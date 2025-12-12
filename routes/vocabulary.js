@@ -8,7 +8,7 @@ const router = express.Router();
 const fs = require('fs');
 const path = require('path');
 
-// Load dữ liệu từ vựng
+// Load dữ liệu từ vựng (cache in-memory)
 let vocabularyData = null;
 
 const loadVocabularyData = () => {
@@ -24,6 +24,28 @@ const loadVocabularyData = () => {
     return [];
   }
 };
+
+// Helpers
+const clamp = (num, min, max) => Math.max(min, Math.min(max, num));
+
+// Parse fields=Base Word,Translate
+function pickFields(items, fieldsParam) {
+  if (!fieldsParam) return items;
+  const fields = fieldsParam
+    .split(',')
+    .map(f => f.trim())
+    .filter(Boolean);
+  if (!fields.length) return items;
+  return items.map(it => {
+    const obj = {};
+    fields.forEach(f => {
+      if (Object.prototype.hasOwnProperty.call(it, f)) {
+        obj[f] = it[f];
+      }
+    });
+    return obj;
+  });
+}
 
 /**
  * GET /api/vocabulary/words
@@ -57,23 +79,40 @@ router.get('/words', (req, res) => {
     // Tìm kiếm
     if (req.query.search) {
       const searchTerm = req.query.search.toLowerCase();
-    filtered = filtered.filter(w => {
-      const base = (w['Base Word'] || '').toString().toLowerCase();
-      const guide = (w.Guideword || '').toString().toLowerCase();
-      return base.includes(searchTerm) || guide.includes(searchTerm);
-    });
+      filtered = filtered.filter(w => {
+        const base = (w['Base Word'] || '').toString().toLowerCase();
+        const guide = (w.Guideword || '').toString().toLowerCase();
+        return base.includes(searchTerm) || guide.includes(searchTerm);
+      });
+    }
+
+    // Lọc theo độ dài Base Word (data quality)
+    const maxLen = clamp(parseInt(req.query.maxLen) || 0, 0, 50);
+    if (maxLen > 0) {
+      filtered = filtered.filter(w => (w['Base Word'] || '').length <= maxLen);
+    }
+
+    // Lọc theo hasGuide / hasTranslate
+    if (req.query.hasGuide === 'true') {
+      filtered = filtered.filter(w => (w.Guideword || '').trim().length >= 2);
+    }
+    if (req.query.hasTranslate === 'true') {
+      filtered = filtered.filter(w => (w.Translate || '').trim().length >= 2);
     }
 
     // Pagination
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 50;
+    const page = clamp(parseInt(req.query.page) || 1, 1, 10000);
+    const limit = clamp(parseInt(req.query.limit) || 50, 1, 200);
     const startIndex = (page - 1) * limit;
     const endIndex = startIndex + limit;
 
     const paginated = filtered.slice(startIndex, endIndex);
 
+    // Fields projection
+    const data = pickFields(paginated, req.query.fields);
+
     res.json({
-      data: paginated,
+      data,
       pagination: {
         page,
         limit,
@@ -157,14 +196,30 @@ router.get('/random', (req, res) => {
       pool = pool.filter(w => w.Level === req.query.level);
     }
 
+    // Lọc theo độ dài Base Word
+    const maxLen = clamp(parseInt(req.query.maxLen) || 0, 0, 50);
+    if (maxLen > 0) {
+      pool = pool.filter(w => (w['Base Word'] || '').length <= maxLen);
+    }
+
+    // Lọc theo hasGuide / hasTranslate
+    if (req.query.hasGuide === 'true') {
+      pool = pool.filter(w => (w.Guideword || '').trim().length >= 2);
+    }
+    if (req.query.hasTranslate === 'true') {
+      pool = pool.filter(w => (w.Translate || '').trim().length >= 2);
+    }
+
     // Lấy số lượng
-    const count = parseInt(req.query.count) || 10;
+    const count = clamp(parseInt(req.query.count) || 10, 1, 200);
     
     // Shuffle và lấy random
     const shuffled = pool.sort(() => 0.5 - Math.random());
     const randomWords = shuffled.slice(0, Math.min(count, shuffled.length));
 
-    res.json(randomWords);
+    const data = pickFields(randomWords, req.query.fields);
+
+    res.json(data);
   } catch (error) {
     console.error('Error fetching random words:', error);
     res.status(500).json({ error: 'Internal server error' });
