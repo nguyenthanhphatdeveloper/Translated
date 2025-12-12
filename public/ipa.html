@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Luyện IPA theo cấp độ</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+    * { font-family: 'Inter', sans-serif; }
+    .ipa { font-family: 'Courier New', monospace; }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+  <nav class="bg-white shadow-sm border-b">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-16 items-center">
+        <a href="/" class="text-xl font-bold text-purple-600">📚 English Vocab</a>
+        <div class="flex items-center space-x-4 text-sm">
+          <a href="/learn" class="text-gray-600 hover:text-purple-600">Học từ</a>
+          <a href="/assessment" class="text-gray-600 hover:text-purple-600">Test Level</a>
+          <a href="/ipa" class="text-purple-600 font-semibold">IPA</a>
+          <a href="/combo" class="text-gray-600 hover:text-purple-600">Combo</a>
+          <a href="/quiz-mix" class="text-gray-600 hover:text-purple-600">Quiz Mix</a>
+          <a href="/grammar" class="text-gray-600 hover:text-purple-600">Grammar</a>
+          <a href="/review" class="text-gray-600 hover:text-purple-600">Ôn từ</a>
+          <a href="/review-grammar" class="text-gray-600 hover:text-purple-600">Ôn Grammar</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900">Luyện IPA theo cấp độ</h1>
+        <p class="text-gray-600 text-sm" id="modeDescription">Hiển thị IPA, bạn nhập từ gốc. Mỗi lượt tối đa 20 từ.</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <select id="modeSelect" class="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 text-sm">
+          <option value="ipa">IPA + Nhập từ</option>
+          <option value="typing">Nghe và gõ</option>
+        </select>
+        <select id="levelSelect" class="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 text-sm">
+          <option value="A1">A1</option>
+          <option value="A2">A2</option>
+          <option value="B1">B1</option>
+          <option value="B2">B2</option>
+          <option value="C1">C1</option>
+          <option value="C2">C2</option>
+          <option value="">Tất cả</option>
+        </select>
+        <button id="btnNew" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm">
+          <i class="fas fa-rotate-right mr-2"></i>Bộ từ mới
+        </button>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-3 text-sm mb-4">
+      <span class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full">Đã tải: <span id="loadedCount">0</span>/20</span>
+      <span class="px-3 py-1 bg-gray-100 text-gray-700 rounded-full">Điểm: <span id="score">0</span></span>
+    </div>
+
+    <div id="loading" class="hidden text-center py-8 text-gray-500">
+      <i class="fas fa-spinner fa-spin text-3xl text-purple-600"></i>
+      <p class="mt-2">Đang tải IPA...</p>
+    </div>
+
+    <div id="list" class="space-y-3"></div>
+    <div id="empty" class="hidden text-center py-10 text-gray-500">Không đủ dữ liệu IPA cho cấp độ này, hãy thử lại hoặc đổi cấp.</div>
+
+    <div class="mt-6 flex flex-wrap gap-3">
+      <button id="btnCheck" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm">Chấm điểm</button>
+      <button id="btnShow" class="px-4 py-2 bg-gray-100 text-gray-800 rounded-lg hover:bg-gray-200 text-sm">Hiện đáp án</button>
+    </div>
+  </main>
+
+  <script>
+    const DICT_CACHE_KEY = 'dictionary_cache_v1';
+    let dictCache = loadCache();
+    let items = [];
+    let score = 0;
+    let currentMode = 'ipa'; // 'ipa' or 'typing'
+
+    function loadCache() {
+      try {
+        const c = localStorage.getItem(DICT_CACHE_KEY);
+        return c ? JSON.parse(c) : {};
+      } catch { return {}; }
+    }
+    function saveCache() {
+      try { localStorage.setItem(DICT_CACHE_KEY, JSON.stringify(dictCache)); } catch {}
+    }
+
+    function setLoading(state) {
+      document.getElementById('loading').classList.toggle('hidden', !state);
+      document.getElementById('empty').classList.add('hidden');
+    }
+
+    async function fetchIPA(word) {
+      if (dictCache[word]) return dictCache[word];
+      const res = await fetch('/api/dictionary/en/' + encodeURIComponent(word));
+      if (!res.ok) return null;
+      const data = await res.json();
+      const pronunciations = data.pronunciation || [];
+      const ipaEntry =
+        pronunciations.find(p => (p.lang || '').toLowerCase().includes('us') && p.pron) ||
+        pronunciations.find(p => (p.lang || '').toLowerCase().includes('uk') && p.pron) ||
+        pronunciations.find(p => p.pron);
+      if (!ipaEntry) return null;
+      // Lưu cả audio URL nếu có
+      if (pronunciations.find(p => p.url)) {
+        ipaEntry.audioUrl = pronunciations.find(p => p.url)?.url;
+      }
+      dictCache[word] = ipaEntry;
+      saveCache();
+      return ipaEntry;
+    }
+
+    async function loadSet() {
+      setLoading(true);
+      items = [];
+      score = 0;
+      document.getElementById('score').textContent = score;
+      document.getElementById('loadedCount').textContent = 0;
+      document.getElementById('list').innerHTML = '';
+
+      const level = document.getElementById('levelSelect').value;
+      const params = new URLSearchParams({ count: 40, ...(level && { level }) });
+      try {
+        const res = await fetch('/api/vocabulary/random?' + params.toString());
+        let words = await res.json();
+        words = words.filter(w => {
+          const bw = (w['Base Word'] || '').toString().trim();
+          const guide = (w.Guideword || '').toString().trim();
+          if (!bw || bw.length > 20) return false;
+          if (!guide || guide.length < 3) return false;
+          return true;
+        });
+        const mode = document.getElementById('modeSelect').value;
+        for (const w of words) {
+          if (items.length >= 20) break;
+          const ipaData = await fetchIPA(w['Base Word']);
+          if (!ipaData || !ipaData.pron) continue;
+          
+          // Với chế độ typing, cần có audio
+          let audioUrl = ipaData.audioUrl || ipaData.url || null;
+          if (mode === 'typing' && !audioUrl) {
+            // Thử lấy audio từ Cambridge API
+            try {
+              const dictRes = await fetch('/api/dictionary/en/' + encodeURIComponent(w['Base Word']));
+              if (dictRes.ok) {
+                const dictData = await dictRes.json();
+                const pronunciations = dictData.pronunciation || [];
+                const audioEntry = pronunciations.find(p => p.url);
+                if (audioEntry) {
+                  audioUrl = audioEntry.url;
+                }
+              }
+            } catch (e) {
+              console.error('Error fetching audio:', e);
+            }
+          }
+          
+          // Bỏ qua nếu chế độ typing mà không có audio
+          if (mode === 'typing' && !audioUrl) continue;
+          
+          items.push({
+            word: w['Base Word'],
+            ipa: ipaData.pron,
+            audioUrl: audioUrl,
+            guide: w.Guideword || '',
+            translate: w.Translate || '',
+            level: w.Level || '',
+            topic: w.Topic || '',
+          });
+          document.getElementById('loadedCount').textContent = items.length;
+        }
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+
+      if (!items.length) {
+        document.getElementById('empty').classList.remove('hidden');
+        return;
+      }
+      renderList();
+    }
+
+    function renderList() {
+      const list = document.getElementById('list');
+      const mode = document.getElementById('modeSelect').value;
+      currentMode = mode;
+      
+      if (mode === 'typing') {
+        // Chế độ Nghe và gõ
+        list.innerHTML = items.map((it, idx) => `
+          <div class="bg-white rounded-lg shadow p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            <div class="flex-1">
+              <p class="text-xs text-gray-500 mb-2">${it.level || 'N/A'} ${it.topic ? '· ' + it.topic : ''}</p>
+              <div class="flex items-center gap-3 mb-2">
+                ${it.audioUrl ? `
+                  <audio id="audio-${idx}" src="${it.audioUrl}" preload="auto"></audio>
+                  <button onclick="playAudio(${idx})" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm flex items-center gap-2">
+                    <i class="fas fa-volume-up"></i> Phát âm
+                  </button>
+                ` : `
+                  <button onclick="playAudio(${idx})" class="px-4 py-2 bg-gray-400 text-white rounded-lg cursor-not-allowed text-sm flex items-center gap-2" disabled>
+                    <i class="fas fa-volume-mute"></i> Không có audio
+                  </button>
+                `}
+                <span class="ipa text-lg font-semibold text-gray-900 px-3 py-2 bg-gray-50 rounded-lg border border-gray-200">${it.ipa || 'N/A'}</span>
+                <button onclick="showHint(${idx})" class="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-sm">
+                  <i class="fas fa-lightbulb"></i> Gợi ý
+                </button>
+              </div>
+              ${it.translate ? `<p class="text-xs text-purple-600 mt-1 font-medium hidden" id="hint-${idx}">${it.translate}</p>` : ''}
+            </div>
+            <div class="flex flex-col gap-2 w-full md:w-auto">
+              <div class="flex items-center gap-2 w-full">
+                <input data-idx="${idx}" type="text" class="answer word w-full md:w-64 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 text-lg" placeholder="Gõ từ bạn nghe được...">
+                <span class="text-xs text-gray-500 hidden" id="ans-${idx}">${it.word}</span>
+              </div>
+              <div class="text-xs text-gray-500" id="feedback-${idx}"></div>
+            </div>
+          </div>
+        `).join('');
+      } else {
+        // Chế độ IPA + Nhập từ (mặc định)
+        list.innerHTML = items.map((it, idx) => `
+          <div class="bg-white rounded-lg shadow p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            <div>
+              <p class="text-xs text-gray-500 mb-1">${it.level || 'N/A'} ${it.topic ? '· ' + it.topic : ''}</p>
+              <p class="ipa text-lg font-semibold text-gray-900">${it.ipa}</p>
+              ${it.guide ? `<p class="text-xs text-gray-500 mt-1">Guideword: ${it.guide}</p>` : ''}
+              ${it.translate ? `<p class="text-xs text-purple-600 mt-1 font-medium">${it.translate}</p>` : ''}
+            </div>
+            <div class="flex flex-col md:flex-row gap-2 w-full md:w-auto">
+              <div class="flex items-center gap-2 w-full">
+                <input data-idx="${idx}" type="text" class="answer word w-full md:w-48 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500" placeholder="Nhập từ...">
+                <span class="text-xs text-gray-500 hidden" id="ans-${idx}">${it.word}</span>
+              </div>
+              <div class="flex items-center gap-2 w-full">
+                <input data-idx="${idx}" type="text" class="answer meaning w-full md:w-56 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500" placeholder="Nhập nghĩa (theo guideword)...">
+                <span class="text-xs text-gray-500 hidden" id="mean-${idx}">${it.guide || 'N/A'}</span>
+              </div>
+              <div class="text-xs text-gray-500" id="vi-${idx}"></div>
+            </div>
+          </div>
+        `).join('');
+      }
+    }
+    
+    function playAudio(idx) {
+      const audio = document.getElementById(`audio-${idx}`);
+      if (audio && audio.src) {
+        audio.play().catch(e => console.error('Audio play failed:', e));
+      }
+    }
+    
+    function showHint(idx) {
+      const hint = document.getElementById(`hint-${idx}`);
+      if (hint) {
+        hint.classList.toggle('hidden');
+      }
+    }
+
+    function checkAnswers(showOnly = false) {
+      if (currentMode === 'typing') {
+        checkTypingMode(showOnly);
+      } else {
+        checkIPAMode(showOnly);
+      }
+    }
+    
+    function checkTypingMode(showOnly = false) {
+      const inputs = document.querySelectorAll('.answer.word');
+      let correct = 0;
+      inputs.forEach(inp => {
+        const idx = Number(inp.dataset.idx);
+        const target = items[idx].word.toLowerCase().trim();
+        const userWord = (inp.value || '').toLowerCase().trim();
+        const ansWord = document.getElementById('ans-' + idx);
+        const feedback = document.getElementById('feedback-' + idx);
+
+        if (showOnly) {
+          ansWord.classList.remove('hidden');
+          inp.classList.remove('border-green-500', 'border-red-400', 'bg-green-50', 'bg-red-50');
+          if (feedback) feedback.textContent = '';
+          return;
+        }
+
+        const wordOk = userWord === target;
+
+        if (wordOk) {
+          inp.classList.add('border-green-500', 'bg-green-50');
+          inp.classList.remove('border-red-400', 'bg-red-50');
+          ansWord.classList.add('hidden');
+          if (feedback) {
+            feedback.textContent = '✓ Đúng!';
+            feedback.className = 'text-xs text-green-600 font-semibold';
+          }
+          correct += 1;
+        } else {
+          inp.classList.add('border-red-400', 'bg-red-50');
+          inp.classList.remove('border-green-500', 'bg-green-50');
+          ansWord.textContent = items[idx].word;
+          ansWord.classList.remove('hidden');
+          if (feedback) {
+            feedback.textContent = `✗ Sai. Đáp án: ${items[idx].word}`;
+            feedback.className = 'text-xs text-red-600';
+          }
+        }
+      });
+      if (!showOnly) {
+        score = correct;
+        document.getElementById('score').textContent = `${score}/${items.length}`;
+      }
+    }
+    
+    function checkIPAMode(showOnly = false) {
+      const inputs = document.querySelectorAll('.answer.word');
+      let correct = 0;
+      inputs.forEach(inp => {
+        const idx = Number(inp.dataset.idx);
+        const target = items[idx].word.toLowerCase().trim();
+        const guide = (items[idx].guide || '').toLowerCase().trim();
+        const userWord = (inp.value || '').toLowerCase().trim();
+        const meaningInput = document.querySelector(`input.meaning[data-idx="${idx}"]`);
+        const userMeaning = (meaningInput?.value || '').toLowerCase().trim();
+        const ansWord = document.getElementById('ans-' + idx);
+        const ansMean = document.getElementById('mean-' + idx);
+        const viEl = document.getElementById('vi-' + idx);
+
+        if (showOnly) {
+          ansWord.classList.remove('hidden');
+          ansMean.classList.remove('hidden');
+          inp.classList.remove('border-green-500', 'border-red-400', 'bg-green-50', 'bg-red-50');
+          meaningInput?.classList.remove('border-green-500','border-red-400','bg-green-50','bg-red-50');
+          if (viEl) viEl.textContent = '';
+          return;
+        }
+
+        const wordOk = userWord === target;
+        const meaningOk = guide ? userMeaning.includes(guide) : true;
+
+        if (wordOk) {
+          inp.classList.add('border-green-500', 'bg-green-50');
+          inp.classList.remove('border-red-400', 'bg-red-50');
+          ansWord.classList.add('hidden');
+        } else {
+          inp.classList.add('border-red-400', 'bg-red-50');
+          inp.classList.remove('border-green-500', 'bg-green-50');
+          ansWord.textContent = items[idx].word;
+          ansWord.classList.remove('hidden');
+        }
+
+        if (meaningInput) {
+          if (meaningOk) {
+            meaningInput.classList.add('border-green-500','bg-green-50');
+            meaningInput.classList.remove('border-red-400','bg-red-50');
+            ansMean.classList.add('hidden');
+          } else {
+            meaningInput.classList.add('border-red-400','bg-red-50');
+            meaningInput.classList.remove('border-green-500','bg-green-50');
+            ansMean.textContent = guide || 'N/A';
+            ansMean.classList.remove('hidden');
+          }
+        }
+
+        if (wordOk && meaningOk) {
+          correct += 1;
+          if (viEl) { viEl.textContent = ''; }
+        }
+      });
+      if (!showOnly) {
+        score = correct;
+        document.getElementById('score').textContent = `${score}/${items.length}`;
+      }
+    }
+
+    document.getElementById('btnNew').onclick = loadSet;
+    document.getElementById('btnCheck').onclick = () => checkAnswers(false);
+    document.getElementById('btnShow').onclick = () => checkAnswers(true);
+    document.getElementById('modeSelect').onchange = () => {
+      if (items.length > 0) {
+        renderList();
+      }
+      updateModeDescription();
+    };
+    
+    function updateModeDescription() {
+      const mode = document.getElementById('modeSelect').value;
+      const desc = document.getElementById('modeDescription');
+      if (mode === 'typing') {
+        desc.textContent = 'Nghe audio và gõ từ đúng. Mỗi lượt tối đa 20 từ.';
+      } else {
+        desc.textContent = 'Hiển thị IPA, bạn nhập từ gốc. Mỗi lượt tối đa 20 từ.';
+      }
+    }
+    
+    window.addEventListener('DOMContentLoaded', () => {
+      updateModeDescription();
+      loadSet();
+    });
+  </script>
+  <script src="/js/command.js"></script>
+</body>
+</html>
+

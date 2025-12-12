@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ôn từ (SRS)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-50 min-h-screen">
+  <nav class="bg-white shadow-sm border-b">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-16 items-center">
+        <a href="/" class="text-xl font-bold text-purple-600">📚 English Vocab</a>
+        <div class="flex items-center space-x-4 text-sm">
+          <a href="/learn" class="text-gray-600 hover:text-purple-600">Học từ</a>
+          <a href="/assessment" class="text-gray-600 hover:text-purple-600">Test Level</a>
+          <a href="/ipa" class="text-gray-600 hover:text-purple-600">IPA</a>
+          <a href="/combo" class="text-gray-600 hover:text-purple-600">Combo</a>
+          <a href="/quiz-mix" class="text-gray-600 hover:text-purple-600">Quiz Mix</a>
+          <a href="/grammar" class="text-gray-600 hover:text-purple-600">Grammar</a>
+          <a href="/review" class="text-purple-600 font-semibold">Ôn từ</a>
+          <a href="/review-grammar" class="text-gray-600 hover:text-purple-600">Ôn Grammar</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="flex items-center justify-between mb-4">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900">Ôn tập từ vựng (SRS)</h1>
+        <p class="text-gray-600 text-sm">Đánh giá: Again / Hard / Good / Easy để lên lịch ôn.</p>
+      </div>
+      <div class="flex items-center gap-2 text-sm">
+        <span class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full">Cần ôn: <span id="needReview">0</span></span>
+        <span class="px-3 py-1 bg-gray-100 text-gray-700 rounded-full">Tổng đã lưu: <span id="total">0</span></span>
+      </div>
+    </div>
+
+    <div id="list" class="space-y-4"></div>
+    <div id="empty" class="hidden text-center py-10 text-gray-500">Chưa có từ trong queue. Hãy học từ trong trang Learn để thêm vào.</div>
+
+    <div class="mt-10 border-t pt-6">
+      <div class="flex items-center justify-between flex-wrap gap-3 mb-3">
+        <div>
+          <h2 class="text-xl font-bold text-gray-900">Chế độ Matching (kéo thả)</h2>
+          <p class="text-gray-600 text-sm">Kéo từ đúng sang nghĩa/guideword tương ứng.</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <select id="matchingLevel" class="px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-purple-500">
+            <option value="">Tất cả level</option>
+            <option value="A1">A1</option>
+            <option value="A2">A2</option>
+            <option value="B1">B1</option>
+            <option value="B2">B2</option>
+            <option value="C1">C1</option>
+            <option value="C2">C2</option>
+          </select>
+          <button id="btnMatching" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700">
+            <i class="fas fa-shuffle mr-2"></i>Tạo bộ kéo thả
+          </button>
+          <button id="btnResetMatching" class="px-4 py-2 bg-gray-100 text-gray-800 rounded-lg text-sm hover:bg-gray-200">
+            <i class="fas fa-rotate mr-2"></i>Làm lại bộ hiện tại
+          </button>
+        </div>
+      </div>
+      <div id="matchingLoading" class="hidden text-gray-500 text-sm mb-3"><i class="fas fa-spinner fa-spin mr-2"></i>Đang chuẩn bị bộ matching...</div>
+      <div id="matchingEmpty" class="hidden text-center text-gray-500 text-sm mb-4">Không đủ dữ liệu (cần guideword/translate). Hãy ôn thêm từ rồi thử lại.</div>
+      <div id="matchingBoard" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+      <div id="matchingResult" class="mt-3 text-sm font-semibold text-gray-800"></div>
+    </div>
+  </main>
+
+  <script src="/js/storage.js"></script>
+  <script>
+    const storage = new StorageManager();
+    let matchingPairs = [];
+    let matchedCount = 0;
+
+    function render(){
+      const queue = storage.getWordsToReview();
+      const progress = storage.getProgress();
+      document.getElementById('needReview').textContent = queue.length;
+      document.getElementById('total').textContent = Object.keys(progress.words||{}).length;
+      const list = document.getElementById('list');
+      if(!queue.length){
+        document.getElementById('empty').classList.remove('hidden');
+        list.innerHTML='';
+        return;
+      }
+      document.getElementById('empty').classList.add('hidden');
+      list.innerHTML = queue.map(it=>`
+        <div class="bg-white rounded-lg shadow p-4">
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-xs px-2 py-1 rounded bg-blue-50 text-blue-700">${it.level||'N/A'}</span>
+            <span class="text-xs text-gray-500">Lần ôn: ${it.reviewCount||0}</span>
+          </div>
+          <p class="font-semibold text-gray-900 mb-1">${it.word}</p>
+          <p class="text-sm text-gray-600 mb-2">Mastery: ${(it.masteryScore||0).toFixed(2)} · Difficulty: ${it.difficulty||'medium'}</p>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-3">
+            ${['again','hard','good','easy'].map(r=>`
+              <button data-id="${it.id}" data-rate="${r}" class="btn-rate px-3 py-2 text-sm rounded bg-gray-100 hover:bg-gray-200">
+                ${r === 'again' ? 'Again' : r.charAt(0).toUpperCase()+r.slice(1)}
+              </button>
+            `).join('')}
+          </div>
+        </div>
+      `).join('');
+      bindActions();
+    }
+
+    function updateItem(id, rating){
+      storage.reviewWord(id, rating);
+      render();
+    }
+
+    function bindActions(){
+      document.querySelectorAll('.btn-rate').forEach(btn=>{
+        btn.onclick = ()=> updateItem(btn.dataset.id, btn.dataset.rate);
+      });
+    }
+
+    // -------- Matching (drag-drop) --------
+    function setMatchingLoading(state){
+      document.getElementById('matchingLoading').classList.toggle('hidden', !state);
+    }
+
+    async function fetchWordDetail(word){
+      try{
+        const params = new URLSearchParams({ search: word, limit: 10 });
+        const res = await fetch('/api/vocabulary/words?' + params.toString());
+        if(!res.ok) return null;
+        const json = await res.json();
+        const data = json.data || json || [];
+        // Ưu tiên match chính xác Base Word (case-insensitive)
+        const lower = word.toLowerCase();
+        const exact = data.find(d => (d['Base Word'] || '').toLowerCase() === lower);
+        return exact || data[0] || null;
+      }catch(e){
+        console.error('fetchWordDetail error', e);
+        return null;
+      }
+    }
+
+    async function buildMatching(){
+      const board = document.getElementById('matchingBoard');
+      const empty = document.getElementById('matchingEmpty');
+      const levelFilter = document.getElementById('matchingLevel')?.value || '';
+      board.innerHTML = '';
+      empty.classList.add('hidden');
+      setMatchingLoading(true);
+      matchedCount = 0;
+      matchingPairs = [];
+
+      // Ưu tiên: từ cần ôn (queue) -> nếu thiếu, lấy từ đã học -> nếu vẫn thiếu, lấy ngẫu nhiên
+      const queue = storage.getWordsToReview().filter(w => !levelFilter || w.level === levelFilter); // words overdue
+      const progress = storage.getProgress();
+      const learned = Object.values(progress.words || {}).filter(w => {
+        if (w.status === 'mastered') return false;
+        if (levelFilter && w.level !== levelFilter) return false;
+        return true;
+      });
+
+      // Tập ứng viên theo ưu tiên
+      let candidates = queue.map(w => ({ word: w.word, level: w.level }));
+      if (candidates.length < 3) {
+        candidates = [
+          ...candidates,
+          ...learned.map(w => ({ word: w.word, level: w.level }))
+        ];
+      }
+
+      // Hàm bổ sung ngẫu nhiên nếu vẫn thiếu
+      async function addRandomFallback(count = 20){
+        try{
+          const params = new URLSearchParams({ count });
+          if (levelFilter) params.set('level', levelFilter);
+          const res = await fetch('/api/vocabulary/random?' + params.toString());
+          const data = await res.json();
+          const extra = (data || []).map(w => ({ word: w['Base Word'], level: w.Level }));
+          candidates = [...candidates, ...extra];
+        }catch(e){
+          console.error('fallback random error', e);
+        }
+      }
+
+      // Nếu sau khi ghép vẫn ít ứng viên, bổ sung random
+      if (candidates.length < 3) {
+        await addRandomFallback();
+      }
+
+      // Loại trùng và rỗng
+      const seen = new Set();
+      candidates = candidates.filter(c => {
+        if (!c.word || seen.has(c.word)) return false;
+        seen.add(c.word);
+        return true;
+      });
+
+      // Lấy tối đa 8 từ có nghĩa/guideword
+      for(const c of candidates){
+        if(matchingPairs.length >= 8) break;
+        const detail = await fetchWordDetail(c.word);
+        if(!detail) continue;
+        const meaning = detail.Translate || detail.Guideword || '';
+        if(!meaning || meaning.trim().length < 2) continue;
+        // Nếu có filter level, bỏ qua nếu không khớp
+        const levelVal = c.level || detail.Level || '';
+        if (levelFilter && levelVal !== levelFilter) continue;
+
+        matchingPairs.push({
+          word: c.word,
+          meaning: meaning.trim(),
+          level: levelVal
+        });
+      }
+
+      setMatchingLoading(false);
+
+      if(matchingPairs.length < 3){
+        empty.textContent = 'Không đủ dữ liệu (cần ≥ 3 mục có guideword/translate). Hãy học/đánh dấu thêm từ rồi thử lại.';
+        empty.classList.remove('hidden');
+        return;
+      }
+
+      renderMatching();
+    }
+
+    function renderMatching(){
+      const board = document.getElementById('matchingBoard');
+      const result = document.getElementById('matchingResult');
+      result.textContent = '';
+      matchedCount = 0;
+
+      // Tạo danh sách kéo (words) và thả (meanings)
+      const words = shuffle([...matchingPairs]);
+      const meanings = shuffle([...matchingPairs]);
+
+      const left = words.map((item, idx) => `
+        <div class="bg-white border rounded-lg p-3 shadow-sm flex items-center justify-between gap-2 drag-word"
+             draggable="true"
+             data-word="${item.word}">
+          <span class="font-semibold text-gray-900">${item.word}</span>
+          <span class="text-xs px-2 py-1 rounded bg-blue-50 text-blue-700">${item.level || 'N/A'}</span>
+        </div>
+      `).join('');
+
+      const right = meanings.map((item, idx) => `
+        <div class="bg-white border rounded-lg p-3 shadow-sm drop-meaning"
+             data-target="${item.word}"
+             data-meaning="${item.meaning}">
+          <p class="text-sm text-gray-800 mb-1">${item.meaning}</p>
+          <p class="text-xs text-gray-500">Kéo từ phù hợp vào đây</p>
+        </div>
+      `).join('');
+
+      board.innerHTML = `
+        <div>
+          <h3 class="text-sm font-semibold text-gray-700 mb-2">Từ</h3>
+          <div class="space-y-2" id="wordsCol">${left}</div>
+        </div>
+        <div>
+          <h3 class="text-sm font-semibold text-gray-700 mb-2">Nghĩa / Guideword</h3>
+          <div class="space-y-2" id="meaningsCol">${right}</div>
+        </div>
+      `;
+
+      bindDragDrop();
+    }
+
+    function bindDragDrop(){
+      const draggables = document.querySelectorAll('.drag-word');
+      const drops = document.querySelectorAll('.drop-meaning');
+      draggables.forEach(el => {
+        el.addEventListener('dragstart', (e) => {
+          e.dataTransfer.setData('text/plain', el.dataset.word);
+          el.classList.add('opacity-70');
+        });
+        el.addEventListener('dragend', () => el.classList.remove('opacity-70'));
+      });
+      drops.forEach(el => {
+        el.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          el.classList.add('border-purple-500', 'bg-purple-50');
+        });
+        el.addEventListener('dragleave', () => {
+          el.classList.remove('border-purple-500', 'bg-purple-50');
+        });
+        el.addEventListener('drop', (e) => {
+          e.preventDefault();
+          el.classList.remove('border-purple-500', 'bg-purple-50');
+          const draggedWord = e.dataTransfer.getData('text/plain');
+          const targetWord = el.dataset.target;
+          const result = document.getElementById('matchingResult');
+
+          if (draggedWord === targetWord) {
+            matchedCount++;
+            el.classList.add('border-green-500', 'bg-green-50');
+            el.querySelector('p.text-xs').textContent = 'Đúng!';
+            // Disable further drops
+            el.ondragover = null;
+            el.ondrop = null;
+            // Remove draggable
+            const dragEl = document.querySelector(`.drag-word[data-word="${draggedWord}"]`);
+            if (dragEl) dragEl.remove();
+            result.textContent = `Đúng ${matchedCount}/${matchingPairs.length} cặp.`;
+          } else {
+            el.classList.add('border-red-400', 'bg-red-50');
+            el.querySelector('p.text-xs').textContent = `Sai. Đáp án: ${targetWord}`;
+            result.textContent = `Sai một cặp, thử lại nhé.`;
+          }
+        });
+      });
+    }
+
+    function resetMatchingBoard(){
+      if (!matchingPairs.length) return;
+      renderMatching();
+    }
+
+    // Fisher-Yates shuffle
+    function shuffle(arr){
+      const a = [...arr];
+      for(let i=a.length-1;i>0;i--){
+        const j = Math.floor(Math.random()*(i+1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      render();
+      document.getElementById('btnMatching').onclick = buildMatching;
+      document.getElementById('btnResetMatching').onclick = resetMatchingBoard;
+    });
+  </script>
+  <script src="/js/command.js"></script>
+</body>
+</html>
+

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ôn tập Grammar (SRS)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-50 min-h-screen">
+  <nav class="bg-white shadow-sm border-b">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-16 items-center">
+        <a href="/" class="text-xl font-bold text-purple-600">📚 English Vocab</a>
+        <div class="flex items-center space-x-4 text-sm">
+          <a href="/learn" class="text-gray-600 hover:text-purple-600">Học từ</a>
+          <a href="/assessment" class="text-gray-600 hover:text-purple-600">Test Level</a>
+          <a href="/ipa" class="text-gray-600 hover:text-purple-600">Luyện IPA</a>
+          <a href="/combo" class="text-gray-600 hover:text-purple-600">Combo</a>
+          <a href="/quiz-mix" class="text-gray-600 hover:text-purple-600">Quiz Mix</a>
+          <a href="/review" class="text-gray-600 hover:text-purple-600">Ôn từ</a>
+          <a href="/grammar" class="text-gray-600 hover:text-purple-600">Grammar</a>
+          <a href="/review-grammar" class="text-purple-600 font-semibold">Ôn Grammar</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="flex items-center justify-between mb-4">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900">Ôn tập Grammar (SRS)</h1>
+        <p class="text-gray-600 text-sm">Đánh giá: Again / Hard / Good / Easy để lên lịch ôn.</p>
+      </div>
+      <div class="flex items-center gap-2 text-sm">
+        <span class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full">Cần ôn: <span id="needReview">0</span></span>
+        <span class="px-3 py-1 bg-gray-100 text-gray-700 rounded-full">Tổng đã lưu: <span id="total">0</span></span>
+      </div>
+    </div>
+
+    <div id="list" class="space-y-4"></div>
+    <div id="empty" class="hidden text-center py-10 text-gray-500">Chưa có grammar trong queue. Hãy thêm từ trang Grammar.</div>
+  </main>
+
+  <script>
+    const KEY = 'grammar_srs_v1';
+
+    function todayStr(){
+      return new Date().toISOString().split('T')[0];
+    }
+    function addDays(d, n){
+      const x = new Date(d);
+      x.setDate(x.getDate()+n);
+      return x.toISOString().split('T')[0];
+    }
+
+    function loadState(){
+      try{
+        const raw = localStorage.getItem(KEY);
+        return raw ? JSON.parse(raw) : { items:{} };
+      }catch{return {items:{}};}
+    }
+    function saveState(state){
+      localStorage.setItem(KEY, JSON.stringify(state));
+    }
+
+    function getQueue(){
+      const state = loadState();
+      const today = todayStr();
+      return Object.entries(state.items||{})
+        .map(([id,it])=>({id,...it}))
+        .filter(it=>!it.nextReview || it.nextReview <= today);
+    }
+
+    function render(){
+      const queue = getQueue();
+      const state = loadState();
+      document.getElementById('needReview').textContent = queue.length;
+      document.getElementById('total').textContent = Object.keys(state.items||{}).length;
+      const list = document.getElementById('list');
+      if(!queue.length){
+        document.getElementById('empty').classList.remove('hidden');
+        list.innerHTML='';
+        return;
+      }
+      document.getElementById('empty').classList.add('hidden');
+      list.innerHTML = queue.map(it=>`
+        <div class="bg-white rounded-lg shadow p-4">
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-xs px-2 py-1 rounded bg-blue-50 text-blue-700">${it.level||'N/A'}</span>
+            <span class="text-xs text-gray-500">Lần ôn: ${it.reviewCount||0}</span>
+          </div>
+          <p class="font-semibold text-gray-900 mb-1">${it.guideword||''}</p>
+          <p class="text-sm text-gray-700 whitespace-pre-line mb-2">${it.cando||''}</p>
+          ${it.example ? `<div class="text-sm text-gray-600 bg-gray-50 rounded p-3 whitespace-pre-line">${it.example}</div>` : ''}
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-3">
+            ${['again','hard','good','easy'].map(r=>`
+              <button data-id="${it.id}" data-rate="${r}" class="btn-rate px-3 py-2 text-sm rounded bg-gray-100 hover:bg-gray-200">
+                ${r === 'again' ? 'Again' : r.charAt(0).toUpperCase()+r.slice(1)}
+              </button>
+            `).join('')}
+          </div>
+        </div>
+      `).join('');
+      bindActions();
+    }
+
+    function updateItem(id, rating){
+      const state = loadState();
+      if(!state.items[id]) return;
+      const it = state.items[id];
+      it.reviewCount = (it.reviewCount||0)+1;
+      const days = {again:1, hard:3, good:7, easy:14}[rating] || 3;
+      it.nextReview = addDays(todayStr(), days);
+      it.difficulty = rating;
+      saveState(state);
+      render();
+    }
+
+    function bindActions(){
+      document.querySelectorAll('.btn-rate').forEach(btn=>{
+        btn.onclick = ()=> updateItem(btn.dataset.id, btn.dataset.rate);
+      });
+    }
+
+    // Helper để thêm grammar vào queue từ console: addGrammarToSRS(item)
+    window.addGrammarToSRS = function(item){
+      const state = loadState();
+      const id = item['Guideword'] + '|' + (item.Level||'');
+      state.items[id] = {
+        guideword: item['Guideword'],
+        cando: item['Can-do statement'],
+        example: item.Example || '',
+        level: item.Level,
+        nextReview: todayStr(),
+        reviewCount: 0,
+        difficulty: 'good'
+      };
+      saveState(state);
+      render();
+    };
+
+    window.addEventListener('DOMContentLoaded', render);
+  </script>
+  <script src="/js/command.js"></script>
+</body>
+</html>
+

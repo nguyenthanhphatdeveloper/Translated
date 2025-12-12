@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Combo lesson 10 phút</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-50 min-h-screen">
+  <nav class="bg-white shadow-sm border-b">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-16 items-center">
+        <a href="/" class="text-xl font-bold text-purple-600">📚 English Vocab</a>
+        <div class="flex items-center space-x-4 text-sm">
+          <a href="/learn" class="text-gray-600 hover:text-purple-600">Học từ</a>
+          <a href="/assessment" class="text-gray-600 hover:text-purple-600">Test Level</a>
+          <a href="/ipa" class="text-gray-600 hover:text-purple-600">IPA</a>
+          <a href="/combo" class="text-purple-600 font-semibold">Combo</a>
+          <a href="/quiz-mix" class="text-gray-600 hover:text-purple-600">Quiz Mix</a>
+          <a href="/grammar" class="text-gray-600 hover:text-purple-600">Grammar</a>
+          <a href="/review" class="text-gray-600 hover:text-purple-600">Ôn từ</a>
+          <a href="/review-grammar" class="text-gray-600 hover:text-purple-600">Ôn Grammar</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900">Combo lesson 10 phút</h1>
+        <p class="text-gray-600 text-sm">1 từ vựng + 1 grammar + 1 IPA/nghe + 1 shadowing ngắn. Chọn level để sinh nội dung.</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <select id="levelSelect" class="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 text-sm">
+          <option value="">Auto</option>
+          <option value="A1">A1</option>
+          <option value="A2">A2</option>
+          <option value="B1">B1</option>
+          <option value="B2">B2</option>
+          <option value="C1">C1</option>
+          <option value="C2">C2</option>
+        </select>
+        <button id="btnNew" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm">
+          <i class="fas fa-rotate-right mr-2"></i>Bộ mới
+        </button>
+      </div>
+    </div>
+
+    <div id="loading" class="hidden text-center py-8 text-gray-500">
+      <i class="fas fa-spinner fa-spin text-3xl text-purple-600"></i>
+      <p class="mt-2">Đang tạo bộ combo...</p>
+    </div>
+
+    <div id="combo" class="space-y-4"></div>
+  </main>
+
+  <script>
+    async function fetchVocab(level=''){
+      const params = new URLSearchParams({ count: 10, ...(level && { level }) });
+      const res = await fetch('/api/vocabulary/random?' + params.toString());
+      let data = await res.json();
+      data = data.filter(w=>{
+        const bw = (w['Base Word']||'').toString().trim();
+        return bw && bw.length<20;
+      });
+      return data[0];
+    }
+
+    async function fetchGrammar(level=''){
+      const params = new URLSearchParams({ limit: 50, ...(level && { level }) });
+      const res = await fetch('/api/grammar/points?' + params.toString());
+      const json = await res.json();
+      const data = (json.data||[]).filter(g=>g['Guideword'] && g['Can-do statement']);
+      return data[0];
+    }
+
+    async function fetchDictionary(word){
+      const res = await fetch('/api/dictionary/en/' + encodeURIComponent(word));
+      if(!res.ok) return null;
+      return res.json();
+    }
+
+    async function buildCombo(){
+      const level = document.getElementById('levelSelect').value;
+      document.getElementById('loading').classList.remove('hidden');
+      document.getElementById('combo').innerHTML = '';
+      try{
+        const vocab = await fetchVocab(level);
+        const grammar = await fetchGrammar(level);
+        let dictData = null;
+        if(vocab) dictData = await fetchDictionary(vocab['Base Word']);
+        const pronunciations = dictData?.pronunciation || [];
+        const ipa = pronunciations.find(p=> (p.lang||'').toLowerCase().includes('us') && p.pron) || pronunciations[0];
+        const audio = ipa?.url;
+        const shadowSentence = dictData?.definition?.[0]?.example?.[0]?.text || 'Try shadowing this sentence.';
+
+        const comboHtml = `
+          <div class="bg-white rounded-lg shadow p-4">
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">Từ vựng</h3>
+            ${vocab ? `
+              <p class="text-xl font-bold text-gray-900">${vocab['Base Word']}</p>
+              <p class="text-sm text-gray-600">${vocab.Guideword || ''}</p>
+              <p class="text-xs text-gray-500 mt-1">Level: ${vocab.Level || 'N/A'} · Topic: ${vocab.Topic || 'N/A'}</p>
+            ` : '<p class="text-gray-500">Không lấy được từ vựng.</p>'}
+          </div>
+          <div class="bg-white rounded-lg shadow p-4">
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">Grammar</h3>
+            ${grammar ? `
+              <p class="font-semibold text-gray-900 mb-1">${grammar['Guideword'] || ''}</p>
+              <p class="text-sm text-gray-700 mb-2 whitespace-pre-line">${grammar['Can-do statement'] || ''}</p>
+              ${grammar.Example ? `<div class="text-sm text-gray-600 bg-gray-50 rounded p-3 whitespace-pre-line">${grammar.Example}</div>` : ''}
+              <p class="text-xs text-gray-500 mt-1">Level: ${grammar.Level || 'N/A'} · ${grammar.SuperCategory || ''}</p>
+            ` : '<p class="text-gray-500">Không lấy được grammar.</p>'}
+          </div>
+          <div class="bg-white rounded-lg shadow p-4">
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">IPA / Nghe</h3>
+            ${ipa ? `
+              <p class="font-mono text-lg text-gray-900">${ipa.pron}</p>
+              <p class="text-sm text-gray-600">${ipa.lang || ''}</p>
+              ${audio ? `<audio controls class="mt-2"><source src="${audio}" type="audio/mpeg"></audio>` : ''}
+            ` : '<p class="text-gray-500">Không lấy được IPA.</p>'}
+          </div>
+          <div class="bg-white rounded-lg shadow p-4">
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">Shadowing</h3>
+            <p class="text-gray-800 mb-2">${shadowSentence}</p>
+            ${audio ? `<audio controls class="mt-2"><source src="${audio}" type="audio/mpeg"></audio>` : '<p class="text-xs text-gray-500">Dùng câu trên để tự thu âm.</p>'}
+          </div>
+        `;
+        document.getElementById('combo').innerHTML = comboHtml;
+      } catch (e){
+        console.error(e);
+        document.getElementById('combo').innerHTML = '<p class="text-center text-red-500">Lỗi khi tải combo.</p>';
+      } finally {
+        document.getElementById('loading').classList.add('hidden');
+      }
+    }
+
+    document.getElementById('btnNew').onclick = buildCombo;
+    window.addEventListener('DOMContentLoaded', buildCombo);
+  </script>
+  <script src="/js/command.js"></script>
+</body>
+</html>
+

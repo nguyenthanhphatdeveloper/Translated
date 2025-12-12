@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Level</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://js.puter.com/v2/"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-50 min-h-screen">
+  <nav class="bg-white shadow-sm border-b">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-16 items-center">
+        <a href="/" class="text-xl font-bold text-purple-600">📚 English Vocab</a>
+        <div class="flex items-center space-x-4 text-sm">
+          <a href="/learn" class="text-gray-700 hover:text-purple-600">Học từ</a>
+          <a href="/assessment" class="text-purple-600 font-semibold">Test Level</a>
+          <a href="/ipa" class="text-gray-700 hover:text-purple-600">IPA</a>
+          <a href="/combo" class="text-gray-700 hover:text-purple-600">Combo</a>
+          <a href="/quiz-mix" class="text-gray-700 hover:text-purple-600">Quiz Mix</a>
+          <a href="/grammar" class="text-gray-700 hover:text-purple-600">Grammar</a>
+          <a href="/review" class="text-gray-700 hover:text-purple-600">Ôn từ</a>
+          <a href="/review-grammar" class="text-gray-700 hover:text-purple-600">Ôn Grammar</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900">Sentence Fill-in Test</h1>
+        <p class="text-gray-600 text-sm">Chọn level, đọc câu ví dụ, điền từ còn thiếu để luyện ngữ cảnh & chính tả.</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <select id="levelSelect" class="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 text-sm">
+          <option value="">Auto (tất cả)</option>
+          <option value="A1">A1</option>
+          <option value="A2">A2</option>
+          <option value="B1">B1</option>
+          <option value="B2">B2</option>
+          <option value="C1">C1</option>
+          <option value="C2">C2</option>
+        </select>
+        <button id="btnStart" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm">
+          <i class="fas fa-play mr-1"></i> Bộ câu mới
+        </button>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-3 text-sm mb-4">
+      <span class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full">Đã tải: <span id="loadedCount">0</span></span>
+      <span class="px-3 py-1 bg-gray-100 text-gray-700 rounded-full">Điểm: <span id="score">0</span></span>
+    </div>
+
+    <div id="list" class="space-y-4"></div>
+
+    <div class="mt-6 flex flex-wrap gap-3">
+      <button id="btnCheck" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm">Chấm điểm</button>
+      <button id="btnShow" class="px-4 py-2 bg-gray-100 text-gray-800 rounded-lg hover:bg-gray-200 text-sm">Hiện đáp án</button>
+      <button id="btnReload" class="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 text-sm">Đổi bộ câu</button>
+    </div>
+
+    <div id="result" class="mt-6 text-lg font-semibold text-gray-900"></div>
+
+    <div id="loading" class="hidden text-center py-8 text-gray-500">
+      <i class="fas fa-spinner fa-spin text-3xl text-purple-600"></i>
+      <p class="mt-2">Đang tải câu ví dụ...</p>
+    </div>
+  </main>
+
+  <script>
+    const MAX_ITEMS = 12;
+    const MAX_CANDIDATES = 80;
+    let items = [];
+    let score = 0;
+    
+    // Audio cache cho TTS
+    const audioCache = new Map();
+    const audioInstances = new Map(); // Lưu Audio instances để có thể pause/play
+    
+    // Load cache từ localStorage
+    function loadAudioCache() {
+      try {
+        const cached = localStorage.getItem('tts_audio_cache');
+        if (cached) {
+          const cacheObj = JSON.parse(cached);
+          Object.entries(cacheObj).forEach(([key, value]) => {
+            audioCache.set(key, value);
+          });
+        }
+      } catch (e) {
+        console.warn('Failed to load audio cache:', e);
+      }
+    }
+    
+    // Save cache to localStorage
+    function saveAudioCache() {
+      try {
+        const cacheObj = Object.fromEntries(audioCache);
+        localStorage.setItem('tts_audio_cache', JSON.stringify(cacheObj));
+      } catch (e) {
+        console.warn('Failed to save audio cache:', e);
+      }
+    }
+    
+    // Generate audio từ Puter.js TTS
+    async function generateAudio(text, questionId) {
+      if (!text || !text.trim()) return null;
+      
+      const cacheKey = text.trim().toLowerCase();
+      
+      // Check cache trước
+      if (audioCache.has(cacheKey)) {
+        const cachedUrl = audioCache.get(cacheKey);
+        return cachedUrl;
+      }
+      
+      try {
+        // Kiểm tra xem Puter.js đã load chưa
+        if (typeof puter === 'undefined' || !puter.ai || !puter.ai.txt2speech) {
+          console.error('Puter.js chưa được load. Vui lòng kiểm tra lại.');
+          return null;
+        }
+        
+        // Gọi Puter.js TTS API
+        // Puter.js trả về Audio object có thể phát trực tiếp
+        const audioResult = await puter.ai.txt2speech(text, {
+          provider: 'elevenlabs',
+          voice: '21m00Tcm4TlvDq8ikWAM', // Giọng nữ tiếng Anh
+          model: 'eleven_multilingual_v2'
+        });
+        
+        // Puter.js trả về Audio object, lấy src để cache
+        let audioUrl = null;
+        if (audioResult) {
+          if (audioResult instanceof Audio) {
+            // Nếu là Audio object
+            audioUrl = audioResult.src || audioResult.currentSrc;
+          } else if (typeof audioResult === 'string') {
+            // Nếu là URL string
+            audioUrl = audioResult;
+          } else if (audioResult.src) {
+            // Nếu có property src
+            audioUrl = audioResult.src;
+          }
+        }
+        
+        // Nếu không có URL, thử tạo từ Audio object
+        if (!audioUrl && audioResult instanceof Audio) {
+          // Audio object từ Puter.js có thể là blob URL hoặc data URL
+          // Lưu lại Audio object để dùng trực tiếp
+          audioCache.set(cacheKey, audioResult);
+          saveAudioCache();
+          return audioResult; // Trả về Audio object để phát trực tiếp
+        }
+        
+        // Cache lại URL
+        if (audioUrl) {
+          audioCache.set(cacheKey, audioUrl);
+          saveAudioCache();
+        }
+        
+        return audioUrl || audioResult;
+      } catch (error) {
+        console.error('TTS Error:', error);
+        return null;
+      }
+    }
+    
+    // Phát audio cho câu hỏi
+    async function playQuestionAudio(idx) {
+      const question = items[idx];
+      if (!question) return;
+      
+      const btn = document.getElementById(`audio-btn-${idx}`);
+      if (!btn) return;
+      
+      // Dừng audio cũ nếu đang phát
+      const oldAudio = audioInstances.get(idx);
+      if (oldAudio && !oldAudio.paused) {
+        oldAudio.pause();
+        oldAudio.currentTime = 0;
+        btn.innerHTML = '<i class="fas fa-volume-up"></i> Nghe câu';
+        return;
+      }
+      
+      // Disable button khi đang load
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang tạo audio...';
+      
+      // Lấy câu đầy đủ (không có blank)
+      const fullSentence = question.sentence;
+      
+      // Generate audio
+      const audioResult = await generateAudio(fullSentence, idx);
+      
+      if (audioResult) {
+        try {
+          let audio;
+          
+          // Xử lý cả Audio object và URL string
+          if (audioResult instanceof Audio) {
+            // Nếu là Audio object từ Puter.js
+            audio = audioResult;
+          } else {
+            // Nếu là URL string, tạo Audio mới
+            audio = new Audio(audioResult);
+          }
+          
+          // Lưu instance để có thể pause sau
+          audioInstances.set(idx, audio);
+          
+          // Event handlers
+          audio.onended = () => {
+            btn.innerHTML = '<i class="fas fa-volume-up"></i> Nghe lại';
+            btn.disabled = false;
+          };
+          
+          audio.onerror = (e) => {
+            console.error('Audio playback error:', e);
+            btn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Lỗi phát audio';
+            btn.disabled = false;
+          };
+          
+          // Phát audio
+          await audio.play();
+          
+          // Update button
+          btn.innerHTML = '<i class="fas fa-pause"></i> Đang phát...';
+          btn.disabled = false;
+          
+          // Thêm click để pause/resume
+          btn.onclick = () => {
+            const currentAudio = audioInstances.get(idx);
+            if (currentAudio) {
+              if (currentAudio.paused) {
+                currentAudio.play();
+                btn.innerHTML = '<i class="fas fa-pause"></i> Đang phát...';
+              } else {
+                currentAudio.pause();
+                btn.innerHTML = '<i class="fas fa-volume-up"></i> Nghe lại';
+              }
+            }
+          };
+        } catch (e) {
+          console.error('Failed to play audio:', e);
+          btn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Lỗi phát audio';
+          btn.disabled = false;
+        }
+      } else {
+        btn.innerHTML = '<i class="fas fa-volume-mute"></i> Không có audio';
+        btn.disabled = false;
+      }
+    }
+    
+    // Preload audio cho vài câu đầu
+    async function preloadAudio() {
+      const firstFew = items.slice(0, 3);
+      for (let i = 0; i < firstFew.length; i++) {
+        const q = firstFew[i];
+        if (q && q.sentence) {
+          // Generate audio nhưng không phát
+          await generateAudio(q.sentence, i);
+        }
+      }
+    }
+
+    const escapeRegExp = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+    function createBlankSentence(sentence, word) {
+      if (!sentence || !word) return null;
+      const regex = new RegExp(`\\b${escapeRegExp(word)}\\b`, 'i');
+      if (!regex.test(sentence)) return null;
+      return sentence.replace(regex, '_____');
+    }
+
+    async function fetchExample(word) {
+      try {
+        const res = await fetch('/api/dictionary/en/' + encodeURIComponent(word));
+        if (!res.ok) return null;
+        const data = await res.json();
+        const defs = data.definition || [];
+        for (const def of defs) {
+          const examples = def.example || [];
+          const hit = examples.find(ex => {
+            const txt = (ex.text || '').toLowerCase();
+            return txt.includes(word.toLowerCase());
+          });
+          if (hit) {
+            return {
+              sentence: hit.text,
+              translation: hit.translation || '',
+              ipa: (data.pronunciation || [])[0]?.pron || '',
+            };
+          }
+        }
+      } catch (e) {
+        console.error('fetchExample error', e);
+      }
+      return null;
+    }
+
+    async function loadSet() {
+      setLoading(true);
+      items = [];
+      score = 0;
+      document.getElementById('score').textContent = score;
+      document.getElementById('loadedCount').textContent = 0;
+      document.getElementById('list').innerHTML = '';
+      document.getElementById('result').textContent = '';
+
+      const level = document.getElementById('levelSelect').value;
+      const params = new URLSearchParams({ count: MAX_CANDIDATES, ...(level && { level }) });
+
+      try {
+        const res = await fetch('/api/vocabulary/random?' + params.toString());
+        let words = await res.json();
+        words = words.filter(w => {
+          const bw = (w['Base Word'] || '').toString().trim();
+          return bw && bw.length < 20;
+        });
+
+        for (const w of words) {
+          if (items.length >= MAX_ITEMS) break;
+          const base = w['Base Word'];
+          const ex = await fetchExample(base);
+          if (!ex || !ex.sentence) continue;
+
+          const blank = createBlankSentence(ex.sentence, base);
+          if (!blank) continue;
+
+          items.push({
+            word: base,
+            sentence: ex.sentence,
+            sentenceBlank: blank,
+            translation: ex.translation || '',
+            level: w.Level || '',
+            topic: w.Topic || '',
+          });
+
+          document.getElementById('loadedCount').textContent = items.length;
+        }
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+
+      if (!items.length) {
+        document.getElementById('list').innerHTML = '<div class="text-center text-gray-500 py-10">Không tìm thấy câu ví dụ phù hợp. Hãy thử lại.</div>';
+        return;
+      }
+      renderList();
+    }
+
+    function renderList() {
+      const list = document.getElementById('list');
+      list.innerHTML = items.map((it, idx) => `
+        <div class="bg-white rounded-lg shadow p-4 space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-700">Câu ${idx + 1}</span>
+            <span class="text-xs px-2 py-1 rounded bg-blue-50 text-blue-700">${it.level || 'N/A'}${it.topic ? ' · ' + it.topic : ''}</span>
+          </div>
+          <p class="text-gray-800 leading-relaxed text-lg">
+            ${it.sentenceBlank.replace('_____', '<span class="font-semibold text-purple-700 underline decoration-dashed">_____</span>')}
+          </p>
+          ${it.translation ? `<p class="text-sm text-gray-500 italic">(${it.translation})</p>` : ''}
+          <div class="flex flex-col md:flex-row items-start md:items-center gap-2">
+            <button id="audio-btn-${idx}" onclick="playQuestionAudio(${idx})" 
+                    class="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+              <i class="fas fa-volume-up"></i> Nghe câu
+            </button>
+            <input data-idx="${idx}" type="text" class="answer word flex-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500" placeholder="Điền từ còn thiếu...">
+            <span class="text-xs text-gray-500 hidden" id="ans-${idx}">${it.word}</span>
+          </div>
+          <div class="text-xs text-gray-500" id="fb-${idx}"></div>
+        </div>
+      `).join('');
+      
+      // Preload audio cho 2-3 câu đầu sau khi render
+      setTimeout(() => {
+        preloadAudio();
+      }, 500);
+    }
+
+    function checkAnswers(showOnly = false) {
+      const inputs = document.querySelectorAll('.answer.word');
+      let correct = 0;
+      inputs.forEach(inp => {
+        const idx = Number(inp.dataset.idx);
+        const target = (items[idx].word || '').toLowerCase().trim();
+        const user = (inp.value || '').toLowerCase().trim();
+        const ans = document.getElementById('ans-' + idx);
+        const fb = document.getElementById('fb-' + idx);
+
+        if (showOnly) {
+          ans.classList.remove('hidden');
+          inp.classList.remove('border-green-500', 'border-red-400', 'bg-green-50', 'bg-red-50');
+          if (fb) fb.textContent = '';
+          return;
+        }
+
+        const ok = user === target;
+        if (ok) {
+          correct++;
+          inp.classList.add('border-green-500', 'bg-green-50');
+          inp.classList.remove('border-red-400', 'bg-red-50');
+          ans.classList.add('hidden');
+          if (fb) { fb.textContent = '✓ Đúng'; fb.className = 'text-xs text-green-600'; }
+        } else {
+          inp.classList.add('border-red-400', 'bg-red-50');
+          inp.classList.remove('border-green-500', 'bg-green-50');
+          ans.textContent = items[idx].word;
+          ans.classList.remove('hidden');
+          if (fb) { fb.textContent = `✗ Sai. Đáp án: ${items[idx].word}`; fb.className = 'text-xs text-red-600'; }
+        }
+      });
+      if (!showOnly) {
+        score = correct;
+        document.getElementById('score').textContent = `${score}/${items.length}`;
+        document.getElementById('result').textContent = `Bạn làm đúng ${score}/${items.length} câu.`;
+      }
+    }
+
+    function setLoading(state) {
+      document.getElementById('loading').classList.toggle('hidden', !state);
+    }
+
+    document.getElementById('btnStart').onclick = loadSet;
+    document.getElementById('btnReload').onclick = loadSet;
+    document.getElementById('btnCheck').onclick = () => checkAnswers(false);
+    document.getElementById('btnShow').onclick = () => checkAnswers(true);
+
+    // Load audio cache khi trang load
+    window.addEventListener('DOMContentLoaded', () => {
+      loadAudioCache();
+      loadSet();
+    });
+  </script>
+</body>
+</html>
+

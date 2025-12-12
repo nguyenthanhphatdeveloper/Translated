@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiz đa kỹ năng</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-50 min-h-screen">
+  <nav class="bg-white shadow-sm border-b">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-16 items-center">
+        <a href="/" class="text-xl font-bold text-purple-600">📚 English Vocab</a>
+        <div class="flex items-center space-x-4 text-sm">
+          <a href="/learn" class="text-gray-600 hover:text-purple-600">Học từ</a>
+          <a href="/assessment" class="text-gray-600 hover:text-purple-600">Test Level</a>
+          <a href="/ipa" class="text-gray-600 hover:text-purple-600">IPA</a>
+          <a href="/combo" class="text-gray-600 hover:text-purple-600">Combo</a>
+          <a href="/quiz-mix" class="text-purple-600 font-semibold">Quiz Mix</a>
+          <a href="/grammar" class="text-gray-600 hover:text-purple-600">Grammar</a>
+          <a href="/review" class="text-gray-600 hover:text-purple-600">Ôn từ</a>
+          <a href="/review-grammar" class="text-gray-600 hover:text-purple-600">Ôn Grammar</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900">Quiz đa kỹ năng</h1>
+        <p class="text-gray-600 text-sm">Trộn: nghĩa, điền từ, chọn IPA, chọn cấu trúc grammar, nghe chọn từ.</p>
+      </div>
+      <div class="flex flex-wrap items-center gap-2">
+        <select id="levelSelect" class="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 text-sm">
+          <option value="">Auto</option>
+          <option value="A1">A1</option>
+          <option value="A2">A2</option>
+          <option value="B1">B1</option>
+          <option value="B2">B2</option>
+          <option value="C1">C1</option>
+          <option value="C2">C2</option>
+        </select>
+        <select id="countSelect" class="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 text-sm">
+          <option value="10">10 câu</option>
+          <option value="15">15 câu</option>
+        </select>
+        <button id="btnNew" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm">
+          <i class="fas fa-rotate-right mr-2"></i>Bộ quiz mới
+        </button>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-3 text-sm mb-4">
+      <span class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full">Điểm: <span id="score">0</span></span>
+      <span class="px-3 py-1 bg-gray-100 text-gray-700 rounded-full">Câu: <span id="current">0</span>/<span id="total">0</span></span>
+    </div>
+
+    <div id="quiz" class="space-y-4"></div>
+    <div id="actions" class="mt-6 hidden">
+      <button id="btnSubmit" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm">Nộp bài</button>
+      <button id="btnReset" class="px-4 py-2 bg-gray-100 text-gray-800 rounded-lg hover:bg-gray-200 text-sm">Làm lại</button>
+    </div>
+
+    <div id="loading" class="hidden text-center py-8 text-gray-500">
+      <i class="fas fa-spinner fa-spin text-3xl text-purple-600"></i>
+      <p class="mt-2">Đang tạo quiz...</p>
+    </div>
+  </main>
+
+  <script>
+    let questions=[];
+
+    function shuffle(arr){ return arr.sort(()=>0.5-Math.random()); }
+
+    async function fetchVocab(level=''){
+      const params = new URLSearchParams({ count: 80, ...(level && { level }) });
+      const res = await fetch('/api/vocabulary/random?' + params.toString());
+      let data = await res.json();
+      data = data.filter(w=>{
+        const bw=(w['Base Word']||'').toString().trim();
+        const guide=(w.Guideword||'').toString().trim();
+        return bw && guide && guide.length>3 && bw.length<20;
+      });
+      return shuffle(data).slice(0,12);
+    }
+
+    async function fetchGrammar(level=''){
+      const params = new URLSearchParams({ limit: 120, ...(level && { level }) });
+      const res = await fetch('/api/grammar/points?' + params.toString());
+      const json = await res.json();
+      let data = json.data||[];
+      data = data.filter(g=>g['Guideword'] && g['Can-do statement']);
+      return shuffle(data).slice(0,6);
+    }
+
+    async function fetchDict(word){
+      const res = await fetch('/api/dictionary/en/' + encodeURIComponent(word));
+      if(!res.ok) return null;
+      return res.json();
+    }
+
+    async function buildQuestions(level, totalCount){
+      const vocab = await fetchVocab(level);
+      const grammar = await fetchGrammar(level);
+      const qs = [];
+
+      const pickVocabDistractors = (word, n) => shuffle(vocab.filter(x=>x['Base Word']!==word['Base Word'])).slice(0,n).map(x=>x['Base Word']);
+
+      // meaning MCQ
+      vocab.slice(0,4).forEach(v=>{
+        const distract = pickVocabDistractors(v,3);
+        qs.push({
+          type:'vocab',
+          prompt:`Chọn từ khớp guideword: "${v.Guideword}"`,
+          correct:v['Base Word'],
+          options: shuffle([v['Base Word'], ...distract]),
+          explain:`Guideword: ${v.Guideword}`
+        });
+      });
+
+      // fill
+      vocab.slice(4,7).forEach(v=>{
+        qs.push({
+          type:'fill',
+          prompt:`Điền từ (guideword: ${v.Guideword})`,
+          correct:v['Base Word'],
+          options:[],
+          explain:`Guideword: ${v.Guideword}`
+        });
+      });
+
+      // IPA + listening
+      if(vocab[7]){
+        const target=vocab[7];
+        const dict=await fetchDict(target['Base Word']);
+        const pronunciations = dict?.pronunciation || [];
+        const ipaList = pronunciations.map(p=>p.pron).filter(Boolean) || [];
+        const ipaUnique = Array.from(new Set(ipaList));
+        const audioSrc = (pronunciations.find(p=>(p.lang||'').toLowerCase().includes('us') && p.url) || pronunciations[0] || {}).url;
+        const distractIpa = ipaUnique.length>1 ? ipaUnique.slice(1,3) : shuffle(['[ɪ]','[ʌ]','[eɪ]','[ɑ:]']).slice(0,2);
+        if(ipaUnique[0]){
+          qs.push({
+            type:'ipa',
+            prompt:`Chọn IPA đúng cho "${target['Base Word']}"`,
+            correct:ipaUnique[0],
+            options: shuffle([ipaUnique[0], ...distractIpa]),
+            explain:`IPA từ Cambridge`,
+            audio: audioSrc || ''
+          });
+        }
+        if(audioSrc){
+          const distractWords = pickVocabDistractors(target,3);
+          qs.push({
+            type:'listen',
+            prompt:`Nghe và chọn từ đúng`,
+            correct:target['Base Word'],
+            options: shuffle([target['Base Word'], ...distractWords]),
+            explain:`Audio phát âm từ Cambridge`,
+            audio: audioSrc
+          });
+        }
+      }
+
+      // Grammar MCQ
+      grammar.slice(0,4).forEach(g=>{
+        const distract = shuffle(grammar.filter(x=>x!==g)).slice(0,3).map(x=>x['Guideword']||x['Can-do statement']||'');
+        qs.push({
+          type:'grammar',
+          prompt:g['Can-do statement'],
+          correct:g['Guideword'] || g['Can-do statement'],
+          options: shuffle([g['Guideword']||g['Can-do statement'], ...distract]),
+          explain:`Can-do: ${g['Can-do statement']}`
+        });
+      });
+
+      return shuffle(qs).slice(0,totalCount);
+    }
+
+    async function loadQuiz(){
+      const level = document.getElementById('levelSelect').value;
+      const total = parseInt(document.getElementById('countSelect').value, 10) || 10;
+      document.getElementById('loading').classList.remove('hidden');
+      document.getElementById('quiz').innerHTML='';
+      document.getElementById('actions').classList.add('hidden');
+      try{
+        questions = await buildQuestions(level, total);
+        renderQuiz();
+        document.getElementById('actions').classList.remove('hidden');
+      }catch(e){
+        console.error(e);
+        document.getElementById('quiz').innerHTML='<p class="text-center text-red-500">Lỗi tải quiz.</p>';
+      }finally{
+        document.getElementById('loading').classList.add('hidden');
+      }
+    }
+
+    function renderQuiz(){
+      const container = document.getElementById('quiz');
+      document.getElementById('score').textContent = 0;
+      document.getElementById('current').textContent = 0;
+      document.getElementById('total').textContent = questions.length;
+      container.innerHTML = questions.map((q,idx)=>`
+        <div class="bg-white rounded-lg shadow p-4">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-700">Câu ${idx+1}</span>
+            <span class="text-xs px-2 py-1 rounded bg-blue-50 text-blue-700">${q.type.toUpperCase()}</span>
+          </div>
+          <p class="font-semibold text-gray-900 mb-2">${q.prompt}</p>
+          ${q.type==='fill' ? `
+            <input type="text" name="q-${idx}" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-purple-500" placeholder="Nhập từ...">
+          ` : q.type==='listen' ? `
+            ${q.audio ? `<audio controls class="mb-2"><source src="${q.audio}" type="audio/mpeg"></audio>` : ''}
+            <div class="space-y-2">
+              ${q.options.map(opt=>`
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input type="radio" name="q-${idx}" value="${opt}">
+                  <span>${opt}</span>
+                </label>
+              `).join('')}
+            </div>
+          ` : `
+            <div class="space-y-2">
+              ${q.options.map(opt=>`
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input type="radio" name="q-${idx}" value="${opt}">
+                  <span>${opt}</span>
+                </label>
+              `).join('')}
+            </div>
+          `}
+          <div id="fb-${idx}" class="mt-2 text-sm"></div>
+        </div>
+      `).join('');
+    }
+
+    function submitQuiz(){
+      let score=0;
+      questions.forEach((q,idx)=>{
+        const fb = document.getElementById(`fb-${idx}`);
+        let user = '';
+        if(q.type==='fill'){
+          user = (document.querySelector(`input[name="q-${idx}"]`)||{}).value || '';
+          if(user.trim().toLowerCase() === q.correct.toLowerCase()){
+            score++;
+            fb.textContent = `Đúng. ${q.explain||''}`;
+            fb.className = 'mt-2 text-sm text-green-600';
+          } else {
+            fb.textContent = `Sai. Đáp án: ${q.correct}. ${q.explain||''}`;
+            fb.className = 'mt-2 text-sm text-red-600';
+          }
+        } else {
+          user = (document.querySelector(`input[name="q-${idx}"]:checked`)||{}).value || '';
+          if(user === q.correct){
+            score++;
+            fb.textContent = `Đúng. ${q.explain||''}`;
+            fb.className = 'mt-2 text-sm text-green-600';
+          } else {
+            fb.textContent = `Sai. Đáp án: ${q.correct}. ${q.explain||''}`;
+            fb.className = 'mt-2 text-sm text-red-600';
+          }
+        }
+      });
+      document.getElementById('score').textContent = score;
+      document.getElementById('current').textContent = questions.length;
+    }
+
+    document.getElementById('btnNew').onclick = loadQuiz;
+    document.getElementById('btnSubmit').onclick = submitQuiz;
+    document.getElementById('btnReset').onclick = loadQuiz;
+
+    window.addEventListener('DOMContentLoaded', loadQuiz);
+  </script>
+  <script src="/js/command.js"></script>
+</body>
+</html>
+
