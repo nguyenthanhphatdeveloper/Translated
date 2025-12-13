@@ -13,7 +13,7 @@ let vocabularyData = null;
 
 const loadVocabularyData = () => {
   if (vocabularyData) return vocabularyData;
-  
+
   try {
     const filePath = path.join(__dirname, '../API/evp_merged.json');
     const rawData = fs.readFileSync(filePath, 'utf8');
@@ -63,15 +63,15 @@ router.get('/words', (req, res) => {
 
     // Lọc theo topic
     if (req.query.topic) {
-      filtered = filtered.filter(w => 
+      filtered = filtered.filter(w =>
         w.Topic && w.Topic.toLowerCase().includes(req.query.topic.toLowerCase())
       );
     }
 
     // Lọc theo part of speech
     if (req.query.pos) {
-      filtered = filtered.filter(w => 
-        w['Part of Speech'] && 
+      filtered = filtered.filter(w =>
+        w['Part of Speech'] &&
         w['Part of Speech'].toLowerCase() === req.query.pos.toLowerCase()
       );
     }
@@ -134,7 +134,7 @@ router.get('/words/:id', (req, res) => {
   try {
     const words = loadVocabularyData();
     const id = parseInt(req.params.id);
-    
+
     if (id < 0 || id >= words.length) {
       return res.status(404).json({ error: 'Word not found' });
     }
@@ -153,7 +153,7 @@ router.get('/words/:id', (req, res) => {
 router.get('/stats', (req, res) => {
   try {
     const words = loadVocabularyData();
-    
+
     const stats = {
       total: words.length,
       byLevel: {},
@@ -212,7 +212,7 @@ router.get('/random', (req, res) => {
 
     // Lấy số lượng
     const count = clamp(parseInt(req.query.count) || 10, 1, 200);
-    
+
     // Shuffle và lấy random
     const shuffled = pool.sort(() => 0.5 - Math.random());
     const randomWords = shuffled.slice(0, Math.min(count, shuffled.length));

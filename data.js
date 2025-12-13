@@ -42,6 +42,26 @@ const setCache = (key, data) => {
 const translateCacheKey = (text, source, target) =>
   `translate_${source}_${target}_${text.trim().slice(0,200)}`;
 
+// Normalize entry để lấy base word từ phrasal verbs
+const normalizeEntryForWiki = (entry) => {
+  if (!entry) return entry;
+  
+  // Loại bỏ các pattern như "sth", "sb", "sth/sb"
+  let normalized = entry
+    .replace(/\s+(?:sth|sb|sth\/sb)\b/gi, '')
+    .replace(/\b(?:sth|sb|sth\/sb)\s+/gi, '')
+    .trim();
+  
+  // Nếu là phrasal verb (có khoảng trắng), lấy từ đầu tiên
+  if (normalized.includes(' ')) {
+    const parts = normalized.split(/\s+/);
+    // Thử lấy từ đầu tiên (thường là động từ chính)
+    normalized = parts[0];
+  }
+  
+  return normalized;
+};
+
 const fetchVerbs = async (wiki) => {
   const cacheKey = getCacheKey(wiki);
   const cached = getFromCache(cacheKey);
@@ -100,7 +120,11 @@ const fetchVerbs = async (wiki) => {
     setCache(cacheKey, verbs);
     return verbs;
   } catch (error) {
-    console.warn(`Failed to fetch verbs from ${wiki}:`, error.message);
+    // Chỉ log warning cho các lỗi không phải 404 (404 là bình thường khi từ không có trên wiktionary)
+    const is404 = error.response?.status === 404 || error.message?.includes('404') || error.code === 'ENOTFOUND';
+    if (!is404) {
+      console.warn(`Failed to fetch verbs from ${wiki}:`, error.message);
+    }
     return [];
   }
 };
@@ -206,7 +230,10 @@ app.get("/api/dictionary/:language/:entry(*)", async (req, res, next) => {
     }
 
     const url = `https://dictionary.cambridge.org/${nation}/dictionary/${language}/${entry}`;
-    const wiki = `https://simple.wiktionary.org/wiki/${entry}`;
+    
+    // Normalize entry để thử fetch base word nếu phrasal verb không tìm thấy
+    const normalizedEntry = normalizeEntryForWiki(entry);
+    const wiki = `https://simple.wiktionary.org/wiki/${normalizedEntry}`;
     
     const mainCacheKey = getCacheKey(url);
     const cachedResult = getFromCache(mainCacheKey);
