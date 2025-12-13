@@ -4,6 +4,16 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Grammar Profile</title>
+  <script>
+    // Suppress Tailwind CDN warning (phải đặt TRƯỚC khi load Tailwind)
+    const originalWarn = console.warn;
+    console.warn = function(...args) {
+      if (args[0] && typeof args[0] === 'string' && args[0].includes('cdn.tailwindcss.com should not be used')) {
+        return; // Suppress this specific warning
+      }
+      originalWarn.apply(console, args);
+    };
+  </script>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
@@ -87,9 +97,40 @@
     <div id="pagination" class="mt-6 flex justify-center"></div>
   </main>
 
+  <!-- AI Grammar Tutor Modal -->
+  <div id="grammarAIModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg max-w-3xl w-full max-h-[85vh] overflow-hidden flex flex-col">
+      <div class="sticky top-0 bg-white border-b p-4 flex justify-between items-center">
+        <div>
+          <h2 class="text-xl font-bold text-gray-900">🤖 AI Grammar Tutor</h2>
+          <p class="text-sm text-gray-600 mt-1">Hỏi về: <strong id="grammarTopic" class="text-purple-600"></strong></p>
+        </div>
+        <button onclick="closeGrammarAIModal()" class="text-gray-500 hover:text-gray-700">
+          <i class="fas fa-times text-2xl"></i>
+        </button>
+      </div>
+      <div id="grammarChatMessages" class="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50"></div>
+      <div class="border-t p-4 bg-white">
+        <div class="flex gap-2">
+          <input type="text" id="grammarQuestionInput" 
+            placeholder="Ví dụ: Khi nào dùng present perfect?" 
+            class="flex-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none"
+            onkeypress="if(event.key === 'Enter') sendGrammarQuestion()">
+          <button onclick="sendGrammarQuestion()" 
+            class="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
+            <i class="fas fa-paper-plane mr-1"></i>Gửi
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://js.puter.com/v2/"></script>
   <script>
     let page = 1;
     let totalPages = 1;
+    let currentGrammarItem = null;
+    let chatMessageId = 0;
 
     async function loadStats() {
       try {
@@ -157,7 +198,7 @@
         return;
       }
       document.getElementById('empty').classList.add('hidden');
-      container.innerHTML = list.map(item => `
+      container.innerHTML = list.map((item, index) => `
         <div class="bg-white rounded-lg shadow p-4">
           <div class="flex items-center justify-between mb-2">
             <div class="flex items-center gap-2 flex-wrap">
@@ -165,12 +206,20 @@
               <span class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-700">${item.SuperCategory || 'SuperCategory'}</span>
               ${item.SubCategory ? `<span class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-700">${item.SubCategory}</span>` : ''}
             </div>
+            <button onclick="askAIAboutGrammar(${index})" 
+              class="px-3 py-1.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm flex items-center gap-1 transition-colors">
+              <i class="fas fa-robot"></i>
+              <span>Hỏi AI</span>
+            </button>
           </div>
           <p class="font-semibold text-gray-900 mb-1">${item['Guideword'] || ''}</p>
           <p class="text-sm text-gray-700 mb-2 whitespace-pre-line">${item['Can-do statement'] || ''}</p>
           ${item.Example ? `<div class="text-sm text-gray-600 bg-gray-50 rounded p-3 whitespace-pre-line">${item.Example}</div>` : ''}
         </div>
       `).join('');
+      
+      // Lưu grammar data để dùng trong AI chat
+      window.currentGrammarList = list;
     }
 
     function renderPagination() {
@@ -197,6 +246,277 @@
     document.getElementById('searchInput').addEventListener('keyup', (e) => {
       if (e.key === 'Enter') loadList(true);
     });
+
+    // Kiểm tra Puter.js availability
+    function checkPuterAvailable() {
+      if (typeof Puter !== 'undefined' && Puter.ai && Puter.ai.chat) {
+        return Puter;
+      }
+      if (typeof puter !== 'undefined' && puter.ai && puter.ai.chat) {
+        return puter;
+      }
+      if (typeof window.puter !== 'undefined' && window.puter.ai && window.puter.ai.chat) {
+        return window.puter;
+      }
+      return null;
+    }
+
+    // Mở modal AI Grammar Tutor
+    function askAIAboutGrammar(index) {
+      if (!window.currentGrammarList || !window.currentGrammarList[index]) {
+        alert('Không tìm thấy thông tin grammar');
+        return;
+      }
+      
+      currentGrammarItem = window.currentGrammarList[index];
+      document.getElementById('grammarTopic').textContent = currentGrammarItem['Guideword'] || 'Grammar';
+      document.getElementById('grammarAIModal').classList.remove('hidden');
+      document.getElementById('grammarChatMessages').innerHTML = '';
+      document.getElementById('grammarQuestionInput').value = '';
+      chatMessageId = 0;
+      
+      // Hiển thị welcome message
+      addChatMessage('assistant', 
+        `Xin chào! 👋 Tôi sẽ giúp bạn hiểu về "${currentGrammarItem['Guideword']}" (Level ${currentGrammarItem.Level || 'N/A'}).\n\n` +
+        `Hãy đặt câu hỏi bất kỳ về grammar này, ví dụ:\n` +
+        `• Khi nào dùng cấu trúc này?\n` +
+        `• Có ví dụ nào khác không?\n` +
+        `• So sánh với cấu trúc tương tự?`);
+    }
+
+    // Đóng modal
+    function closeGrammarAIModal() {
+      document.getElementById('grammarAIModal').classList.add('hidden');
+      currentGrammarItem = null;
+    }
+
+    // Thêm message vào chat
+    function addChatMessage(role, content, isLoading = false) {
+      const messagesDiv = document.getElementById('grammarChatMessages');
+      const messageId = chatMessageId++;
+      const messageDiv = document.createElement('div');
+      messageDiv.id = `grammarMsg_${messageId}`;
+      messageDiv.className = `flex ${role === 'user' ? 'justify-end' : 'justify-start'}`;
+      
+      const bgColor = role === 'user' ? 'bg-purple-600 text-white' : 'bg-white border';
+      const icon = role === 'user' ? '👤' : '🤖';
+      
+      messageDiv.innerHTML = `
+        <div class="max-w-[80%] ${bgColor} rounded-lg p-3 shadow-sm">
+          <div class="flex items-start gap-2">
+            <span class="text-lg">${icon}</span>
+            <div class="flex-1">
+              ${isLoading ? '<div class="flex items-center gap-2"><div class="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent"></div><span>Đang suy nghĩ...</span></div>' : formatMessage(content)}
+            </div>
+          </div>
+        </div>
+      `;
+      
+      messagesDiv.appendChild(messageDiv);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+      
+      return messageId;
+    }
+
+    // Cập nhật message (cho loading state)
+    function updateChatMessage(messageId, content) {
+      const messageDiv = document.getElementById(`grammarMsg_${messageId}`);
+      if (messageDiv) {
+        const contentDiv = messageDiv.querySelector('.flex-1');
+        if (contentDiv) {
+          contentDiv.innerHTML = formatMessage(content);
+        }
+      }
+    }
+
+    // Format message (giữ line breaks, escape HTML)
+    function formatMessage(text) {
+      // Đảm bảo text là string
+      if (typeof text !== 'string') {
+        if (text && typeof text === 'object') {
+          text = text.text || text.content || text.message || text.response || JSON.stringify(text);
+        } else {
+          text = String(text || '');
+        }
+      }
+      
+      return text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/\n/g, '<br>');
+    }
+
+    // Gửi câu hỏi đến AI
+    async function sendGrammarQuestion() {
+      const questionInput = document.getElementById('grammarQuestionInput');
+      const question = questionInput.value.trim();
+      
+      if (!question) return;
+      
+      // Hiển thị câu hỏi của user
+      addChatMessage('user', question);
+      questionInput.value = '';
+      
+      // Hiển thị loading
+      const loadingId = addChatMessage('assistant', '', true);
+      
+      // Kiểm tra Puter.js
+      const puterClient = checkPuterAvailable();
+      if (!puterClient) {
+        updateChatMessage(loadingId, 
+          '⚠️ Puter.js không khả dụng.\n\n' +
+          'Vui lòng đăng nhập tại <a href="https://puter.com" target="_blank" class="text-purple-600 underline">puter.com</a> để sử dụng tính năng AI.');
+        return;
+      }
+      
+      try {
+        // Tạo prompt với context về grammar
+        const grammarContext = `
+Grammar point: ${currentGrammarItem['Guideword'] || ''}
+Level: ${currentGrammarItem.Level || 'N/A'}
+SuperCategory: ${currentGrammarItem.SuperCategory || ''}
+Can-do statement: ${currentGrammarItem['Can-do statement'] || ''}
+${currentGrammarItem.Example ? `Example: ${currentGrammarItem.Example}` : ''}
+        `.trim();
+        
+        const prompt = `Bạn là giáo viên tiếng Anh chuyên nghiệp. Giải thích ngắn gọn, dễ hiểu bằng tiếng Việt:
+
+${grammarContext}
+
+Câu hỏi của học sinh: ${question}
+
+Yêu cầu:
+- Giải thích rõ ràng, có ví dụ cụ thể
+- So sánh với các cấu trúc tương tự nếu có
+- Đưa ra lưu ý quan trọng
+- Dùng emoji để dễ đọc
+- Không dùng markdown`;
+
+        // Gọi AI với auto-fallback model selection (tương tự learn.html)
+        const modelsToTry = [
+          "gpt-4o-mini",
+          "gpt-3.5-turbo",
+          "gpt-5-mini",
+          "gpt-5-nano",
+          "gpt-4o",
+        ];
+        
+        let response = null;
+        for (const model of modelsToTry) {
+          try {
+            try {
+              response = await puterClient.ai.chat(prompt, { 
+                model: model,
+                max_tokens: 200
+              });
+              console.log(`✅ Grammar AI success with model: ${model}`);
+              break;
+            } catch (optionsError) {
+              if (optionsError && typeof optionsError === 'object') {
+                if (optionsError.success === false || optionsError.error) {
+                  const errorMsg = optionsError.error?.message || optionsError.error?.code || '';
+                  if (errorMsg.includes('model') && (errorMsg.includes('not found') || errorMsg.includes('not available'))) {
+                    continue;
+                  }
+                }
+              }
+              response = await puterClient.ai.chat(prompt, { model: model });
+              console.log(`✅ Grammar AI success with model: ${model} (no options)`);
+              break;
+            }
+          } catch (modelError) {
+            if (modelError && typeof modelError === 'object') {
+              const errorMsg = modelError.error?.message || modelError.error?.code || modelError.message || '';
+              if (errorMsg.includes('model') && (errorMsg.includes('not found') || errorMsg.includes('not available'))) {
+                continue;
+              }
+            }
+            if (model === modelsToTry[modelsToTry.length - 1]) {
+              throw modelError;
+            }
+            continue;
+          }
+        }
+        
+        if (!response) {
+          throw new Error('Không thể kết nối với AI');
+        }
+        
+        // Xử lý response (Puter.js format: response.message.content)
+        let responseText = '';
+        console.log('Raw AI response:', response, 'Type:', typeof response);
+        
+        if (typeof response === 'string') {
+          responseText = response;
+        } else if (response && typeof response === 'object') {
+          // Puter.js format: response.message.content
+          if (response.message && response.message.content) {
+            responseText = response.message.content;
+          } 
+          // OpenAI format: response.choices[0].message.content
+          else if (response.choices && response.choices[0] && response.choices[0].message && response.choices[0].message.content) {
+            responseText = response.choices[0].message.content;
+          }
+          // Các format khác
+          else {
+            responseText = response.text || 
+                          response.content || 
+                          response.message || 
+                          response.response || 
+                          response.choices?.[0]?.text ||
+                          response.data?.text ||
+                          response.data?.content ||
+                          '';
+          }
+          
+          // Nếu vẫn không có, log để debug
+          if (!responseText || responseText === '{}' || responseText === '[object Object]') {
+            console.warn('Unexpected AI response format:', response);
+            console.warn('Response keys:', Object.keys(response || {}));
+            // Nếu có message object, thử lấy content từ đó
+            if (response.message && typeof response.message === 'object') {
+              responseText = response.message.content || response.message.text || JSON.stringify(response.message, null, 2);
+            } else {
+              // Fallback: stringify toàn bộ response
+              try {
+                responseText = JSON.stringify(response, null, 2);
+              } catch (e) {
+                responseText = 'Xin lỗi, không thể xử lý phản hồi từ AI. Vui lòng thử lại.';
+              }
+            }
+          }
+        } else {
+          responseText = String(response || 'Không có phản hồi');
+        }
+        
+        // Đảm bảo responseText là string và không phải "[object Object]"
+        if (typeof responseText !== 'string') {
+          responseText = String(responseText);
+        }
+        if (responseText === '[object Object]') {
+          console.warn('Got [object Object], trying to extract from response.message.content');
+          if (response && response.message && response.message.content) {
+            responseText = response.message.content;
+          } else {
+            try {
+              responseText = JSON.stringify(response, null, 2);
+            } catch (e) {
+              responseText = 'Xin lỗi, không thể xử lý phản hồi từ AI. Vui lòng thử lại.';
+            }
+          }
+        }
+        
+        // Cập nhật message với response
+        updateChatMessage(loadingId, responseText);
+        
+      } catch (error) {
+        console.error('Grammar AI error:', error);
+        updateChatMessage(loadingId, 
+          `❌ Lỗi: ${error.message || 'Không thể tải phản hồi từ AI'}\n\n` +
+          `Vui lòng thử lại sau hoặc kiểm tra Console (F12) để xem chi tiết.`);
+      }
+    }
 
     window.addEventListener('DOMContentLoaded', () => {
       loadStats();

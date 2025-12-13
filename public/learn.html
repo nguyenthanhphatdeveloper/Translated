@@ -4,6 +4,16 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Học Từ Vựng - English Vocabulary Learning</title>
+  <script>
+    // Suppress Tailwind CDN warning (phải đặt TRƯỚC khi load Tailwind)
+    const originalWarn = console.warn;
+    console.warn = function(...args) {
+      if (args[0] && typeof args[0] === 'string' && args[0].includes('cdn.tailwindcss.com should not be used')) {
+        return; // Suppress this specific warning
+      }
+      originalWarn.apply(console, args);
+    };
+  </script>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
@@ -146,21 +156,39 @@
           <i class="fas fa-times text-2xl"></i>
         </button>
       </div>
+      <!-- Tabs -->
+      <div class="border-b bg-white sticky top-16 z-10">
+        <div class="flex gap-2 px-4">
+          <button id="tabDetails" onclick="showWordTab('details')" 
+            class="px-4 py-2 border-b-2 border-purple-600 text-purple-600 font-medium transition-colors">
+            Chi tiết
+          </button>
+          <button id="tabAI" onclick="showWordTab('ai')" 
+            class="px-4 py-2 border-b-2 border-transparent text-gray-600 hover:text-purple-600 font-medium transition-colors">
+            <i class="fas fa-robot mr-1"></i>AI Giải thích
+          </button>
+        </div>
+      </div>
       <div id="modalContent" class="p-6">
         <!-- Word details will be loaded here -->
       </div>
     </div>
   </div>
 
+  <script src="https://js.puter.com/v2/"></script>
   <script src="/js/vocabulary.js"></script>
   <script src="/js/storage.js"></script>
   <script src="/js/command.js"></script>
   <script>
     const storage = new StorageManager();
     const DICT_CACHE_KEY = 'dictionary_cache_v1';
+    const AI_CACHE_KEY = 'ai_explanation_cache_v1';
     let dictionaryCache = loadDictCache();
+    let aiCache = loadAICache();
     let currentPage = 1;
     let currentFilters = {};
+    let currentWordData = null; // Lưu word data hiện tại
+    let currentTab = 'details'; // 'details' hoặc 'ai'
 
     function loadDictCache() {
       try {
@@ -178,6 +206,511 @@
       } catch (e) {
         console.warn('Cannot save dictionary cache:', e);
       }
+    }
+
+    function loadAICache() {
+      try {
+        const cached = localStorage.getItem(AI_CACHE_KEY);
+        return cached ? JSON.parse(cached) : {};
+      } catch (e) {
+        console.warn('Cannot load AI cache:', e);
+        return {};
+      }
+    }
+
+    function saveAICache() {
+      try {
+        localStorage.setItem(AI_CACHE_KEY, JSON.stringify(aiCache));
+      } catch (e) {
+        console.warn('Cannot save AI cache:', e);
+      }
+    }
+
+    // Kiểm tra Puter.js availability
+    function checkPuterAvailable() {
+      if (typeof Puter !== 'undefined' && Puter.ai && Puter.ai.chat) {
+        return Puter;
+      }
+      if (typeof puter !== 'undefined' && puter.ai && puter.ai.chat) {
+        return puter;
+      }
+      if (typeof window.puter !== 'undefined' && window.puter.ai && window.puter.ai.chat) {
+        return window.puter;
+      }
+      return null;
+    }
+
+    // Switch tabs
+    function showWordTab(tab) {
+      currentTab = tab;
+      
+      // Update tab buttons
+      const tabDetails = document.getElementById('tabDetails');
+      const tabAI = document.getElementById('tabAI');
+      
+      if (tab === 'details') {
+        tabDetails.classList.add('border-purple-600', 'text-purple-600');
+        tabDetails.classList.remove('border-transparent', 'text-gray-600');
+        tabAI.classList.remove('border-purple-600', 'text-purple-600');
+        tabAI.classList.add('border-transparent', 'text-gray-600');
+        
+        // Show details content
+        renderWordDetails();
+      } else {
+        tabDetails.classList.remove('border-purple-600', 'text-purple-600');
+        tabDetails.classList.add('border-transparent', 'text-gray-600');
+        tabAI.classList.add('border-purple-600', 'text-purple-600');
+        tabAI.classList.remove('border-transparent', 'text-gray-600');
+        
+        // Show AI content
+        renderAIContent();
+      }
+    }
+
+    // Render word details (existing content)
+    function renderWordDetails() {
+      if (!currentWordData) return;
+      
+      const modalContent = document.getElementById('modalContent');
+      const { word, wordData, dictData } = currentWordData;
+      
+      let html = `
+        <div class="space-y-4">
+          <div class="flex items-center space-x-4">
+            <span class="level-badge level-${wordData.Level}">${wordData.Level}</span>
+            <span class="text-gray-600">${wordData['Part of Speech'] || 'N/A'}</span>
+            ${wordData.Topic ? `<span class="text-gray-600"><i class="fas fa-folder mr-1"></i>${wordData.Topic}</span>` : ''}
+          </div>
+          ${wordData.Guideword ? `<p class="text-gray-600"><strong>Guideword:</strong> ${wordData.Guideword}</p>` : ''}
+          ${wordData.Translate ? `<p class="text-purple-600 font-medium"><strong>Nghĩa:</strong> ${wordData.Translate}</p>` : ''}
+      `;
+
+      if (dictData) {
+        // Pronunciation
+        if (dictData.pronunciation && dictData.pronunciation.length > 0) {
+          html += `
+            <div class="border-t pt-4">
+              <h3 class="font-semibold mb-2">Phát âm (IPA)</h3>
+              ${dictData.pronunciation.map(pron => `
+                <div class="flex items-center space-x-2 mb-2">
+                  <span class="px-2 py-1 bg-purple-50 text-purple-700 rounded text-xs font-semibold">${(pron.lang || '').toUpperCase() || 'US'}</span>
+                  <span class="text-gray-800 font-mono">${pron.pron || ''}</span>
+                  ${pron.url ? `<audio controls class="h-8"><source src="${pron.url}" type="audio/mpeg"></audio>` : ''}
+                </div>
+              `).join('')}
+            </div>
+          `;
+        }
+
+        // Definitions
+        if (dictData.definition && dictData.definition.length > 0) {
+          html += `
+            <div class="border-t pt-4">
+              <h3 class="font-semibold mb-2">Định nghĩa</h3>
+              ${dictData.definition.map(def => `
+                <div class="mb-4">
+                  <p class="text-gray-700 mb-1">${def.text}</p>
+                  ${def.translation ? `<p class="text-gray-600 italic">${def.translation}</p>` : ''}
+                  ${def.example && def.example.length > 0 ? `
+                    <div class="mt-2 ml-4 border-l-2 border-purple-200 pl-3">
+                      ${def.example.map(ex => `
+                        <p class="text-sm text-gray-600 mb-1">${ex.text}</p>
+                        ${ex.translation ? `<p class="text-sm text-gray-500 italic">${ex.translation}</p>` : ''}
+                      `).join('')}
+                    </div>
+                  ` : ''}
+                </div>
+              `).join('')}
+            </div>
+          `;
+        }
+      } else {
+        html += `<p class="text-gray-500">Không tìm thấy thông tin chi tiết từ Cambridge Dictionary</p>`;
+      }
+
+      html += `</div>`;
+      modalContent.innerHTML = html;
+    }
+
+    // Render AI content
+    function renderAIContent() {
+      const modalContent = document.getElementById('modalContent');
+      
+      if (!currentWordData) {
+        modalContent.innerHTML = '<p class="text-gray-500">Vui lòng chọn tab "Chi tiết" trước</p>';
+        return;
+      }
+      
+      const { word, wordData } = currentWordData;
+      
+      // Check cache first
+      const cacheKey = `${word}_${wordData.Level}`;
+      if (aiCache[cacheKey]) {
+        const cachedResponse = aiCache[cacheKey];
+        // Đảm bảo cached response là string và có nội dung
+        if (typeof cachedResponse === 'string' && cachedResponse.length > 10) {
+          modalContent.innerHTML = formatAIResponse(cachedResponse);
+          // Hiển thị indicator là cached
+          const cachedBadge = '<div class="mb-2 text-xs text-green-600 bg-green-50 px-2 py-1 rounded inline-block"><i class="fas fa-bolt"></i> Từ cache (instant)</div>';
+          modalContent.insertAdjacentHTML('afterbegin', cachedBadge);
+          return;
+        } else {
+          // Nếu cache không đúng format, xóa và fetch lại
+          delete aiCache[cacheKey];
+          saveAICache();
+        }
+      }
+      
+      // Check Puter.js availability
+      const puterClient = checkPuterAvailable();
+      if (!puterClient) {
+        modalContent.innerHTML = `
+          <div class="text-center py-8">
+            <i class="fas fa-robot text-4xl text-gray-400 mb-4"></i>
+            <p class="text-gray-600 mb-2">Puter.js không khả dụng</p>
+            <p class="text-sm text-gray-500 mb-4">Vui lòng đăng nhập tại <a href="https://puter.com" target="_blank" class="text-purple-600 hover:underline">puter.com</a> để sử dụng tính năng AI</p>
+            <p class="text-xs text-gray-400">Hoặc sử dụng tab "Chi tiết" để xem thông tin từ Cambridge Dictionary</p>
+          </div>
+        `;
+        return;
+      }
+      
+      // Show loading with better UX và timer
+      let loadingSeconds = 0;
+      const loadingInterval = setInterval(() => {
+        loadingSeconds++;
+        const timerEl = document.getElementById('aiLoadingTimer');
+        if (timerEl) {
+          timerEl.textContent = `Đã chờ ${loadingSeconds} giây...`;
+        }
+      }, 1000);
+      
+      modalContent.innerHTML = `
+        <div class="text-center py-8">
+          <i class="fas fa-spinner fa-spin text-4xl text-purple-600 mb-4"></i>
+          <p class="text-gray-600 mb-2">Đang tải giải thích từ AI...</p>
+          <p id="aiLoadingTimer" class="text-sm text-gray-500 mb-2">Đã chờ 0 giây...</p>
+          <p class="text-xs text-gray-400 mb-4">Thường mất 3-5 giây</p>
+          <div class="mt-4 w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+            <div class="bg-purple-600 h-2 rounded-full animate-pulse" style="width: 60%"></div>
+          </div>
+        </div>
+      `;
+      
+      // Store interval để clear sau
+      window.aiLoadingInterval = loadingInterval;
+      
+      loadAIExplanation(word, wordData.Level, cacheKey).finally(() => {
+        if (window.aiLoadingInterval) {
+          clearInterval(window.aiLoadingInterval);
+          window.aiLoadingInterval = null;
+        }
+      });
+    }
+
+    // Load AI explanation
+    async function loadAIExplanation(word, level, cacheKey) {
+      const modalContent = document.getElementById('modalContent');
+      const puterClient = checkPuterAvailable();
+      
+      if (!puterClient) {
+        modalContent.innerHTML = '<p class="text-red-500">Puter.js không khả dụng</p>';
+        return;
+      }
+      
+      // Set timeout để tránh chờ quá lâu (tăng lên 15 giây vì có thể cần thời gian)
+      const timeoutId = setTimeout(() => {
+        const timerEl = document.getElementById('aiLoadingTimer');
+        if (timerEl) {
+          timerEl.innerHTML = '<span class="text-yellow-600">Đang xử lý, vui lòng đợi thêm...</span>';
+        }
+      }, 10000);
+      
+      try {
+        // Prompt theo yêu cầu: 1. Nghĩa, 2. IPA, 3. Âm nhấn, 4. Âm tiết, 5. Từ loại liên quan, 6. Collocations
+        const prompt = `Giải thích từ "${word}" (${level}) theo thứ tự: 1. Nghĩa, 2. IPA, 3. Âm nhấn, 4. Âm tiết, 5. Từ loại liên quan, 6. Collocations. Dùng emoji, không markdown.`;
+
+        // Thêm options để tối ưu tốc độ
+        const startTime = Date.now();
+        
+        // Tạo chat promise với timeout protection
+        let response;
+        
+        // Tạo chat promise với thử nhiều model (từ nhanh nhất đến chậm nhất)
+        const chatPromise = (async () => {
+          // Danh sách model để thử (theo thứ tự ưu tiên: nhanh → chậm)
+          const modelsToTry = [
+            "gpt-4o-mini",      // Đã test: ~14-16s (nhanh hơn gpt-5-nano)
+            "gpt-3.5-turbo",    // Model nhanh của OpenAI (có thể nhanh hơn)
+            "gpt-5-mini",       // Nhanh nhất (theo web search, nhưng có thể không có sẵn)
+            "gpt-5-nano",       // Model cũ (~18-20s)
+            "gpt-4o",           // Fallback cuối cùng
+          ];
+          
+          for (const model of modelsToTry) {
+            try {
+              // Thử với max_tokens để giới hạn độ dài response (nhanh hơn)
+              try {
+                const result = await puterClient.ai.chat(prompt, { 
+                  model: model,
+                  max_tokens: 120 // Giảm xuống 120 để nhanh hơn (thay vì 150)
+                });
+                console.log(`✅ Success with model: ${model}`);
+                return result;
+              } catch (optionsError) {
+                // Nếu max_tokens không được hỗ trợ, thử không có options
+                if (optionsError && typeof optionsError === 'object') {
+                  if (optionsError.success === false || optionsError.error) {
+                    const errorMsg = optionsError.error?.message || optionsError.error?.code || '';
+                    // Nếu là lỗi "model not found", thử model tiếp theo
+                    if (errorMsg.includes('model') && (errorMsg.includes('not found') || errorMsg.includes('not available'))) {
+                      console.log(`⚠️ Model ${model} not available, trying next...`);
+                      continue; // Thử model tiếp theo
+                    }
+                    // Nếu là lỗi về options (như temperature), thử không có options
+                    if (errorMsg.includes('temperature') || errorMsg.includes('max_tokens')) {
+                      console.log(`⚠️ Options not supported for ${model}, trying without options...`);
+                      // Thử không có options
+                      try {
+                        const result = await puterClient.ai.chat(prompt, { model: model });
+                        console.log(`✅ Success with model: ${model} (no options)`);
+                        return result;
+                      } catch (noOptionsError) {
+                        // Nếu vẫn lỗi, thử model tiếp theo
+                        continue;
+                      }
+                    }
+                  }
+                }
+                // Nếu không phải lỗi model, throw lại
+                throw optionsError;
+              }
+            } catch (modelError) {
+              // Nếu là lỗi "model not found", thử model tiếp theo
+              if (modelError && typeof modelError === 'object') {
+                const errorMsg = modelError.error?.message || modelError.error?.code || modelError.message || '';
+                if (errorMsg.includes('model') && (errorMsg.includes('not found') || errorMsg.includes('not available'))) {
+                  console.log(`⚠️ Model ${model} not available, trying next...`);
+                  continue; // Thử model tiếp theo
+                }
+              }
+              // Nếu là lỗi khác và đây là model cuối cùng, throw
+              if (model === modelsToTry[modelsToTry.length - 1]) {
+                throw modelError;
+              }
+              // Nếu không phải model cuối, thử model tiếp theo
+              continue;
+            }
+          }
+          
+          // Nếu tất cả model đều fail, throw error
+          throw new Error('All models failed. Please check Puter.js availability.');
+        })();
+        
+        // Timeout promise: reject sau 30 giây (tăng lên vì model có thể cần 18-20s)
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => {
+            reject(new Error('Request timeout after 30 seconds'));
+          }, 30000);
+        });
+        
+        // Race giữa chat và timeout
+        try {
+          response = await Promise.race([chatPromise, timeoutPromise]);
+        } catch (raceError) {
+          // Nếu timeout, throw timeout error
+          if (raceError.message && raceError.message.includes('timeout')) {
+            throw raceError;
+          }
+          // Nếu là lỗi khác từ chat, throw lại
+          throw raceError;
+        }
+        
+        const responseTime = Date.now() - startTime;
+        console.log(`✅ AI response time: ${responseTime}ms (${(responseTime/1000).toFixed(1)}s)`);
+        
+        // Warn nếu quá chậm (điều chỉnh threshold: 12s cho gpt-4o-mini)
+        if (responseTime > 12000) {
+          console.warn(`⚠️ AI response quá chậm (${(responseTime/1000).toFixed(1)}s). Có thể do network hoặc Puter.js server.`);
+        } else if (responseTime > 8000) {
+          console.info(`ℹ️ AI response time: ${(responseTime/1000).toFixed(1)}s (chấp nhận được)`);
+        }
+        
+        // Clear timeout và loading interval
+        clearTimeout(timeoutId);
+        if (window.aiLoadingInterval) {
+          clearInterval(window.aiLoadingInterval);
+          window.aiLoadingInterval = null;
+        }
+        
+        // Kiểm tra response type (Puter.js format: response.message.content)
+        let responseText = '';
+        if (typeof response === 'string') {
+          responseText = response;
+        } else if (response && typeof response === 'object') {
+          // Puter.js format: response.message.content
+          if (response.message && response.message.content) {
+            responseText = response.message.content;
+          } 
+          // OpenAI format: response.choices[0].message.content
+          else if (response.choices && response.choices[0] && response.choices[0].message && response.choices[0].message.content) {
+            responseText = response.choices[0].message.content;
+          }
+          // Các format khác
+          else {
+            responseText = response.text || response.content || response.message || response.response || '';
+          }
+          
+          // Nếu vẫn không có, log để debug
+          if (!responseText || responseText === '{}' || responseText === '[object Object]') {
+            console.warn('Unexpected AI response format:', response);
+            // Nếu có message object, thử lấy content từ đó
+            if (response.message && typeof response.message === 'object') {
+              responseText = response.message.content || response.message.text || 'Xin lỗi, không thể xử lý phản hồi từ AI.';
+            } else {
+              responseText = 'Xin lỗi, không thể xử lý phản hồi từ AI. Vui lòng thử lại.';
+            }
+          }
+        } else {
+          responseText = String(response || 'Không có phản hồi');
+        }
+        
+        // Đảm bảo responseText là string
+        if (typeof responseText !== 'string') {
+          responseText = String(responseText);
+        }
+        
+        // Cache response (chỉ cache string)
+        if (typeof responseText === 'string' && responseText.length > 0) {
+          aiCache[cacheKey] = responseText;
+          saveAICache();
+        }
+        
+        // Display formatted response
+        modalContent.innerHTML = formatAIResponse(responseText);
+      } catch (error) {
+        clearTimeout(timeoutId);
+        if (window.aiLoadingInterval) {
+          clearInterval(window.aiLoadingInterval);
+          window.aiLoadingInterval = null;
+        }
+        
+        console.error('AI explanation error:', error);
+        
+        let errorMessage = 'Vui lòng thử lại sau';
+        let isTimeout = false;
+        
+        if (error.message) {
+          errorMessage = error.message;
+          if (error.message.includes('timeout')) {
+            isTimeout = true;
+            errorMessage = 'AI phản hồi quá chậm (>30 giây). Có thể do network hoặc server Puter.js.';
+          }
+        } else if (typeof error === 'string') {
+          errorMessage = error;
+        }
+        
+        modalContent.innerHTML = `
+          <div class="text-center py-8">
+            <i class="fas fa-${isTimeout ? 'clock' : 'exclamation-triangle'} text-4xl text-${isTimeout ? 'yellow' : 'red'}-400 mb-4"></i>
+            <p class="text-${isTimeout ? 'yellow' : 'red'}-600 mb-2 font-semibold">
+              ${isTimeout ? 'Phản hồi quá chậm' : 'Lỗi khi tải giải thích từ AI'}
+            </p>
+            <p class="text-sm text-gray-500 mb-2">${errorMessage}</p>
+            ${isTimeout ? `
+              <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4 text-left text-sm max-w-md mx-auto">
+                <p class="font-semibold text-yellow-800 mb-1">💡 Gợi ý:</p>
+                <ul class="list-disc list-inside text-yellow-700 space-y-1">
+                  <li>Sử dụng tab "Chi tiết" để xem thông tin từ Cambridge Dictionary (nhanh hơn)</li>
+                  <li>Thử lại sau vài phút (có thể server đang bận)</li>
+                  <li>Kiểm tra kết nối internet</li>
+                </ul>
+              </div>
+            ` : ''}
+            <p class="text-xs text-gray-400 mb-4">Kiểm tra Console (F12) để xem chi tiết</p>
+            <div class="flex gap-2 justify-center">
+              <button onclick="renderAIContent()" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
+                Thử lại
+              </button>
+              <button onclick="showWordTab('details')" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">
+                Xem Chi tiết
+              </button>
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    // Format AI response to HTML
+    function formatAIResponse(text) {
+      // Kiểm tra input type
+      if (!text) {
+        return '<p class="text-gray-500">Không có dữ liệu</p>';
+      }
+      
+      // Đảm bảo text là string
+      let textStr = '';
+      if (typeof text === 'string') {
+        textStr = text;
+      } else if (typeof text === 'object') {
+        // Nếu là object, thử extract text
+        textStr = text.text || text.content || text.message || text.response || JSON.stringify(text);
+      } else {
+        textStr = String(text);
+      }
+      
+      if (!textStr || textStr.trim().length === 0) {
+        return '<p class="text-gray-500">Không có dữ liệu</p>';
+      }
+      
+      // Escape HTML để tránh XSS
+      const escapeHtml = (str) => {
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+      };
+      
+      // Split by double newlines (paragraphs)
+      const paragraphs = textStr.split(/\n\n+/).filter(p => p.trim());
+      
+      if (paragraphs.length === 0) {
+        // Nếu không có paragraph, split by single newline
+        const lines = textStr.split(/\n/).filter(l => l.trim());
+        if (lines.length === 0) {
+          return `<p class="text-gray-700">${escapeHtml(textStr)}</p>`;
+        }
+        paragraphs.push(...lines);
+      }
+      
+      let html = '<div class="space-y-4">';
+      
+      paragraphs.forEach(para => {
+        const trimmed = para.trim();
+        if (!trimmed) return;
+        
+        // Check if it's a heading (starts with number or emoji + text)
+        if (/^[\d\s]*[🎯📚💡🔤✨📝]/i.test(trimmed) || /^\d+\./.test(trimmed)) {
+          html += `<h3 class="font-semibold text-lg text-purple-700 mt-4 mb-2">${escapeHtml(trimmed)}</h3>`;
+        } 
+        // Check if it's a list item
+        else if (/^[-•▪▫]\s/.test(trimmed) || /^\d+[\.\)]\s/.test(trimmed)) {
+          html += `<div class="ml-4 mb-2 text-gray-700">${escapeHtml(trimmed)}</div>`;
+        }
+        // Regular paragraph
+        else {
+          // Replace **bold** with <strong> (sau khi escape)
+          const escaped = escapeHtml(trimmed);
+          const formatted = escaped
+            .replace(/\*\*(.*?)\*\*/g, '<strong class="text-gray-900 font-semibold">$1</strong>')
+            .replace(/\*(.*?)\*/g, '<em class="text-gray-700 italic">$1</em>');
+          
+          html += `<p class="text-gray-700 leading-relaxed">${formatted}</p>`;
+        }
+      });
+      
+      html += '</div>';
+      
+      return html;
     }
 
     // Load words on page load
@@ -363,6 +896,7 @@
       modalWord.textContent = word;
       modalContent.innerHTML = '<div class="text-center py-8"><i class="fas fa-spinner fa-spin text-4xl text-purple-600"></i></div>';
       modal.classList.remove('hidden');
+      currentTab = 'details'; // Reset to details tab
 
       try {
         // Get word data
@@ -380,62 +914,11 @@
           }
         }
 
-        let html = `
-          <div class="space-y-4">
-            <div class="flex items-center space-x-4">
-              <span class="level-badge level-${wordData.Level}">${wordData.Level}</span>
-              <span class="text-gray-600">${wordData['Part of Speech'] || 'N/A'}</span>
-              ${wordData.Topic ? `<span class="text-gray-600"><i class="fas fa-folder mr-1"></i>${wordData.Topic}</span>` : ''}
-            </div>
-            ${wordData.Guideword ? `<p class="text-gray-600"><strong>Guideword:</strong> ${wordData.Guideword}</p>` : ''}
-            ${wordData.Translate ? `<p class="text-purple-600 font-medium"><strong>Nghĩa:</strong> ${wordData.Translate}</p>` : ''}
-        `;
-
-        if (dictData) {
-          // Pronunciation
-          if (dictData.pronunciation && dictData.pronunciation.length > 0) {
-            html += `
-              <div class="border-t pt-4">
-                <h3 class="font-semibold mb-2">Phát âm (IPA)</h3>
-                ${dictData.pronunciation.map(pron => `
-                  <div class="flex items-center space-x-2 mb-2">
-                    <span class="px-2 py-1 bg-purple-50 text-purple-700 rounded text-xs font-semibold">${(pron.lang || '').toUpperCase() || 'US'}</span>
-                    <span class="text-gray-800 font-mono">${pron.pron || ''}</span>
-                    ${pron.url ? `<audio controls class="h-8"><source src="${pron.url}" type="audio/mpeg"></audio>` : ''}
-                  </div>
-                `).join('')}
-              </div>
-            `;
-          }
-
-          // Definitions
-          if (dictData.definition && dictData.definition.length > 0) {
-            html += `
-              <div class="border-t pt-4">
-                <h3 class="font-semibold mb-2">Định nghĩa</h3>
-                ${dictData.definition.map(def => `
-                  <div class="mb-4">
-                    <p class="text-gray-700 mb-1">${def.text}</p>
-                    ${def.translation ? `<p class="text-gray-600 italic">${def.translation}</p>` : ''}
-                    ${def.example && def.example.length > 0 ? `
-                      <div class="mt-2 ml-4 border-l-2 border-purple-200 pl-3">
-                        ${def.example.map(ex => `
-                          <p class="text-sm text-gray-600 mb-1">${ex.text}</p>
-                          ${ex.translation ? `<p class="text-sm text-gray-500 italic">${ex.translation}</p>` : ''}
-                        `).join('')}
-                      </div>
-                    ` : ''}
-                  </div>
-                `).join('')}
-              </div>
-            `;
-          }
-        } else {
-          html += `<p class="text-gray-500">Không tìm thấy thông tin chi tiết từ Cambridge Dictionary</p>`;
-        }
-
-        html += `</div>`;
-        modalContent.innerHTML = html;
+        // Store current word data for tab switching
+        currentWordData = { word, wordData, dictData };
+        
+        // Render details tab by default
+        renderWordDetails();
       } catch (error) {
         console.error('Error loading word detail:', error);
         modalContent.innerHTML = '<p class="text-red-500">Lỗi khi tải thông tin từ</p>';
@@ -454,50 +937,6 @@
       }
     });
   </script>
-</body>
-</html>
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Học từ vựng</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-50 min-h-screen">
-  <nav class="bg-white shadow-sm border-b">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex justify-between h-16">
-        <a href="/" class="text-xl font-bold text-purple-600">📚 English Vocab</a>
-        <div class="flex items-center space-x-4 text-sm">
-          <a href="/learn" class="text-purple-600 font-semibold">Học từ</a>
-          <a href="/assessment" class="text-gray-700 hover:text-purple-600">Test Level</a>
-          <a href="/ipa" class="text-gray-700 hover:text-purple-600">IPA</a>
-          <a href="/combo" class="text-gray-700 hover:text-purple-600">Combo</a>
-          <a href="/quiz-mix" class="text-gray-700 hover:text-purple-600">Quiz Mix</a>
-          <a href="/grammar" class="text-gray-700 hover:text-purple-600">Grammar</a>
-          <a href="/review" class="text-gray-700 hover:text-purple-600">Ôn từ</a>
-          <a href="/review-grammar" class="text-gray-700 hover:text-purple-600">Ôn Grammar</a>
-          <div class="border-l pl-4 ml-2 flex items-center gap-2">
-            <button onclick="openPreferencesModal()" class="text-gray-700 hover:text-purple-600 flex items-center gap-1 transition-colors" title="Tùy chọn học tập">
-              <i class="fas fa-cog"></i>
-            </button>
-            <button onclick="openDashboardModal()" class="text-gray-700 hover:text-purple-600 flex items-center gap-1 transition-colors" title="Bảng tiến độ">
-              <i class="fas fa-chart-line"></i>
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </nav>
-  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <h1 class="text-2xl font-bold text-gray-900 mb-4">Học Từ Vựng</h1>
-    <p class="text-gray-600 mb-4">Trang học từ đã được giản lược. Bạn có thể tích hợp lại API /api/vocabulary để hiển thị danh sách.</p>
-    <div class="bg-white rounded-lg shadow p-4">
-      <p class="text-sm text-gray-500">Placeholder. Cần lấy dữ liệu từ /api/vocabulary và render.</p>
-    </div>
-  </main>
-  <script src="/js/storage.js"></script>
   <script src="/js/preferences.js"></script>
   <script src="/js/progressDashboard.js"></script>
   <script src="/js/weakAreas.js"></script>
