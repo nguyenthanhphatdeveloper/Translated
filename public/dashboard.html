@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bảng tiến độ</title>
+  <script>
+    (function() {
+      if (typeof console !== 'undefined' && console.warn) {
+        const originalWarn = console.warn;
+        console.warn = function(...args) {
+          const firstArg = args[0];
+          if (typeof firstArg === 'string' && (
+            firstArg.includes('cdn.tailwindcss.com should not be used') ||
+            firstArg.includes('tailwindcss.com should not be used')
+          )) {
+            return;
+          }
+          originalWarn.apply(console, args);
+        };
+      }
+    })();
+  </script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-50 min-h-screen">
+  <nav class="bg-white shadow-sm border-b">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-16 items-center">
+        <a href="/" class="text-xl font-bold text-purple-600">📚 English Vocab</a>
+        <div class="flex items-center space-x-4 text-sm">
+          <a href="/learn" class="text-gray-700 hover:text-purple-600">Học từ</a>
+          <a href="/assessment" class="text-gray-700 hover:text-purple-600">Test Level</a>
+          <a href="/ipa" class="text-gray-700 hover:text-purple-600">IPA</a>
+          <a href="/preferences" class="text-gray-700 hover:text-purple-600">Tùy chọn</a>
+          <a href="/dashboard" class="text-purple-600 font-semibold">Tiến độ</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <h1 class="text-3xl font-bold text-gray-900 mb-6">📊 Bảng tiến độ</h1>
+
+    <!-- Overall Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+      <div class="bg-white rounded-lg shadow p-4">
+        <div class="text-sm text-gray-600">🔥 Streak</div>
+        <div class="text-3xl font-bold text-purple-600" id="streak">0</div>
+        <div class="text-xs text-gray-500">ngày liên tiếp</div>
+      </div>
+      <div class="bg-white rounded-lg shadow p-4">
+        <div class="text-sm text-gray-600">📚 Từ đã học</div>
+        <div class="text-3xl font-bold text-blue-600" id="learnedWords">0</div>
+        <div class="text-xs text-gray-500">từ</div>
+      </div>
+      <div class="bg-white rounded-lg shadow p-4">
+        <div class="text-sm text-gray-600">✅ Độ chính xác</div>
+        <div class="text-3xl font-bold text-green-600" id="accuracy">0%</div>
+        <div class="text-xs text-gray-500">tổng thể</div>
+      </div>
+      <div class="bg-white rounded-lg shadow p-4">
+        <div class="text-sm text-gray-600">🎯 Đã master</div>
+        <div class="text-3xl font-bold text-yellow-600" id="masteredWords">0</div>
+        <div class="text-xs text-gray-500">từ</div>
+      </div>
+    </div>
+
+    <!-- Weekly Chart -->
+    <div class="bg-white rounded-lg shadow p-6 mb-6">
+      <h2 class="text-xl font-bold text-gray-900 mb-4">📈 Tiến độ 7 ngày qua</h2>
+      <div class="grid grid-cols-7 gap-2">
+        <div v-for="day in weeklyDays" class="text-center">
+          <div class="text-xs text-gray-600 mb-1">{{ day.label }}</div>
+          <div class="bg-gray-200 rounded h-32 flex items-end justify-center">
+            <div class="bg-purple-600 rounded-t w-full" :style="{ height: day.height + '%' }"></div>
+          </div>
+          <div class="text-xs text-gray-700 mt-1">{{ day.words }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Weak Areas -->
+    <div class="bg-white rounded-lg shadow p-6 mb-6">
+      <h2 class="text-xl font-bold text-gray-900 mb-4">📚 Điểm yếu</h2>
+      <div id="weakAreas" class="space-y-3">
+        <div class="text-gray-500 text-center py-4">Đang tải...</div>
+      </div>
+    </div>
+
+    <!-- Insights -->
+    <div class="bg-white rounded-lg shadow p-6">
+      <h2 class="text-xl font-bold text-gray-900 mb-4">💡 Insights</h2>
+      <div id="insights" class="space-y-3">
+        <div class="text-gray-500 text-center py-4">Đang tải...</div>
+      </div>
+    </div>
+  </main>
+
+  <script src="/js/storage.js"></script>
+  <script src="/js/progressDashboard.js"></script>
+  <script src="/js/weakAreas.js"></script>
+  <script>
+    const storage = new StorageManager();
+    const dashboard = new ProgressDashboard(storage);
+    const weakAreas = new WeakAreasAnalyzer(storage);
+
+    // Load overall stats
+    function loadOverallStats() {
+      const stats = dashboard.getOverallStats();
+      document.getElementById('streak').textContent = stats.streak;
+      document.getElementById('learnedWords').textContent = stats.learnedWords;
+      document.getElementById('accuracy').textContent = stats.overallAccuracy + '%';
+      document.getElementById('masteredWords').textContent = stats.masteredWords;
+    }
+
+    // Load weekly stats
+    function loadWeeklyStats() {
+      const weekly = dashboard.getWeeklyStats();
+      const container = document.querySelector('.grid.grid-cols-7');
+      if (!container) return;
+
+      const maxWords = Math.max(...weekly.days.map(d => d.wordsLearned), 1);
+      
+      container.innerHTML = weekly.days.map(day => {
+        const date = new Date(day.date);
+        const label = date.toLocaleDateString('vi-VN', { weekday: 'short' });
+        const height = maxWords > 0 ? (day.wordsLearned / maxWords) * 100 : 0;
+        
+        return `
+          <div class="text-center">
+            <div class="text-xs text-gray-600 mb-1">${label}</div>
+            <div class="bg-gray-200 rounded h-32 flex items-end justify-center relative">
+              <div class="bg-purple-600 rounded-t w-full transition-all" style="height: ${height}%"></div>
+            </div>
+            <div class="text-xs text-gray-700 mt-1">${day.wordsLearned}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Load weak areas
+    function loadWeakAreas() {
+      const analysis = weakAreas.analyzeWeakAreas();
+      const container = document.getElementById('weakAreas');
+      
+      if (analysis.weakTopics.length === 0) {
+        container.innerHTML = '<div class="text-gray-500 text-center py-4">Bạn chưa có điểm yếu nào. Tiếp tục phát huy! 🎉</div>';
+        return;
+      }
+
+      container.innerHTML = analysis.weakTopics.slice(0, 5).map(topic => `
+        <div class="border rounded-lg p-3">
+          <div class="flex justify-between items-center mb-2">
+            <span class="font-semibold">${topic.topic}</span>
+            <span class="text-sm text-gray-600">${topic.count} từ</span>
+          </div>
+          <div class="text-sm text-gray-600">Độ chính xác: ${topic.averageAccuracy}%</div>
+          <div class="mt-2">
+            <div class="bg-gray-200 rounded-full h-2">
+              <div class="bg-red-500 h-2 rounded-full" style="width: ${100 - topic.averageAccuracy}%"></div>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Load insights
+    function loadInsights() {
+      const insights = dashboard.getInsights();
+      const container = document.getElementById('insights');
+      
+      if (insights.length === 0) {
+        container.innerHTML = '<div class="text-gray-500 text-center py-4">Chưa có insights. Hãy học thêm để xem phân tích!</div>';
+        return;
+      }
+
+      container.innerHTML = insights.map(insight => `
+        <div class="border-l-4 ${insight.type === 'success' ? 'border-green-500' : insight.type === 'warning' ? 'border-yellow-500' : 'border-blue-500'} bg-gray-50 p-4 rounded">
+          <div class="flex items-start">
+            <span class="text-2xl mr-3">${insight.icon}</span>
+            <div>
+              <div class="font-semibold text-gray-900">${insight.title}</div>
+              <div class="text-sm text-gray-600 mt-1">${insight.message}</div>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Load all data
+    function loadDashboard() {
+      loadOverallStats();
+      loadWeeklyStats();
+      loadWeakAreas();
+      loadInsights();
+    }
+
+    window.addEventListener('DOMContentLoaded', loadDashboard);
+  </script>
+</body>
+</html>
+

@@ -21,6 +21,14 @@
           <a href="/grammar" class="text-gray-600 hover:text-purple-600">Grammar</a>
           <a href="/review" class="text-purple-600 font-semibold">Ôn từ</a>
           <a href="/review-grammar" class="text-gray-600 hover:text-purple-600">Ôn Grammar</a>
+          <div class="border-l pl-4 ml-2 flex items-center gap-2">
+            <button onclick="openPreferencesModal()" class="text-gray-600 hover:text-purple-600 flex items-center gap-1 transition-colors" title="Tùy chọn học tập">
+              <i class="fas fa-cog"></i>
+            </button>
+            <button onclick="openDashboardModal()" class="text-gray-600 hover:text-purple-600 flex items-center gap-1 transition-colors" title="Bảng tiến độ">
+              <i class="fas fa-chart-line"></i>
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -336,6 +344,13 @@
     });
   </script>
   <script src="/js/command.js"></script>
+  <script src="/js/storage.js"></script>
+  <script src="/js/preferences.js"></script>
+  <script src="/js/progressDashboard.js"></script>
+  <script src="/js/weakAreas.js"></script>
+  <script src="/js/modals.js"></script>
+  <script src="/js/preferencesModal.js"></script>
+  <script src="/js/dashboardModal.js"></script>
 </body>
 </html>
 

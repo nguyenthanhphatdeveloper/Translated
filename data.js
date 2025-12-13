@@ -5,8 +5,25 @@ const app = express();
 const cors = require("cors");
 
 const cache = new Map();
-const CACHE_TTL = 1000 * 60 * 30;
+const CACHE_TTL = 1000 * 60 * 30; // 30 minutes
 const TRANSLATE_TTL = 1000 * 60 * 60; // 1h cache
+const EXAMPLE_CACHE_TTL = 1000 * 60 * 60 * 24; // 24h for examples (ít thay đổi)
+
+// Cache cleanup: xóa cache cũ mỗi 1 giờ
+setInterval(() => {
+  const now = Date.now();
+  let cleaned = 0;
+  for (const [key, value] of cache.entries()) {
+    const ttl = key.includes('example') ? EXAMPLE_CACHE_TTL : CACHE_TTL;
+    if (now - value.timestamp > ttl) {
+      cache.delete(key);
+      cleaned++;
+    }
+  }
+  if (cleaned > 0) {
+    console.log(`Cache cleanup: removed ${cleaned} expired entries`);
+  }
+}, 1000 * 60 * 60); // Run every hour
 
 const httpClient = axios.create({
   timeout: 10000, 
@@ -173,6 +190,16 @@ app.get("/grammar", (req, res) => {
   res.sendFile(__dirname + "/public/grammar.html");
 });
 
+// Serve Preferences page
+app.get("/preferences", (req, res) => {
+  res.sendFile(__dirname + "/public/preferences.html");
+});
+
+// Serve Dashboard page
+app.get("/dashboard", (req, res) => {
+  res.sendFile(__dirname + "/public/dashboard.html");
+});
+
 // Serve Assessment (level test) page
 app.get("/assessment", (req, res) => {
   res.sendFile(__dirname + "/public/assessment.html");
@@ -319,10 +346,71 @@ app.get("/api/dictionary/:language/:entry(*)", async (req, res, next) => {
 
     setCache(mainCacheKey, result);
     
+    setCache(mainCacheKey, result);
+    
     res.status(200).json(result);
   } catch (error) {
     console.error('API Error:', error.message);
     res.status(500).json({ error: "Internal server error" });
   }
 });
+
+// Batch API endpoint cho examples (performance optimization)
+app.get("/api/examples/batch", async (req, res) => {
+  try {
+    const words = req.query.words ? req.query.words.split(',') : [];
+    if (words.length === 0 || words.length > 50) {
+      return res.status(400).json({ error: "Invalid words parameter (1-50 words)" });
+    }
+
+    // Fetch examples parallel
+    const examplePromises = words.map(async (word) => {
+      const cacheKey = `example_${word.toLowerCase().trim()}`;
+      const cached = getFromCache(cacheKey);
+      if (cached) {
+        return { word, example: cached };
+      }
+
+      try {
+        const dictRes = await httpClient.get(
+          `https://dictionary.cambridge.org/us/dictionary/english/${encodeURIComponent(word)}`
+        );
+        const $ = cheerio.load(dictRes.data);
+        const defs = $(".def-block.ddef_block");
+        
+        let example = null;
+        defs.each((i, def) => {
+          if (example) return false; // Break loop
+          const examples = $(def).find(".examp.dexamp");
+          examples.each((j, ex) => {
+            const text = $(ex).find(".eg.deg").text().trim();
+            const translation = $(ex).find(".trans.dtrans").text().trim();
+            if (text && text.toLowerCase().includes(word.toLowerCase())) {
+              example = { sentence: text, translation };
+              return false; // Break
+            }
+          });
+        });
+
+        if (example) {
+          setCache(cacheKey, example);
+        }
+        return { word, example };
+      } catch (error) {
+        return { word, example: null, error: error.message };
+      }
+    });
+
+    const results = await Promise.allSettled(examplePromises);
+    const examples = results.map((r, i) => 
+      r.status === 'fulfilled' ? r.value : { word: words[i], example: null }
+    );
+
+    res.json({ examples });
+  } catch (error) {
+    console.error('Batch Examples API Error:', error.message);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 module.exports = app;
