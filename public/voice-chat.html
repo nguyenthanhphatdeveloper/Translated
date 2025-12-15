@@ -30,7 +30,6 @@
           <a href="/assessment" class="text-gray-600 hover:text-purple-600">Test Level</a>
           <a href="/ipa" class="text-gray-600 hover:text-purple-600">Luyện IPA</a>
           <a href="/combo" class="text-gray-600 hover:text-purple-600">Combo</a>
-          <a href="/quiz-mix" class="text-gray-600 hover:text-purple-600">Quiz Mix</a>
           <a href="/grammar" class="text-gray-600 hover:text-purple-600">Grammar</a>
           <a href="/writing-practice" class="text-gray-600 hover:text-purple-600">Luyện Viết</a>
           <a href="/conversation-practice" class="text-gray-600 hover:text-purple-600">Luyện Hội thoại</a>
@@ -186,6 +185,7 @@
     let history = [];
     let lastAIText = '';
     let repeatMode = false;
+    let hasGreeted = false;
 
     const recordBtn = document.getElementById('recordBtn');
     const stopBtn = document.getElementById('stopBtn');
@@ -242,6 +242,18 @@
       transcriptEl.scrollTop = transcriptEl.scrollHeight;
     }
 
+    function extractAIContent(resp) {
+      if (!resp) return '';
+      if (typeof resp === 'string') return resp;
+      if (resp.success === false && resp.error) return '';
+      if (resp.message?.content) return resp.message.content;
+      if (resp.content) return resp.content;
+      if (Array.isArray(resp.choices) && resp.choices[0]?.message?.content) {
+        return resp.choices[0].message.content;
+      }
+      return '';
+    }
+
     function escapeHtml(str='') {
       return str.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
     }
@@ -273,13 +285,18 @@
       setState('transcribing');
       const blob = new Blob(chunks, { type: 'audio/webm' });
       chunks = [];
+      if (!blob || blob.size === 0) {
+        setState('idle');
+        alert('Không nhận được âm thanh, hãy thử lại và giữ mic gần hơn.');
+        return;
+      }
       let userText = '';
       try {
-        userText = await puter.ai.speech2txt({ audio: blob, language: 'en-US' });
+        userText = await puter.ai.speech2txt({ audio: blob, language: 'English', prompt: 'Transcribe the speech in English.' });
       } catch (e) {
         console.warn('speech2txt with blob failed, fallback mic:', e);
         try {
-          userText = await puter.ai.speech2txt({ language: 'en-US' });
+          userText = await puter.ai.speech2txt({ language: 'English', prompt: 'Transcribe the speech in English.' });
         } catch (err) {
           console.error(err);
           setState('idle');
@@ -302,6 +319,52 @@
       }
       appendMessage('user', cleanedUserText);
       await processAI(cleanedUserText);
+    }
+
+    async function greetUserOnce() {
+      if (hasGreeted) return;
+      hasGreeted = true;
+      setState('thinking');
+      let aiText = '';
+      try {
+        const resp = await puter.ai.chat({
+          messages: [
+            { role: 'system', content: buildSystemPrompt() },
+            { role: 'user', content: 'Give a short, friendly greeting (10-16 words) and ask one simple question to start the conversation.' }
+          ],
+          model: 'gpt-4o-mini'
+        });
+        if (resp?.success === false || resp?.error) {
+          throw new Error(resp?.error || 'chat error');
+        }
+        aiText = extractAIContent(resp);
+      } catch (e) {
+        console.warn('greet failed, fallback nano', e);
+        try {
+          const resp2 = await puter.ai.chat({
+            messages: [
+              { role: 'system', content: buildSystemPrompt() },
+              { role: 'user', content: 'Give a short, friendly greeting (10-16 words) and ask one simple question to start the conversation.' }
+            ],
+            model: 'gpt-5-nano'
+          });
+          if (resp2?.success === false || resp2?.error) {
+            throw new Error(resp2?.error || 'chat error');
+          }
+          aiText = extractAIContent(resp2);
+        } catch (err) {
+          console.error(err);
+          setState('idle');
+          return;
+        }
+      }
+      aiText = (aiText || '').toString().trim();
+      if (aiText) {
+        appendMessage('ai', aiText);
+      } else {
+        appendMessage('ai', 'Hi there! How are you today?');
+      }
+      setState('idle');
     }
 
     function buildSystemPrompt() {
@@ -434,6 +497,9 @@ Topic: ${topic}. Encourage the learner to reply. End with one short question. Sp
     ttsRate.addEventListener('input', () => {
       ttsRateValue.textContent = `${parseFloat(ttsRate.value).toFixed(1)}x`;
     });
+
+    // Greet user on load
+    greetUserOnce();
 
     function normalizeWords(str='') {
       return str

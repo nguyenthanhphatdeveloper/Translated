@@ -3,30 +3,198 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>English Vocab</title>
+  <title>English AI Learning Hub</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    @media (max-width: 640px) {
+      .nav-links { gap: 8px; padding: 10px 0; }
+      .nav-links a { white-space: nowrap; padding: 10px 12px; border-radius: 9999px; background: #f9fafb; }
+      .nav-links a.active-nav { background: #ede9fe; color: #5b21b6; font-weight: 600; }
+    }
+  </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
   <nav class="bg-white shadow-sm border-b">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex justify-between h-16 items-center">
         <a href="/" class="text-xl font-bold text-purple-600">📚 English Vocab</a>
-        <div class="flex items-center space-x-4 text-sm">
+        <div class="nav-links flex items-center space-x-2 sm:space-x-4 text-sm overflow-x-auto no-scrollbar py-2 sm:py-0" aria-label="Điều hướng chính">
           <a href="/learn" class="text-gray-700 hover:text-purple-600">Học từ</a>
           <a href="/assessment" class="text-gray-700 hover:text-purple-600">Test Level</a>
           <a href="/ipa" class="text-gray-700 hover:text-purple-600">IPA</a>
           <a href="/combo" class="text-gray-700 hover:text-purple-600">Combo</a>
-          <a href="/quiz-mix" class="text-gray-700 hover:text-purple-600">Quiz Mix</a>
           <a href="/grammar" class="text-gray-700 hover:text-purple-600">Grammar</a>
+          <a href="/writing-practice" class="text-gray-700 hover:text-purple-600">Luyện Viết</a>
+          <a href="/conversation-practice" class="text-gray-700 hover:text-purple-600">Luyện Hội thoại</a>
+          <a href="/voice-chat" class="text-gray-700 hover:text-purple-600">Voice Chat</a>
           <a href="/review" class="text-gray-700 hover:text-purple-600">Ôn từ</a>
           <a href="/review-grammar" class="text-gray-700 hover:text-purple-600">Ôn Grammar</a>
         </div>
       </div>
     </div>
   </nav>
-  <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 text-center">
-    <h1 class="text-3xl font-bold text-gray-900 mb-3">Chào mừng</h1>
-    <p class="text-gray-600">Chọn tính năng ở menu để bắt đầu học, ôn từ, luyện IPA hoặc làm quiz.</p>
+
+  <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+    <section class="bg-gradient-to-r from-purple-50 via-white to-blue-50 border border-purple-100 rounded-2xl p-5 sm:p-8 shadow-sm">
+      <div class="flex flex-col lg:flex-row items-start lg:items-center gap-6 lg:gap-10">
+        <div class="flex-1">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border text-xs font-medium text-purple-700 shadow-sm mb-3">
+            <span class="h-2 w-2 rounded-full bg-purple-600"></span> AI-powered English practice
+          </div>
+          <h1 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 leading-tight mb-3">
+            Học, luyện nói & viết tiếng Anh với AI, tối ưu cho mọi thiết bị
+          </h1>
+          <p class="text-gray-700 text-sm sm:text-base leading-relaxed mb-5">
+            Chọn lộ trình bạn cần: luyện từ vựng, hội thoại, phát âm, viết, hoặc kiểm tra level. Giao diện đã tối ưu mobile/desktop, tốc độ và khả dụng trên HTTPS.
+          </p>
+          <div class="flex flex-col sm:flex-row gap-3 sm:items-center">
+            <a href="/conversation-practice" class="inline-flex items-center justify-center px-5 py-3 bg-purple-600 text-white rounded-xl font-semibold shadow hover:bg-purple-700 transition">
+              Bắt đầu hội thoại AI
+              <i class="fas fa-comments ml-2 text-sm"></i>
+            </a>
+            <a href="/writing-practice" class="inline-flex items-center justify-center px-5 py-3 bg-white text-purple-700 border border-purple-200 rounded-xl font-semibold hover:border-purple-400 transition shadow-sm">
+              Luyện viết & chấm điểm
+              <i class="fas fa-pen ml-2 text-sm"></i>
+            </a>
+            <a href="/voice-chat" class="inline-flex items-center justify-center px-5 py-3 bg-white text-blue-700 border border-blue-200 rounded-xl font-semibold hover:border-blue-400 transition shadow-sm">
+              Voice Chat + phát âm
+              <i class="fas fa-microphone ml-2 text-sm"></i>
+            </a>
+          </div>
+        </div>
+        <div class="w-full lg:w-80 bg-white border border-purple-100 rounded-2xl p-4 shadow-sm">
+          <h3 class="text-sm font-semibold text-gray-900 mb-3">Lộ trình gợi ý (1 ngày)</h3>
+          <ul class="space-y-3 text-sm text-gray-700">
+            <li class="flex items-start gap-3">
+              <div class="h-8 w-8 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center font-semibold">1</div>
+              <div>
+                <p class="font-semibold text-gray-900">Định trình độ & mục tiêu</p>
+                <p class="text-gray-600">Test nhanh tại <a href="/assessment" class="text-purple-700 underline">Assessment</a></p>
+              </div>
+            </li>
+            <li class="flex items-start gap-3">
+              <div class="h-8 w-8 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center font-semibold">2</div>
+              <div>
+                <p class="font-semibold text-gray-900">Học và luyện từ</p>
+                <p class="text-gray-600">Xem từ theo chủ đề tại <a href="/learn" class="text-purple-700 underline">Học từ</a> và ôn ở <a href="/review" class="text-purple-700 underline">Ôn từ</a></p>
+              </div>
+            </li>
+            <li class="flex items-start gap-3">
+              <div class="h-8 w-8 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center font-semibold">3</div>
+              <div>
+                <p class="font-semibold text-gray-900">Luyện nói & phát âm</p>
+                <p class="text-gray-600">Chọn <a href="/conversation-practice" class="text-purple-700 underline">Luyện Hội thoại</a> hoặc <a href="/voice-chat" class="text-purple-700 underline">Voice Chat</a></p>
+              </div>
+            </li>
+            <li class="flex items-start gap-3">
+              <div class="h-8 w-8 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center font-semibold">4</div>
+              <div>
+                <p class="font-semibold text-gray-900">Viết và chấm điểm</p>
+                <p class="text-gray-600">Dùng <a href="/writing-practice" class="text-purple-700 underline">Luyện Viết</a> để được chấm điểm, gợi ý sửa lỗi</p>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="mt-8 grid gap-4 sm:gap-5 md:grid-cols-2">
+      <div class="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
+        <div class="flex items-center gap-3 mb-3">
+          <span class="h-10 w-10 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center text-lg"><i class="fas fa-language"></i></span>
+          <div>
+            <p class="text-xs uppercase tracking-wide text-purple-700 font-semibold">Từ vựng & ôn tập</p>
+            <h3 class="text-lg font-semibold text-gray-900">Học từ, Quiz Mix, Combo 10 phút</h3>
+          </div>
+        </div>
+        <p class="text-gray-700 text-sm leading-relaxed mb-3">Học từ theo level/chủ đề, làm quiz xen kẽ, xem combo gợi ý 10 phút gồm từ vựng, grammar, IPA, shadowing.</p>
+        <div class="flex flex-wrap gap-2 text-sm">
+          <a href="/learn" class="px-3 py-2 rounded-lg bg-purple-50 text-purple-700 border border-purple-100 hover:border-purple-200">Học từ</a>
+          <a href="/quiz-mix" class="px-3 py-2 rounded-lg bg-purple-50 text-purple-700 border border-purple-100 hover:border-purple-200">Quiz Mix</a>
+          <a href="/combo" class="px-3 py-2 rounded-lg bg-purple-50 text-purple-700 border border-purple-100 hover:border-purple-200">Combo 10 phút</a>
+          <a href="/review" class="px-3 py-2 rounded-lg bg-purple-50 text-purple-700 border border-purple-100 hover:border-purple-200">Ôn từ</a>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
+        <div class="flex items-center gap-3 mb-3">
+          <span class="h-10 w-10 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center text-lg"><i class="fas fa-microphone"></i></span>
+          <div>
+            <p class="text-xs uppercase tracking-wide text-blue-700 font-semibold">Nói & phát âm</p>
+            <h3 class="text-lg font-semibold text-gray-900">Hội thoại AI, Voice Chat, IPA</h3>
+          </div>
+        </div>
+        <p class="text-gray-700 text-sm leading-relaxed mb-3">Chọn level A1–C2, 38 chủ đề; luyện STT/TTS, auto-advance, kiểm tra phát âm và shadowing.</p>
+        <div class="flex flex-wrap gap-2 text-sm">
+          <a href="/conversation-practice" class="px-3 py-2 rounded-lg bg-blue-50 text-blue-700 border border-blue-100 hover:border-blue-200">Luyện Hội thoại</a>
+          <a href="/voice-chat" class="px-3 py-2 rounded-lg bg-blue-50 text-blue-700 border border-blue-100 hover:border-blue-200">Voice Chat</a>
+          <a href="/ipa" class="px-3 py-2 rounded-lg bg-blue-50 text-blue-700 border border-blue-100 hover:border-blue-200">IPA</a>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
+        <div class="flex items-center gap-3 mb-3">
+          <span class="h-10 w-10 rounded-xl bg-green-100 text-green-700 flex items-center justify-center text-lg"><i class="fas fa-pen"></i></span>
+          <div>
+            <p class="text-xs uppercase tracking-wide text-green-700 font-semibold">Viết & chấm điểm</p>
+            <h3 class="text-lg font-semibold text-gray-900">Luyện Viết + real-time grammar</h3>
+          </div>
+        </div>
+        <p class="text-gray-700 text-sm leading-relaxed mb-3">Word count, auto-save, prompt chấm điểm (score, level, error breakdown), highlight lỗi khi gõ, dashboard tiến độ.</p>
+        <div class="flex flex-wrap gap-2 text-sm">
+          <a href="/writing-practice" class="px-3 py-2 rounded-lg bg-green-50 text-green-700 border border-green-100 hover:border-green-200">Mở Luyện Viết</a>
+          <a href="/review-grammar" class="px-3 py-2 rounded-lg bg-green-50 text-green-700 border border-green-100 hover:border-green-200">Ôn Grammar</a>
+          <a href="/grammar" class="px-3 py-2 rounded-lg bg-green-50 text-green-700 border border-green-100 hover:border-green-200">Grammar Library</a>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
+        <div class="flex items-center gap-3 mb-3">
+          <span class="h-10 w-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center text-lg"><i class="fas fa-bolt"></i></span>
+          <div>
+            <p class="text-xs uppercase tracking-wide text-amber-700 font-semibold">Kiểm tra & lộ trình</p>
+            <h3 class="text-lg font-semibold text-gray-900">Assessment nhanh & theo dõi tiến độ</h3>
+          </div>
+        </div>
+        <p class="text-gray-700 text-sm leading-relaxed mb-3">Test level, xem dashboard (progress, weak areas), chọn topic Digital Marketing/E-commerce, luyện đều trên mobile/desktop.</p>
+        <div class="flex flex-wrap gap-2 text-sm">
+          <a href="/assessment" class="px-3 py-2 rounded-lg bg-amber-50 text-amber-700 border border-amber-100 hover:border-amber-200">Test Level</a>
+          <a href="/dashboard" class="px-3 py-2 rounded-lg bg-amber-50 text-amber-700 border border-amber-100 hover:border-amber-200">Dashboard</a>
+          <a href="/preferences" class="px-3 py-2 rounded-lg bg-amber-50 text-amber-700 border border-amber-100 hover:border-amber-200">Tùy chỉnh</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="mt-8 bg-white border border-gray-100 rounded-2xl p-5 sm:p-6 shadow-sm">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+        <div>
+          <p class="text-xs uppercase tracking-wide text-gray-500 font-semibold">An tâm khi dùng</p>
+          <h3 class="text-lg sm:text-xl font-semibold text-gray-900">Tối ưu cho mobile/desktop, API & bảo mật</h3>
+        </div>
+        <div class="flex flex-wrap gap-2 text-xs sm:text-sm">
+          <span class="px-3 py-1 rounded-full bg-gray-100 text-gray-700 border border-gray-200">HTTPS friendly</span>
+          <span class="px-3 py-1 rounded-full bg-gray-100 text-gray-700 border border-gray-200">Rate limit cho API</span>
+          <span class="px-3 py-1 rounded-full bg-gray-100 text-gray-700 border border-gray-200">Cache nén response</span>
+        </div>
+      </div>
+      <div class="grid md:grid-cols-3 gap-4 text-sm text-gray-700">
+        <div class="p-4 rounded-xl bg-gray-50 border border-gray-100">
+          <p class="font-semibold text-gray-900 mb-1">Hiệu năng & ổn định</p>
+          <p class="text-gray-600">Compression, cache, retry HTTP, rate limit API; đo endpoint chậm >1s.</p>
+        </div>
+        <div class="p-4 rounded-xl bg-gray-50 border border-gray-100">
+          <p class="font-semibold text-gray-900 mb-1">Trải nghiệm trên mobile</p>
+          <p class="text-gray-600">Header cuộn ngang, nút to (min 44px), bố cục thẻ gọn; test trên trình duyệt di động.</p>
+        </div>
+        <div class="p-4 rounded-xl bg-gray-50 border border-gray-100">
+          <p class="font-semibold text-gray-900 mb-1">Âm thanh & bảo mật</p>
+          <p class="text-gray-600">STT/TTS cần HTTPS và cho phép mic; Voice Chat hỗ trợ trạng thái thu/đọc rõ ràng.</p>
+        </div>
+      </div>
+    </section>
   </main>
 </body>
 </html>

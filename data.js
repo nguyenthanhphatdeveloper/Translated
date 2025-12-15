@@ -313,19 +313,9 @@ app.get("/learn", (req, res) => {
   res.sendFile(__dirname + "/public/learn.html");
 });
 
-// Serve practice page
-app.get("/practice", (req, res) => {
-  res.sendFile(__dirname + "/public/practice.html");
-});
-
 // Serve review page
 app.get("/review", (req, res) => {
   res.sendFile(__dirname + "/public/review.html");
-});
-
-// Serve progress page
-app.get("/progress", (req, res) => {
-  res.sendFile(__dirname + "/public/progress.html");
 });
 
 // Serve IPA practice page
@@ -358,30 +348,9 @@ app.get("/combo", (req, res) => {
   res.sendFile(__dirname + "/public/combo.html");
 });
 
-// Serve Grammar SRS review page
-app.get("/review-grammar", (req, res) => {
-  res.sendFile(__dirname + "/public/review-grammar.html");
-});
-
-// Serve Mixed Quiz page
-app.get("/quiz-mix", (req, res) => {
-  res.sendFile(__dirname + "/public/quiz-mix.html");
-});
-
-
-// Serve Combo Lesson page
-app.get("/combo", (req, res) => {
-  res.sendFile(__dirname + "/public/combo.html");
-});
-
 // Serve Grammar Review (SRS) page
 app.get("/grammar-review", (req, res) => {
   res.sendFile(__dirname + "/public/grammar-review.html");
-});
-
-// Serve Mixed Quiz page
-app.get("/quiz-mix", (req, res) => {
-  res.sendFile(__dirname + "/public/quiz-mix.html");
 });
 
 // Serve Writing Practice page
