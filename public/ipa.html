@@ -264,10 +264,6 @@
                 <input data-idx="${idx}" type="text" class="answer word w-full md:w-48 px-3 sm:px-4 py-2.5 sm:py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 text-sm sm:text-base min-h-[44px] sm:min-h-0" placeholder="Nhập từ...">
                 <span class="text-xs text-gray-500 hidden" id="ans-${idx}">${it.word}</span>
               </div>
-              <div class="flex items-center gap-2 w-full">
-                <input data-idx="${idx}" type="text" class="answer meaning w-full md:w-56 px-3 sm:px-4 py-2.5 sm:py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 text-sm sm:text-base min-h-[44px] sm:min-h-0" placeholder="Nhập nghĩa (theo guideword)...">
-                <span class="text-xs text-gray-500 hidden" id="mean-${idx}">${it.guide || 'N/A'}</span>
-              </div>
               <div class="text-xs sm:text-sm text-gray-500" id="vi-${idx}"></div>
             </div>
           </div>
@@ -348,12 +344,8 @@
       inputs.forEach(inp => {
         const idx = Number(inp.dataset.idx);
         const target = items[idx].word.toLowerCase().trim();
-        const guide = (items[idx].guide || '').toLowerCase().trim();
         const userWord = (inp.value || '').toLowerCase().trim();
-        const meaningInput = document.querySelector(`input.meaning[data-idx="${idx}"]`);
-        const userMeaning = (meaningInput?.value || '').toLowerCase().trim();
         const ansWord = document.getElementById('ans-' + idx);
-        const ansMean = document.getElementById('mean-' + idx);
         const viEl = document.getElementById('vi-' + idx);
 
         if (showOnly) {
@@ -366,7 +358,6 @@
         }
 
         const wordOk = userWord === target;
-        const meaningOk = guide ? userMeaning.includes(guide) : true;
 
         if (wordOk) {
           inp.classList.add('border-green-500', 'bg-green-50');
@@ -379,20 +370,7 @@
           ansWord.classList.remove('hidden');
         }
 
-        if (meaningInput) {
-          if (meaningOk) {
-            meaningInput.classList.add('border-green-500','bg-green-50');
-            meaningInput.classList.remove('border-red-400','bg-red-50');
-            ansMean.classList.add('hidden');
-          } else {
-            meaningInput.classList.add('border-red-400','bg-red-50');
-            meaningInput.classList.remove('border-green-500','bg-green-50');
-            ansMean.textContent = guide || 'N/A';
-            ansMean.classList.remove('hidden');
-          }
-        }
-
-        if (wordOk && meaningOk) {
+        if (wordOk) {
           correct += 1;
           if (viEl) { viEl.textContent = ''; }
         }
