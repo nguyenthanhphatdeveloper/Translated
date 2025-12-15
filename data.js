@@ -1,8 +1,13 @@
 const cheerio = require("cheerio");
 const express = require("express");
 const axios = require("axios");
+const axiosRetryModule = require("axios-retry");
+const axiosRetry = axiosRetryModule.default || axiosRetryModule;
+const compression = require("compression");
+const rateLimit = require("express-rate-limit");
 const app = express();
 const cors = require("cors");
+const logger = require("./utils/logger");
 
 const cache = new Map();
 const CACHE_TTL = 1000 * 60 * 30; // 30 minutes
@@ -21,7 +26,7 @@ setInterval(() => {
     }
   }
   if (cleaned > 0) {
-    console.log(`Cache cleanup: removed ${cleaned} expired entries`);
+    logger.info(`Cache cleanup: removed ${cleaned} expired entries`, { cleaned, cacheSize: cache.size });
   }
 }, 1000 * 60 * 60); // Run every hour
 
@@ -29,6 +34,29 @@ const httpClient = axios.create({
   timeout: 10000, 
   headers: {
     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+  }
+});
+
+// Request Retry Logic: tự động retry khi network lỗi hoặc rate limit
+axiosRetry(httpClient, {
+  retries: 2, // Retry tối đa 2 lần
+  retryDelay: axiosRetryModule.exponentialDelay, // Exponential backoff: 100ms, 200ms, 400ms
+  retryCondition: (error) => {
+    // Retry khi:
+    // 1. Network error hoặc timeout
+    // 2. Rate limit (429)
+    // 3. Server error (5xx)
+    return axiosRetryModule.isNetworkOrIdempotentRequestError(error) || 
+           error.response?.status === 429 || 
+           (error.response?.status >= 500 && error.response?.status < 600);
+  },
+  onRetry: (retryCount, error, requestConfig) => {
+    logger.warn(`Retrying request (attempt ${retryCount + 1}/3)`, {
+      url: requestConfig.url,
+      method: requestConfig.method,
+      status: error.response?.status,
+      message: error.message
+    });
   }
 });
 
@@ -146,9 +174,129 @@ const fetchVerbs = async (wiki) => {
   }
 };
 
+// ============================================
+// Phase 1: Quick Wins - Performance & Monitoring
+// ============================================
+
+// 1. Response Compression (giảm 60-80% kích thước response)
+app.use(compression({ level: 6 }));
+
+// 2. Performance Monitoring (log slow endpoints > 1s)
+app.use((req, res, next) => {
+  const start = Date.now();
+  res.on('finish', () => {
+    const duration = Date.now() - start;
+    if (duration > 1000) {
+      logger.warn(`Slow endpoint detected`, {
+        method: req.method,
+        path: req.path,
+        duration: `${duration}ms`,
+        statusCode: res.statusCode
+      });
+    }
+  });
+  next();
+});
+
+// 3. Response Headers (cache control)
+app.use((req, res, next) => {
+  // Cache static JSON responses (vocabulary API)
+  if (req.path.startsWith('/api/vocabulary/')) {
+    res.set('Cache-Control', 'public, max-age=300'); // 5 phút
+  }
+  // No cache cho dynamic responses (dictionary API)
+  if (req.path.startsWith('/api/dictionary/')) {
+    res.set('Cache-Control', 'no-cache');
+  }
+  // No cache cho grammar API (có thể thay đổi)
+  if (req.path.startsWith('/api/grammar/')) {
+    res.set('Cache-Control', 'no-cache');
+  }
+  next();
+});
+
+// Standard middleware
 app.use(cors({ origin: "*" }));
 app.use(express.json());
 app.use(express.static(__dirname + "/public"));
+
+// ============================================
+// Phase 3: Security - Rate Limiting
+// ============================================
+
+// General API Rate Limiter: 1000 requests per 15 minutes (tăng cao cho dự án cá nhân)
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 phút
+  max: 1000, // 1000 requests per window (đủ cho 1 user sử dụng thoải mái)
+  message: {
+    error: 'Too many requests',
+    message: 'Bạn đã gửi quá nhiều requests. Vui lòng thử lại sau 15 phút.',
+    retryAfter: '15 minutes'
+  },
+  standardHeaders: true, // Return rate limit info in `RateLimit-*` headers
+  legacyHeaders: false, // Disable `X-RateLimit-*` headers
+  handler: (req, res) => {
+    logger.warn('Rate limit exceeded', {
+      ip: req.ip,
+      path: req.path,
+      method: req.method
+    });
+    res.status(429).json({
+      error: 'Too many requests',
+      message: 'Bạn đã gửi quá nhiều requests. Vui lòng thử lại sau 15 phút.',
+      retryAfter: '15 minutes'
+    });
+  }
+});
+
+// Dictionary API Rate Limiter: 200 requests per 15 minutes (tăng cao cho dự án cá nhân)
+const dictionaryLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 phút
+  max: 200, // 200 requests per window (đủ cho 1 user tra từ nhiều)
+  message: {
+    error: 'Too many dictionary requests',
+    message: 'Bạn đã tra từ quá nhiều lần. Vui lòng thử lại sau 15 phút.',
+    retryAfter: '15 minutes'
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (req, res) => {
+    logger.warn('Dictionary API rate limit exceeded', {
+      ip: req.ip,
+      path: req.path,
+      word: req.params.entry
+    });
+    res.status(429).json({
+      error: 'Too many dictionary requests',
+      message: 'Bạn đã tra từ quá nhiều lần. Vui lòng thử lại sau 15 phút.',
+      retryAfter: '15 minutes'
+    });
+  }
+});
+
+// Áp dụng rate limiting
+app.use('/api/', apiLimiter); // General API rate limit
+app.use('/api/dictionary/', dictionaryLimiter); // Dictionary API có rate limit riêng (stricter)
+
+// 4. Health Check Endpoint
+app.get("/health", (req, res) => {
+  const memoryUsage = process.memoryUsage();
+  res.json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    uptime: Math.floor(process.uptime()),
+    memory: {
+      rss: `${Math.round(memoryUsage.rss / 1024 / 1024)}MB`,
+      heapTotal: `${Math.round(memoryUsage.heapTotal / 1024 / 1024)}MB`,
+      heapUsed: `${Math.round(memoryUsage.heapUsed / 1024 / 1024)}MB`,
+      external: `${Math.round(memoryUsage.external / 1024 / 1024)}MB`
+    },
+    cache: {
+      size: cache.size,
+      maxSize: 1000
+    }
+  });
+});
 
 // Import vocabulary routes
 const vocabularyRoutes = require("./routes/vocabulary");
@@ -234,6 +382,11 @@ app.get("/grammar-review", (req, res) => {
 // Serve Mixed Quiz page
 app.get("/quiz-mix", (req, res) => {
   res.sendFile(__dirname + "/public/quiz-mix.html");
+});
+
+// Serve Writing Practice page
+app.get("/writing-practice", (req, res) => {
+  res.sendFile(__dirname + "/public/writing-practice.html");
 });
 
 // Allow slash in entry (e.g., "know of sth/sb") by using wildcard
@@ -350,7 +503,7 @@ app.get("/api/dictionary/:language/:entry(*)", async (req, res, next) => {
     
     res.status(200).json(result);
   } catch (error) {
-    console.error('API Error:', error.message);
+    logger.error('Dictionary API Error', error);
     res.status(500).json({ error: "Internal server error" });
   }
 });

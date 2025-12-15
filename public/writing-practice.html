@@ -1,0 +1,1481 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Luyện Viết - AI Writing Assistant</title>
+  <script>
+    // Suppress Tailwind CDN warning
+    const originalWarn = console.warn;
+    console.warn = function(...args) {
+      if (args[0] && typeof args[0] === 'string' && args[0].includes('cdn.tailwindcss.com should not be used')) {
+        return;
+      }
+      originalWarn.apply(console, args);
+    };
+  </script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://js.puter.com/v2/"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    * { font-family: 'Inter', sans-serif; }
+
+    .error-highlight {
+      background: #fee2e2;
+      color: #991b1b;
+      padding: 2px 4px;
+      border-radius: 3px;
+      text-decoration: line-through;
+    }
+
+    .correction-highlight {
+      background: #d1fae5;
+      color: #065f46;
+      padding: 2px 4px;
+      border-radius: 3px;
+      font-weight: 600;
+    }
+
+    .suggestion-item {
+      transition: all 0.2s ease;
+    }
+
+    .suggestion-item:hover {
+      transform: translateX(4px);
+    }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+  <!-- Navigation -->
+  <nav class="bg-white shadow-sm border-b">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-16">
+        <div class="flex items-center">
+          <a href="/" class="text-xl font-bold text-purple-600">📚 English Vocab</a>
+        </div>
+        <div class="flex items-center space-x-4">
+          <a href="/learn" class="text-gray-600 hover:text-purple-600">Học từ</a>
+          <a href="/assessment" class="text-gray-600 hover:text-purple-600">Test Level</a>
+          <a href="/ipa" class="text-gray-600 hover:text-purple-600">Luyện IPA</a>
+          <a href="/combo" class="text-gray-600 hover:text-purple-600">Combo</a>
+          <a href="/quiz-mix" class="text-gray-600 hover:text-purple-600">Quiz Mix</a>
+          <a href="/grammar" class="text-gray-600 hover:text-purple-600">Grammar</a>
+          <a href="/writing-practice" class="text-purple-600 font-medium">Luyện Viết</a>
+          <a href="/review" class="text-gray-600 hover:text-purple-600">Ôn từ</a>
+          <a href="/review-grammar" class="text-gray-600 hover:text-purple-600">Ôn Grammar</a>
+          <div class="border-l pl-4 ml-2 flex items-center gap-2">
+            <button onclick="openPreferencesModal()" class="text-gray-600 hover:text-purple-600 flex items-center gap-1 transition-colors" title="Tùy chọn học tập">
+              <i class="fas fa-cog"></i>
+              <span class="hidden md:inline text-sm">Tùy chọn</span>
+            </button>
+            <button onclick="openDashboardModal()" class="text-gray-600 hover:text-purple-600 flex items-center gap-1 transition-colors" title="Bảng tiến độ">
+              <i class="fas fa-chart-line"></i>
+              <span class="hidden md:inline text-sm">Tiến độ</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="mb-8 flex justify-between items-center">
+      <div>
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">
+          <i class="fas fa-pen-fancy text-purple-600 mr-2"></i>
+          AI Writing Assistant
+        </h1>
+        <p class="text-gray-600">Viết bài và nhận phản hồi tức thì về ngữ pháp, chính tả và cách diễn đạt</p>
+      </div>
+      <button 
+        onclick="toggleHistory()"
+        class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-2"
+      >
+        <i class="fas fa-history"></i>
+        <span>Lịch sử</span>
+      </button>
+    </div>
+
+    <!-- Writing History Sidebar -->
+    <div id="historySidebar" class="hidden fixed inset-y-0 right-0 w-96 bg-white shadow-xl z-50 overflow-y-auto">
+      <div class="p-6">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-xl font-bold text-gray-900">Lịch sử Bài viết</h2>
+          <button onclick="toggleHistory()" class="text-gray-500 hover:text-gray-700">
+            <i class="fas fa-times text-2xl"></i>
+          </button>
+        </div>
+        <div id="historyList" class="space-y-3">
+          <!-- History items will be displayed here -->
+        </div>
+        <button 
+          onclick="clearHistory()"
+          class="mt-4 w-full px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors text-sm"
+        >
+          <i class="fas fa-trash mr-2"></i>
+          Xóa tất cả lịch sử
+        </button>
+      </div>
+    </div>
+    <div id="historyOverlay" class="hidden fixed inset-0 bg-black bg-opacity-50 z-40" onclick="toggleHistory()"></div>
+
+    <!-- Topic Selector (Phase 2) - Enhanced với nhiều chủ đề thực tế -->
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h3 class="text-lg font-semibold text-gray-900">
+            <i class="fas fa-book-open text-purple-600 mr-2"></i>
+            Luyện tập theo Chủ đề
+          </h3>
+          <p class="text-sm text-gray-500 mt-1">Chọn chủ đề giao tiếp thực tế để luyện viết</p>
+        </div>
+        <button 
+          onclick="generateTopicPrompt()"
+          id="generatePromptBtn"
+          class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled
+        >
+          <i class="fas fa-magic"></i>
+          <span>Tạo đề bài</span>
+        </button>
+      </div>
+
+      <!-- Topic Categories -->
+      <div class="space-y-4">
+        <!-- Giao tiếp Hàng ngày -->
+        <div>
+          <h4 class="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+            <i class="fas fa-comments text-blue-600"></i>
+            Giao tiếp Hàng ngày
+          </h4>
+          <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
+            <button onclick="selectTopic('greetings', event)" class="topic-btn px-3 py-2 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors text-xs text-center">
+              <i class="fas fa-hand-paper mr-1"></i>Chào hỏi
+            </button>
+            <button onclick="selectTopic('introductions', event)" class="topic-btn px-3 py-2 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors text-xs text-center">
+              <i class="fas fa-user-plus mr-1"></i>Giới thiệu
+            </button>
+            <button onclick="selectTopic('small-talk', event)" class="topic-btn px-3 py-2 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors text-xs text-center">
+              <i class="fas fa-comment-dots mr-1"></i>Trò chuyện
+            </button>
+            <button onclick="selectTopic('asking-directions', event)" class="topic-btn px-3 py-2 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors text-xs text-center">
+              <i class="fas fa-map-signs mr-1"></i>Hỏi đường
+            </button>
+            <button onclick="selectTopic('shopping', event)" class="topic-btn px-3 py-2 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors text-xs text-center">
+              <i class="fas fa-shopping-cart mr-1"></i>Mua sắm
+            </button>
+            <button onclick="selectTopic('restaurant', event)" class="topic-btn px-3 py-2 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors text-xs text-center">
+              <i class="fas fa-utensils mr-1"></i>Nhà hàng
+            </button>
+          </div>
+        </div>
+
+        <!-- Tình huống Thực tế -->
+        <div>
+          <h4 class="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+            <i class="fas fa-life-ring text-green-600"></i>
+            Tình huống Thực tế
+          </h4>
+          <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
+            <button onclick="selectTopic('making-appointments', event)" class="topic-btn px-3 py-2 border-2 border-gray-200 rounded-lg hover:border-green-500 hover:bg-green-50 transition-colors text-xs text-center">
+              <i class="fas fa-calendar-check mr-1"></i>Đặt lịch
+            </button>
+            <button onclick="selectTopic('complaints', event)" class="topic-btn px-3 py-2 border-2 border-gray-200 rounded-lg hover:border-green-500 hover:bg-green-50 transition-colors text-xs text-center">
+              <i class="fas fa-exclamation-triangle mr-1"></i>Khiếu nại
+            </button>
+            <button onclick="selectTopic('apologies', event)" class="topic-btn px-3 py-2 border-2 border-gray-200 rounded-lg hover:border-green-500 hover:bg-green-50 transition-colors text-xs text-center">
+              <i class="fas fa-hand-holding-heart mr-1"></i>Xin lỗi
+            </button>
+            <button onclick="selectTopic('requests', event)" class="topic-btn px-3 py-2 border-2 border-gray-200 rounded-lg hover:border-green-500 hover:bg-green-50 transition-colors text-xs text-center">
+              <i class="fas fa-hands-helping mr-1"></i>Yêu cầu
+            </button>
+            <button onclick="selectTopic('giving-advice', event)" class="topic-btn px-3 py-2 border-2 border-gray-200 rounded-lg hover:border-green-500 hover:bg-green-50 transition-colors text-xs text-center">
+              <i class="fas fa-lightbulb mr-1"></i>Đưa lời khuyên
+            </button>
+            <button onclick="selectTopic('making-decisions', event)" class="topic-btn px-3 py-2 border-2 border-gray-200 rounded-lg hover:border-green-500 hover:bg-green-50 transition-colors text-xs text-center">
+              <i class="fas fa-check-circle mr-1"></i>Quyết định
+            </button>
+          </div>
+        </div>
+
+        <!-- Công việc & Học tập -->
+        <div>
+          <h4 class="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+            <i class="fas fa-briefcase text-purple-600"></i>
+            Công việc & Học tập
+          </h4>
+          <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
+            <button onclick="selectTopic('job-interview', event)" class="topic-btn px-3 py-2 border-2 border-gray-200 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition-colors text-xs text-center">
+              <i class="fas fa-user-tie mr-1"></i>Phỏng vấn
+            </button>
+            <button onclick="selectTopic('workplace', event)" class="topic-btn px-3 py-2 border-2 border-gray-200 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition-colors text-xs text-center">
+              <i class="fas fa-building mr-1"></i>Nơi làm việc
+            </button>
+            <button onclick="selectTopic('meetings', event)" class="topic-btn px-3 py-2 border-2 border-gray-200 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition-colors text-xs text-center">
+              <i class="fas fa-users mr-1"></i>Cuộc họp
+            </button>
+            <button onclick="selectTopic('email-writing', event)" class="topic-btn px-3 py-2 border-2 border-gray-200 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition-colors text-xs text-center">
+              <i class="fas fa-envelope mr-1"></i>Email công việc
+            </button>
+            <button onclick="selectTopic('presentations', event)" class="topic-btn px-3 py-2 border-2 border-gray-200 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition-colors text-xs text-center">
+              <i class="fas fa-presentation mr-1"></i>Thuyết trình
+            </button>
+            <button onclick="selectTopic('studying', event)" class="topic-btn px-3 py-2 border-2 border-gray-200 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition-colors text-xs text-center">
+              <i class="fas fa-graduation-cap mr-1"></i>Học tập
+            </button>
+          </div>
+        </div>
+
+        <!-- Du lịch & Giải trí -->
+        <div>
+          <h4 class="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+            <i class="fas fa-plane text-orange-600"></i>
+            Du lịch & Giải trí
+          </h4>
+          <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
+            <button onclick="selectTopic('travel', event)" class="topic-btn px-3 py-2 border-2 border-gray-200 rounded-lg hover:border-orange-500 hover:bg-orange-50 transition-colors text-xs text-center">
+              <i class="fas fa-plane mr-1"></i>Du lịch
+            </button>
+            <button onclick="selectTopic('hotel', event)" class="topic-btn px-3 py-2 border-2 border-gray-200 rounded-lg hover:border-orange-500 hover:bg-orange-50 transition-colors text-xs text-center">
+              <i class="fas fa-hotel mr-1"></i>Khách sạn
+            </button>
+            <button onclick="selectTopic('transportation', event)" class="topic-btn px-3 py-2 border-2 border-gray-200 rounded-lg hover:border-orange-500 hover:bg-orange-50 transition-colors text-xs text-center">
+              <i class="fas fa-bus mr-1"></i>Giao thông
+            </button>
+            <button onclick="selectTopic('sightseeing', event)" class="topic-btn px-3 py-2 border-2 border-gray-200 rounded-lg hover:border-orange-500 hover:bg-orange-50 transition-colors text-xs text-center">
+              <i class="fas fa-camera mr-1"></i>Tham quan
+            </button>
+            <button onclick="selectTopic('entertainment', event)" class="topic-btn px-3 py-2 border-2 border-gray-200 rounded-lg hover:border-orange-500 hover:bg-orange-50 transition-colors text-xs text-center">
+              <i class="fas fa-film mr-1"></i>Giải trí
+            </button>
+            <button onclick="selectTopic('sports', event)" class="topic-btn px-3 py-2 border-2 border-gray-200 rounded-lg hover:border-orange-500 hover:bg-orange-50 transition-colors text-xs text-center">
+              <i class="fas fa-football-ball mr-1"></i>Thể thao
+            </button>
+          </div>
+        </div>
+
+        <!-- Sức khỏe & Cuộc sống -->
+        <div>
+          <h4 class="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+            <i class="fas fa-heartbeat text-red-600"></i>
+            Sức khỏe & Cuộc sống
+          </h4>
+          <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
+            <button onclick="selectTopic('health', event)" class="topic-btn px-3 py-2 border-2 border-gray-200 rounded-lg hover:border-red-500 hover:bg-red-50 transition-colors text-xs text-center">
+              <i class="fas fa-heart mr-1"></i>Sức khỏe
+            </button>
+            <button onclick="selectTopic('doctor', event)" class="topic-btn px-3 py-2 border-2 border-gray-200 rounded-lg hover:border-red-500 hover:bg-red-50 transition-colors text-xs text-center">
+              <i class="fas fa-user-md mr-1"></i>Bác sĩ
+            </button>
+            <button onclick="selectTopic('food', event)" class="topic-btn px-3 py-2 border-2 border-gray-200 rounded-lg hover:border-red-500 hover:bg-red-50 transition-colors text-xs text-center">
+              <i class="fas fa-utensils mr-1"></i>Ẩm thực
+            </button>
+            <button onclick="selectTopic('exercise', event)" class="topic-btn px-3 py-2 border-2 border-gray-200 rounded-lg hover:border-red-500 hover:bg-red-50 transition-colors text-xs text-center">
+              <i class="fas fa-dumbbell mr-1"></i>Tập thể dục
+            </button>
+            <button onclick="selectTopic('family', event)" class="topic-btn px-3 py-2 border-2 border-gray-200 rounded-lg hover:border-red-500 hover:bg-red-50 transition-colors text-xs text-center">
+              <i class="fas fa-users mr-1"></i>Gia đình
+            </button>
+            <button onclick="selectTopic('hobbies', event)" class="topic-btn px-3 py-2 border-2 border-gray-200 rounded-lg hover:border-red-500 hover:bg-red-50 transition-colors text-xs text-center">
+              <i class="fas fa-palette mr-1"></i>Sở thích
+            </button>
+          </div>
+        </div>
+
+        <!-- Công nghệ & Hiện đại -->
+        <div>
+          <h4 class="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+            <i class="fas fa-laptop-code text-indigo-600"></i>
+            Công nghệ & Hiện đại
+          </h4>
+          <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
+            <button onclick="selectTopic('technology', event)" class="topic-btn px-3 py-2 border-2 border-gray-200 rounded-lg hover:border-indigo-500 hover:bg-indigo-50 transition-colors text-xs text-center">
+              <i class="fas fa-laptop mr-1"></i>Công nghệ
+            </button>
+            <button onclick="selectTopic('social-media', event)" class="topic-btn px-3 py-2 border-2 border-gray-200 rounded-lg hover:border-indigo-500 hover:bg-indigo-50 transition-colors text-xs text-center">
+              <i class="fas fa-share-alt mr-1"></i>Mạng xã hội
+            </button>
+            <button onclick="selectTopic('online-shopping', event)" class="topic-btn px-3 py-2 border-2 border-gray-200 rounded-lg hover:border-indigo-500 hover:bg-indigo-50 transition-colors text-xs text-center">
+              <i class="fas fa-shopping-bag mr-1"></i>Mua sắm online
+            </button>
+            <button onclick="selectTopic('banking', event)" class="topic-btn px-3 py-2 border-2 border-gray-200 rounded-lg hover:border-indigo-500 hover:bg-indigo-50 transition-colors text-xs text-center">
+              <i class="fas fa-university mr-1"></i>Ngân hàng
+            </button>
+            <button onclick="selectTopic('customer-service', event)" class="topic-btn px-3 py-2 border-2 border-gray-200 rounded-lg hover:border-indigo-500 hover:bg-indigo-50 transition-colors text-xs text-center">
+              <i class="fas fa-headset mr-1"></i>Chăm sóc KH
+            </button>
+            <button onclick="selectTopic('emergency', event)" class="topic-btn px-3 py-2 border-2 border-gray-200 rounded-lg hover:border-indigo-500 hover:bg-indigo-50 transition-colors text-xs text-center">
+              <i class="fas fa-phone-alt mr-1"></i>Khẩn cấp
+            </button>
+          </div>
+        </div>
+      </div>
+      <div id="topicPrompt" class="mt-4 p-4 bg-purple-50 border border-purple-200 rounded-lg hidden">
+        <div class="flex justify-between items-start mb-2">
+          <div>
+            <h4 class="font-semibold text-purple-900 mb-1">Đề bài:</h4>
+            <p id="topicPromptText" class="text-gray-800"></p>
+          </div>
+          <button onclick="closeTopicPrompt()" class="text-purple-600 hover:text-purple-800">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div id="topicVocabulary" class="mt-3">
+          <!-- Vocabulary suggestions will be displayed here -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Writing Area -->
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+      <label class="block text-sm font-medium text-gray-700 mb-2">
+        <i class="fas fa-edit mr-2"></i>
+        Viết bài của bạn (tiếng Anh)
+      </label>
+      <textarea 
+        id="writingInput" 
+        class="w-full h-48 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
+        placeholder="Ví dụ: I go to school yesterday. I am very happy because I learn many new things."
+      ></textarea>
+      <div class="mt-4 flex items-center justify-between">
+        <div class="text-sm text-gray-500">
+          <span id="charCount">0</span> ký tự
+        </div>
+        <button 
+          id="correctBtn" 
+          onclick="correctWriting()"
+          class="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+        >
+          <i class="fas fa-magic"></i>
+          <span>Sửa lỗi với AI</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- AI Status -->
+    <div id="aiStatus" class="hidden mb-4">
+      <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center gap-3">
+        <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+        <span class="text-blue-700">AI đang xử lý...</span>
+        <span id="loadingTimer" class="text-blue-600 text-sm ml-auto"></span>
+      </div>
+    </div>
+
+    <!-- Results -->
+    <div id="resultsContainer" class="hidden">
+      <!-- Score & Level -->
+      <div id="scoreContainer" class="bg-white rounded-lg shadow-lg p-6 mb-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-xl font-bold text-gray-900 mb-2">Đánh giá</h2>
+            <div class="flex items-center gap-4">
+              <div class="text-center">
+                <div id="scoreValue" class="text-4xl font-bold text-purple-600">-</div>
+                <div class="text-sm text-gray-500">Điểm</div>
+              </div>
+              <div class="text-center">
+                <div id="levelValue" class="text-2xl font-bold text-blue-600">-</div>
+                <div class="text-sm text-gray-500">Level</div>
+              </div>
+              <div class="text-center">
+                <div id="errorCountBadge" class="text-2xl font-bold text-red-600">-</div>
+                <div class="text-sm text-gray-500">Lỗi</div>
+              </div>
+            </div>
+          </div>
+          <div id="feedbackText" class="text-gray-600 text-sm max-w-md"></div>
+        </div>
+      </div>
+
+      <!-- Before/After Comparison -->
+      <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-xl font-bold text-gray-900 flex items-center gap-2">
+            <i class="fas fa-exchange-alt text-purple-600"></i>
+            So sánh Trước/Sau
+          </h2>
+          <div class="flex gap-2">
+            <button 
+              onclick="setViewMode('side-by-side')"
+              id="viewSideBySide"
+              class="px-3 py-1 bg-purple-600 text-white rounded text-sm"
+            >
+              <i class="fas fa-columns mr-1"></i> Cạnh nhau
+            </button>
+            <button 
+              onclick="setViewMode('before')"
+              id="viewBefore"
+              class="px-3 py-1 bg-gray-200 text-gray-700 rounded text-sm"
+            >
+              <i class="fas fa-file-alt mr-1"></i> Bản gốc
+            </button>
+            <button 
+              onclick="setViewMode('after')"
+              id="viewAfter"
+              class="px-3 py-1 bg-gray-200 text-gray-700 rounded text-sm"
+            >
+              <i class="fas fa-check mr-1"></i> Bản sửa
+            </button>
+          </div>
+        </div>
+        <div id="comparisonView" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="border-r border-gray-200 pr-4">
+            <h3 class="text-sm font-semibold text-gray-500 mb-2">Bản gốc</h3>
+            <div id="originalText" class="prose max-w-none text-gray-800 leading-relaxed p-4 bg-gray-50 rounded-lg border border-gray-200 min-h-[200px]">
+              <!-- Original text will be displayed here -->
+            </div>
+          </div>
+          <div class="pl-4">
+            <h3 class="text-sm font-semibold text-gray-500 mb-2">Bản đã sửa</h3>
+            <div id="correctedText" class="prose max-w-none text-gray-800 leading-relaxed p-4 bg-green-50 rounded-lg border border-green-200 min-h-[200px]">
+              <!-- Corrected text will be displayed here -->
+            </div>
+          </div>
+        </div>
+        <div class="mt-4 flex gap-2">
+          <button 
+            onclick="copyCorrectedText()"
+            class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm flex items-center gap-2"
+          >
+            <i class="fas fa-copy"></i>
+            <span>Sao chép bản đã sửa</span>
+          </button>
+          <button 
+            onclick="playCorrectedText()"
+            id="playTTSBtn"
+            class="px-4 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors text-sm flex items-center gap-2"
+          >
+            <i class="fas fa-volume-up"></i>
+            <span>Nghe bản đã sửa</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Errors Found -->
+      <div id="errorsContainer" class="bg-white rounded-lg shadow-lg p-6 mb-6">
+        <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+          <i class="fas fa-exclamation-triangle text-red-600"></i>
+          Lỗi đã phát hiện
+          <span id="errorCount" class="text-sm font-normal text-gray-500"></span>
+        </h2>
+        <div id="errorsList" class="space-y-4">
+          <!-- Errors will be displayed here -->
+        </div>
+      </div>
+
+      <!-- Suggestions -->
+      <div id="suggestionsContainer" class="bg-white rounded-lg shadow-lg p-6">
+        <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+          <i class="fas fa-lightbulb text-yellow-600"></i>
+          Gợi ý cải thiện
+        </h2>
+        <div id="suggestionsList" class="space-y-2">
+          <!-- Suggestions will be displayed here -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Error Message -->
+    <div id="errorMessage" class="hidden bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+      <div class="flex items-center gap-2 text-red-700">
+        <i class="fas fa-exclamation-circle"></i>
+        <span id="errorMessageText"></span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Character counter
+    document.getElementById('writingInput').addEventListener('input', function() {
+      const count = this.value.length;
+      document.getElementById('charCount').textContent = count;
+      document.getElementById('correctBtn').disabled = count === 0;
+    });
+
+    // Kiểm tra Puter.js availability
+    function checkPuterAvailable() {
+      if (typeof Puter !== 'undefined' && Puter.ai && Puter.ai.chat) {
+        return Puter;
+      }
+      if (typeof puter !== 'undefined' && puter.ai && puter.ai.chat) {
+        return puter;
+      }
+      if (typeof window.puter !== 'undefined' && window.puter.ai && window.puter.ai.chat) {
+        return window.puter;
+      }
+      return null;
+    }
+
+    // Cache cho AI responses
+    const writingCache = new Map();
+    const CACHE_KEY = 'writing_ai_cache';
+
+    function loadCache() {
+      try {
+        const cached = localStorage.getItem(CACHE_KEY);
+        if (cached) {
+          const cacheObj = JSON.parse(cached);
+          Object.entries(cacheObj).forEach(([key, value]) => {
+            writingCache.set(key, value);
+          });
+        }
+      } catch (e) {
+        console.warn('Failed to load writing cache:', e);
+      }
+    }
+
+    function saveCache() {
+      try {
+        const cacheObj = Object.fromEntries(writingCache);
+        localStorage.setItem(CACHE_KEY, JSON.stringify(cacheObj));
+      } catch (e) {
+        console.warn('Failed to save writing cache:', e);
+      }
+    }
+
+    loadCache();
+
+    // Main function: Correct writing with AI
+    async function correctWriting() {
+      const inputText = document.getElementById('writingInput').value.trim();
+      
+      if (!inputText) {
+        showError('Vui lòng nhập bài viết của bạn');
+        return;
+      }
+
+      // Check cache first
+      const cacheKey = inputText.toLowerCase().trim();
+      if (writingCache.has(cacheKey)) {
+        console.log('✅ Using cached result');
+        await displayResultsEnhanced(writingCache.get(cacheKey));
+        return;
+      }
+
+      // Check Puter.js availability
+      const puterClient = checkPuterAvailable();
+      if (!puterClient) {
+        showError('Puter.js không khả dụng. Vui lòng kiểm tra kết nối hoặc đăng nhập Puter.com');
+        return;
+      }
+
+      // Show loading
+      showLoading(true);
+      hideError();
+      hideResults();
+
+      const startTime = Date.now();
+      let loadingTimer = 0;
+      const timerInterval = setInterval(() => {
+        loadingTimer += 1;
+        document.getElementById('loadingTimer').textContent = `${loadingTimer}s`;
+      }, 1000);
+
+      try {
+        const prompt = `Bạn là giáo viên sửa bài viết tiếng Anh chuyên nghiệp. Hãy phân tích và sửa bài viết sau:
+
+Bài viết của học sinh:
+"${inputText}"
+
+Yêu cầu:
+1. Sửa tất cả lỗi ngữ pháp, chính tả
+2. Cải thiện cách diễn đạt nếu cần
+3. Liệt kê các lỗi đã sửa với giải thích
+4. Đưa ra gợi ý cải thiện
+
+Trả về JSON format chính xác (không markdown, chỉ JSON):
+{
+  "corrected": "Bản đã sửa hoàn chỉnh",
+  "errors": [
+    {
+      "original": "Từ/câu sai",
+      "corrected": "Từ/câu đúng",
+      "explanation": "Giải thích lỗi"
+    }
+  ],
+  "suggestions": ["Gợi ý 1", "Gợi ý 2"]
+}`;
+
+        const modelsToTry = ["gpt-4o-mini", "gpt-3.5-turbo", "gpt-5-mini", "gpt-5-nano", "gpt-4o"];
+        let response = null;
+
+        for (const model of modelsToTry) {
+          try {
+            try {
+              response = await puterClient.ai.chat(prompt, {
+                model: model,
+                max_tokens: 500
+              });
+              console.log(`✅ Success with model: ${model}`);
+              break;
+            } catch (optionsError) {
+              // Nếu lỗi về options, thử không có options
+              if (optionsError && typeof optionsError === 'object') {
+                const errorMsg = optionsError.error?.message || optionsError.error?.code || optionsError.message || '';
+                if (errorMsg.includes('temperature') || errorMsg.includes('max_tokens')) {
+                  console.log(`⚠️ Options not supported for ${model}, trying without options...`);
+                  response = await puterClient.ai.chat(prompt, { model: model });
+                  console.log(`✅ Success with model: ${model} (no options)`);
+                  break;
+                }
+              }
+              throw optionsError;
+            }
+          } catch (modelError) {
+            if (modelError && typeof modelError === 'object') {
+              const errorMsg = modelError.error?.message || modelError.error?.code || modelError.message || '';
+              if (errorMsg.includes('model') && (errorMsg.includes('not found') || errorMsg.includes('not available'))) {
+                console.log(`⚠️ Model ${model} not available, trying next...`);
+                continue;
+              }
+            }
+            if (model === modelsToTry[modelsToTry.length - 1]) {
+              throw modelError;
+            }
+            continue;
+          }
+        }
+
+        if (!response) {
+          throw new Error('Tất cả AI models đều không khả dụng');
+        }
+
+        // Extract response text
+        let responseText = '';
+        if (typeof response === 'string') {
+          responseText = response;
+        } else if (response && typeof response === 'object') {
+          if (response.message && response.message.content) {
+            responseText = response.message.content;
+          } else if (response.choices && response.choices[0] && response.choices[0].message && response.choices[0].message.content) {
+            responseText = response.choices[0].message.content;
+          } else {
+            responseText = response.text || response.content || response.message || '';
+          }
+        }
+
+        if (!responseText) {
+          throw new Error('AI không trả về phản hồi');
+        }
+
+        // Parse JSON (remove markdown code blocks if any)
+        let jsonText = responseText.trim();
+        if (jsonText.startsWith('```json')) {
+          jsonText = jsonText.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+        } else if (jsonText.startsWith('```')) {
+          jsonText = jsonText.replace(/^```\s*/, '').replace(/\s*```$/, '');
+        }
+
+        const result = JSON.parse(jsonText);
+
+        // Validate result structure
+        if (!result.corrected) {
+          throw new Error('AI response không đúng format');
+        }
+
+        // Cache result
+        writingCache.set(cacheKey, result);
+        saveCache();
+
+        const duration = Date.now() - startTime;
+        console.log(`✅ AI response time: ${duration}ms (${(duration / 1000).toFixed(1)}s)`);
+
+        // Display results
+        displayResults(result);
+
+      } catch (error) {
+        console.error('Writing correction error:', error);
+        showError(`Lỗi khi sửa bài viết: ${error.message || 'Vui lòng thử lại'}`);
+      } finally {
+        clearInterval(timerInterval);
+        showLoading(false);
+      }
+    }
+
+    // Writing History
+    const WRITING_HISTORY_KEY = 'writing_history';
+    let writingHistory = [];
+
+    function loadHistory() {
+      try {
+        const saved = localStorage.getItem(WRITING_HISTORY_KEY);
+        if (saved) {
+          writingHistory = JSON.parse(saved);
+        }
+      } catch (e) {
+        console.warn('Failed to load writing history:', e);
+        writingHistory = [];
+      }
+    }
+
+    function saveHistory() {
+      try {
+        localStorage.setItem(WRITING_HISTORY_KEY, JSON.stringify(writingHistory));
+      } catch (e) {
+        console.warn('Failed to save writing history:', e);
+      }
+    }
+
+    function addToHistory(original, result) {
+      const historyItem = {
+        id: Date.now(),
+        timestamp: new Date().toISOString(),
+        original: original,
+        corrected: result.corrected,
+        score: result.score || 0,
+        level: result.level || 'N/A',
+        errorCount: result.errors?.length || 0,
+        result: result
+      };
+      writingHistory.unshift(historyItem); // Add to beginning
+      // Keep only last 50 items
+      if (writingHistory.length > 50) {
+        writingHistory = writingHistory.slice(0, 50);
+      }
+      saveHistory();
+      renderHistory();
+    }
+
+    function renderHistory() {
+      const historyListEl = document.getElementById('historyList');
+      if (!historyListEl) return;
+
+      if (writingHistory.length === 0) {
+        historyListEl.innerHTML = '<p class="text-gray-500 text-center py-8">Chưa có lịch sử bài viết</p>';
+        return;
+      }
+
+      historyListEl.innerHTML = writingHistory.map(item => {
+        const date = new Date(item.timestamp);
+        const dateStr = date.toLocaleDateString('vi-VN', { 
+          day: '2-digit', 
+          month: '2-digit', 
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+        const preview = item.original.length > 100 
+          ? item.original.substring(0, 100) + '...' 
+          : item.original;
+
+        return `
+          <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 cursor-pointer transition-colors" onclick="loadHistoryItem(${item.id})">
+            <div class="flex justify-between items-start mb-2">
+              <div class="flex-1">
+                <p class="text-sm text-gray-600 mb-1">${dateStr}</p>
+                <p class="text-gray-800 text-sm">${escapeHtml(preview)}</p>
+              </div>
+              <div class="text-right ml-4">
+                <div class="text-lg font-bold text-purple-600">${item.score || 0}</div>
+                <div class="text-xs text-gray-500">${item.level || 'N/A'}</div>
+              </div>
+            </div>
+            <div class="flex gap-2 mt-2">
+              <span class="text-xs bg-red-100 text-red-700 px-2 py-1 rounded">${item.errorCount} lỗi</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function loadHistoryItem(id) {
+      const item = writingHistory.find(h => h.id === id);
+      if (!item) return;
+
+      // Load vào input và display results
+      document.getElementById('writingInput').value = item.original;
+      document.getElementById('charCount').textContent = item.original.length;
+      displayResultsEnhanced(item.result);
+      toggleHistory(); // Close sidebar
+    }
+
+    function toggleHistory() {
+      const sidebar = document.getElementById('historySidebar');
+      const overlay = document.getElementById('historyOverlay');
+      sidebar.classList.toggle('hidden');
+      overlay.classList.toggle('hidden');
+    }
+
+    function clearHistory() {
+      if (confirm('Bạn có chắc muốn xóa tất cả lịch sử?')) {
+        writingHistory = [];
+        saveHistory();
+        renderHistory();
+      }
+    }
+
+    // View mode for comparison
+    let currentViewMode = 'side-by-side';
+
+    function setViewMode(mode) {
+      currentViewMode = mode;
+      const comparisonView = document.getElementById('comparisonView');
+      const originalEl = document.getElementById('originalText');
+      const correctedEl = document.getElementById('correctedText');
+
+      // Update button states
+      document.getElementById('viewSideBySide').className = 
+        mode === 'side-by-side' ? 'px-3 py-1 bg-purple-600 text-white rounded text-sm' : 'px-3 py-1 bg-gray-200 text-gray-700 rounded text-sm';
+      document.getElementById('viewBefore').className = 
+        mode === 'before' ? 'px-3 py-1 bg-purple-600 text-white rounded text-sm' : 'px-3 py-1 bg-gray-200 text-gray-700 rounded text-sm';
+      document.getElementById('viewAfter').className = 
+        mode === 'after' ? 'px-3 py-1 bg-purple-600 text-white rounded text-sm' : 'px-3 py-1 bg-gray-200 text-gray-700 rounded text-sm';
+
+      if (mode === 'side-by-side') {
+        comparisonView.className = 'grid grid-cols-1 md:grid-cols-2 gap-4';
+        originalEl.parentElement.classList.remove('hidden');
+        correctedEl.parentElement.classList.remove('hidden');
+      } else if (mode === 'before') {
+        comparisonView.className = 'grid grid-cols-1 gap-4';
+        originalEl.parentElement.classList.remove('hidden');
+        correctedEl.parentElement.classList.add('hidden');
+      } else if (mode === 'after') {
+        comparisonView.className = 'grid grid-cols-1 gap-4';
+        originalEl.parentElement.classList.add('hidden');
+        correctedEl.parentElement.classList.remove('hidden');
+      }
+    }
+
+    // TTS Integration
+    function checkPuterTTSAvailable() {
+      if (typeof Puter !== 'undefined' && Puter.ai && Puter.ai.txt2speech) {
+        return Puter;
+      }
+      if (typeof puter !== 'undefined' && puter.ai && puter.ai.txt2speech) {
+        return puter;
+      }
+      if (typeof window.puter !== 'undefined' && window.puter.ai && window.puter.ai.txt2speech) {
+        return window.puter;
+      }
+      return null;
+    }
+
+    function checkWebSpeechAvailable() {
+      return 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
+    }
+
+    async function playCorrectedText() {
+      const correctedText = document.getElementById('correctedText').textContent.trim();
+      if (!correctedText) {
+        showError('Không có văn bản để phát');
+        return;
+      }
+
+      const btn = document.getElementById('playTTSBtn');
+      const originalHTML = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Đang phát...</span>';
+
+      try {
+        // Try Puter.js TTS first
+        const puterClient = checkPuterTTSAvailable();
+        if (puterClient) {
+          const audioResult = await puterClient.ai.txt2speech(correctedText, {
+            provider: 'elevenlabs',
+            voice: '21m00Tcm4TlvDq8ikWAM',
+            model: 'eleven_multilingual_v2'
+          });
+
+          if (audioResult && audioResult.src) {
+            const audio = new Audio(audioResult.src);
+            audio.play();
+            audio.onended = () => {
+              btn.disabled = false;
+              btn.innerHTML = originalHTML;
+            };
+            audio.onerror = () => {
+              // Fallback to Web Speech API
+              playWithWebSpeech(correctedText, btn, originalHTML);
+            };
+            return;
+          }
+        }
+
+        // Fallback to Web Speech API
+        playWithWebSpeech(correctedText, btn, originalHTML);
+      } catch (error) {
+        console.error('TTS error:', error);
+        playWithWebSpeech(correctedText, btn, originalHTML);
+      }
+    }
+
+    function playWithWebSpeech(text, btn, originalHTML) {
+      if (!checkWebSpeechAvailable()) {
+        showError('TTS không khả dụng trên trình duyệt này');
+        btn.disabled = false;
+        btn.innerHTML = originalHTML;
+        return;
+      }
+
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'en-US';
+      utterance.rate = 0.8;
+      utterance.pitch = 1;
+      utterance.volume = 1;
+
+      const voices = speechSynthesis.getVoices();
+      const englishVoice = voices.find(v => 
+        v.lang.startsWith('en') && v.name.toLowerCase().includes('female')
+      ) || voices.find(v => v.lang.startsWith('en-US')) || voices[0];
+
+      if (englishVoice) {
+        utterance.voice = englishVoice;
+      }
+
+      utterance.onend = () => {
+        btn.disabled = false;
+        btn.innerHTML = originalHTML;
+      };
+
+      utterance.onerror = () => {
+        showError('Lỗi khi phát âm thanh');
+        btn.disabled = false;
+        btn.innerHTML = originalHTML;
+      };
+
+      speechSynthesis.speak(utterance);
+    }
+
+    function displayResults(result) {
+      // Save original text
+      const originalText = document.getElementById('writingInput').value.trim();
+      
+      // Save to history
+      addToHistory(originalText, result);
+
+      // Display score and level
+      const scoreContainer = document.getElementById('scoreContainer');
+      if (result.score !== undefined) {
+        scoreContainer.classList.remove('hidden');
+        document.getElementById('scoreValue').textContent = result.score || 0;
+        document.getElementById('levelValue').textContent = result.level || 'N/A';
+        document.getElementById('errorCountBadge').textContent = result.errors?.length || 0;
+        document.getElementById('feedbackText').textContent = result.feedback || 'Không có phản hồi';
+      } else {
+        scoreContainer.classList.add('hidden');
+      }
+
+      // Display original and corrected text for comparison
+      const originalEl = document.getElementById('originalText');
+      const correctedEl = document.getElementById('correctedText');
+      originalEl.textContent = originalText;
+      correctedEl.textContent = result.corrected || 'Không có bản sửa';
+
+      // Display errors
+      const errorsListEl = document.getElementById('errorsList');
+      const errorsContainerEl = document.getElementById('errorsContainer');
+      const errorCountEl = document.getElementById('errorCount');
+
+      if (result.errors && result.errors.length > 0) {
+        errorsContainerEl.classList.remove('hidden');
+        errorCountEl.textContent = `(${result.errors.length} lỗi)`;
+        
+        errorsListEl.innerHTML = result.errors.map((error, index) => `
+          <div class="border-l-4 border-red-500 pl-4 py-2 bg-red-50 rounded">
+            <div class="flex items-start gap-3">
+              <span class="text-red-600 font-bold">${index + 1}.</span>
+              <div class="flex-1">
+                <div class="mb-2">
+                  <span class="error-highlight">${escapeHtml(error.original || 'N/A')}</span>
+                  <span class="mx-2 text-gray-400">→</span>
+                  <span class="correction-highlight">${escapeHtml(error.corrected || 'N/A')}</span>
+                </div>
+                <p class="text-sm text-gray-600">${escapeHtml(error.explanation || 'Không có giải thích')}</p>
+              </div>
+            </div>
+          </div>
+        `).join('');
+      } else {
+        errorsContainerEl.classList.add('hidden');
+      }
+
+      // Display suggestions
+      const suggestionsListEl = document.getElementById('suggestionsList');
+      const suggestionsContainerEl = document.getElementById('suggestionsContainer');
+
+      if (result.suggestions && result.suggestions.length > 0) {
+        suggestionsContainerEl.classList.remove('hidden');
+        suggestionsListEl.innerHTML = result.suggestions.map((suggestion, index) => `
+          <div class="suggestion-item flex items-start gap-3 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+            <span class="text-yellow-600 font-bold mt-1">${index + 1}.</span>
+            <span class="text-gray-700 flex-1">${escapeHtml(suggestion)}</span>
+          </div>
+        `).join('');
+      } else {
+        suggestionsContainerEl.classList.add('hidden');
+      }
+
+      // Show results container
+      document.getElementById('resultsContainer').classList.remove('hidden');
+    }
+
+    function copyCorrectedText() {
+      const correctedText = document.getElementById('correctedText').textContent;
+      navigator.clipboard.writeText(correctedText).then(() => {
+        const btn = event.target.closest('button');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-check"></i> <span>Đã sao chép!</span>';
+        btn.classList.add('bg-green-100', 'text-green-700');
+        setTimeout(() => {
+          btn.innerHTML = originalText;
+          btn.classList.remove('bg-green-100', 'text-green-700');
+        }, 2000);
+      });
+    }
+
+    function showLoading(show) {
+      const statusEl = document.getElementById('aiStatus');
+      if (show) {
+        statusEl.classList.remove('hidden');
+      } else {
+        statusEl.classList.add('hidden');
+      }
+    }
+
+    function hideResults() {
+      document.getElementById('resultsContainer').classList.add('hidden');
+    }
+
+    function showError(message) {
+      const errorEl = document.getElementById('errorMessage');
+      const errorTextEl = document.getElementById('errorMessageText');
+      errorTextEl.textContent = message;
+      errorEl.classList.remove('hidden');
+    }
+
+    function hideError() {
+      document.getElementById('errorMessage').classList.add('hidden');
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // ============================================
+    // Phase 2: Advanced Features
+    // ============================================
+
+    // 1. Topic-based Practice
+    let currentTopic = null;
+
+    function selectTopic(topic, event) {
+      currentTopic = topic;
+      
+      // Update button styles - remove all active states
+      document.querySelectorAll('.topic-btn').forEach(btn => {
+        btn.classList.remove('border-purple-500', 'bg-purple-50', 'border-blue-500', 'bg-blue-50', 
+                            'border-green-500', 'bg-green-50', 'border-orange-500', 'bg-orange-50',
+                            'border-red-500', 'bg-red-50', 'border-indigo-500', 'bg-indigo-50');
+        btn.classList.add('border-gray-200');
+      });
+      
+      // Find clicked button
+      let clickedBtn = null;
+      if (event && event.target) {
+        clickedBtn = event.target.closest('.topic-btn') || event.target;
+      }
+      
+      // If not found, find by searching all buttons
+      if (!clickedBtn) {
+        document.querySelectorAll('.topic-btn').forEach(btn => {
+          if (btn.getAttribute('onclick') && btn.getAttribute('onclick').includes(`selectTopic('${topic}'`)) {
+            clickedBtn = btn;
+          }
+        });
+      }
+      
+      if (clickedBtn) {
+        // Determine color based on category
+        const categoryColors = {
+          'greetings': { border: 'border-blue-500', bg: 'bg-blue-50' },
+          'introductions': { border: 'border-blue-500', bg: 'bg-blue-50' },
+          'small-talk': { border: 'border-blue-500', bg: 'bg-blue-50' },
+          'asking-directions': { border: 'border-blue-500', bg: 'bg-blue-50' },
+          'shopping': { border: 'border-blue-500', bg: 'bg-blue-50' },
+          'restaurant': { border: 'border-blue-500', bg: 'bg-blue-50' },
+          'making-appointments': { border: 'border-green-500', bg: 'bg-green-50' },
+          'complaints': { border: 'border-green-500', bg: 'bg-green-50' },
+          'apologies': { border: 'border-green-500', bg: 'bg-green-50' },
+          'requests': { border: 'border-green-500', bg: 'bg-green-50' },
+          'giving-advice': { border: 'border-green-500', bg: 'bg-green-50' },
+          'making-decisions': { border: 'border-green-500', bg: 'bg-green-50' },
+          'job-interview': { border: 'border-purple-500', bg: 'bg-purple-50' },
+          'workplace': { border: 'border-purple-500', bg: 'bg-purple-50' },
+          'meetings': { border: 'border-purple-500', bg: 'bg-purple-50' },
+          'email-writing': { border: 'border-purple-500', bg: 'bg-purple-50' },
+          'presentations': { border: 'border-purple-500', bg: 'bg-purple-50' },
+          'studying': { border: 'border-purple-500', bg: 'bg-purple-50' },
+          'travel': { border: 'border-orange-500', bg: 'bg-orange-50' },
+          'hotel': { border: 'border-orange-500', bg: 'bg-orange-50' },
+          'transportation': { border: 'border-orange-500', bg: 'bg-orange-50' },
+          'sightseeing': { border: 'border-orange-500', bg: 'bg-orange-50' },
+          'entertainment': { border: 'border-orange-500', bg: 'bg-orange-50' },
+          'sports': { border: 'border-orange-500', bg: 'bg-orange-50' },
+          'health': { border: 'border-red-500', bg: 'bg-red-50' },
+          'doctor': { border: 'border-red-500', bg: 'bg-red-50' },
+          'food': { border: 'border-red-500', bg: 'bg-red-50' },
+          'exercise': { border: 'border-red-500', bg: 'bg-red-50' },
+          'family': { border: 'border-red-500', bg: 'bg-red-50' },
+          'hobbies': { border: 'border-red-500', bg: 'bg-red-50' },
+          'technology': { border: 'border-indigo-500', bg: 'bg-indigo-50' },
+          'social-media': { border: 'border-indigo-500', bg: 'bg-indigo-50' },
+          'online-shopping': { border: 'border-indigo-500', bg: 'bg-indigo-50' },
+          'banking': { border: 'border-indigo-500', bg: 'bg-indigo-50' },
+          'customer-service': { border: 'border-indigo-500', bg: 'bg-indigo-50' },
+          'emergency': { border: 'border-indigo-500', bg: 'bg-indigo-50' }
+        };
+        
+        const colors = categoryColors[topic] || { border: 'border-purple-500', bg: 'bg-purple-50' };
+        clickedBtn.classList.remove('border-gray-200');
+        clickedBtn.classList.add(colors.border, colors.bg);
+      }
+      
+      // Enable generate button
+      const generateBtn = document.getElementById('generatePromptBtn');
+      if (generateBtn) {
+        generateBtn.disabled = false;
+      }
+    }
+
+    async function generateTopicPrompt() {
+      if (!currentTopic) {
+        showError('Vui lòng chọn chủ đề trước');
+        return;
+      }
+
+      const puterClient = checkPuterAvailable();
+      if (!puterClient) {
+        showError('Puter.js không khả dụng');
+        return;
+      }
+
+      const topicNames = {
+        // Giao tiếp Hàng ngày
+        'greetings': 'Greetings and Introductions',
+        'introductions': 'Introducing Yourself and Others',
+        'small-talk': 'Small Talk and Casual Conversation',
+        'asking-directions': 'Asking for Directions',
+        'shopping': 'Shopping and Buying Things',
+        'restaurant': 'Ordering Food at Restaurant',
+        // Tình huống Thực tế
+        'making-appointments': 'Making Appointments and Reservations',
+        'complaints': 'Making Complaints',
+        'apologies': 'Apologizing and Making Excuses',
+        'requests': 'Making Requests and Asking for Help',
+        'giving-advice': 'Giving Advice and Suggestions',
+        'making-decisions': 'Making Decisions and Choices',
+        // Công việc & Học tập
+        'job-interview': 'Job Interview',
+        'workplace': 'Workplace Communication',
+        'meetings': 'Business Meetings',
+        'email-writing': 'Writing Professional Emails',
+        'presentations': 'Giving Presentations',
+        'studying': 'Studying and Education',
+        // Du lịch & Giải trí
+        'travel': 'Travel and Tourism',
+        'hotel': 'Hotel Booking and Check-in',
+        'transportation': 'Transportation and Getting Around',
+        'sightseeing': 'Sightseeing and Tourist Activities',
+        'entertainment': 'Entertainment and Leisure',
+        'sports': 'Sports and Fitness',
+        // Sức khỏe & Cuộc sống
+        'health': 'Health and Wellness',
+        'doctor': 'Visiting the Doctor',
+        'food': 'Food and Cooking',
+        'exercise': 'Exercise and Fitness',
+        'family': 'Family and Relationships',
+        'hobbies': 'Hobbies and Interests',
+        // Công nghệ & Hiện đại
+        'technology': 'Technology and Gadgets',
+        'social-media': 'Social Media and Online Communication',
+        'online-shopping': 'Online Shopping',
+        'banking': 'Banking and Finance',
+        'customer-service': 'Customer Service',
+        'emergency': 'Emergency Situations'
+      };
+
+      showLoading(true);
+      try {
+        const prompt = `Tạo một đề bài viết tiếng Anh về chủ đề "${topicNames[currentTopic]}". 
+Yêu cầu:
+1. Đề bài ngắn gọn, rõ ràng (1-2 câu)
+2. Phù hợp với level B1-B2
+3. Gợi ý 5-7 từ vựng liên quan (kèm nghĩa tiếng Việt)
+
+Trả về JSON:
+{
+  "prompt": "Đề bài viết",
+  "vocabulary": [
+    {"word": "từ vựng", "meaning": "nghĩa tiếng Việt"}
+  ]
+}`;
+
+        const response = await puterClient.ai.chat(prompt, { model: 'gpt-4o-mini' });
+        let responseText = '';
+        if (typeof response === 'string') {
+          responseText = response;
+        } else if (response && response.message && response.message.content) {
+          responseText = response.message.content;
+        }
+
+        let jsonText = responseText.trim();
+        if (jsonText.startsWith('```json')) {
+          jsonText = jsonText.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+        } else if (jsonText.startsWith('```')) {
+          jsonText = jsonText.replace(/^```\s*/, '').replace(/\s*```$/, '');
+        }
+
+        const result = JSON.parse(jsonText);
+
+        // Display prompt
+        document.getElementById('topicPromptText').textContent = result.prompt;
+        document.getElementById('topicPrompt').classList.remove('hidden');
+
+        // Display vocabulary
+        const vocabEl = document.getElementById('topicVocabulary');
+        if (result.vocabulary && result.vocabulary.length > 0) {
+          vocabEl.innerHTML = `
+            <h5 class="font-semibold text-purple-900 mb-2">Gợi ý từ vựng:</h5>
+            <div class="flex flex-wrap gap-2">
+              ${result.vocabulary.map(v => `
+                <span class="px-3 py-1 bg-white border border-purple-200 rounded-lg text-sm cursor-pointer hover:bg-purple-100" 
+                      onclick="addVocabularyToInput('${v.word}')" 
+                      title="${v.meaning}">
+                  ${v.word} <span class="text-gray-500 text-xs">(${v.meaning})</span>
+                </span>
+              `).join('')}
+            </div>
+          `;
+        } else {
+          vocabEl.innerHTML = '';
+        }
+      } catch (error) {
+        console.error('Error generating topic prompt:', error);
+        showError('Lỗi khi tạo đề bài');
+      } finally {
+        showLoading(false);
+      }
+    }
+
+    function addVocabularyToInput(word) {
+      const input = document.getElementById('writingInput');
+      const currentText = input.value;
+      input.value = currentText + (currentText ? ' ' : '') + word + ' ';
+      input.focus();
+      document.getElementById('charCount').textContent = input.value.length;
+    }
+
+    function closeTopicPrompt() {
+      document.getElementById('topicPrompt').classList.add('hidden');
+    }
+
+    // 2. Vocabulary Integration
+    let vocabularyData = null;
+
+    async function loadVocabularyData() {
+      if (vocabularyData) return vocabularyData;
+      try {
+        const response = await fetch('/api/vocabulary/words?limit=10000&fields=Base Word,Level,Translate,Guideword');
+        const data = await response.json();
+        vocabularyData = new Map();
+        data.data.forEach(word => {
+          const baseWord = word['Base Word']?.toLowerCase();
+          if (baseWord) {
+            vocabularyData.set(baseWord, word);
+          }
+        });
+        return vocabularyData;
+      } catch (error) {
+        console.error('Error loading vocabulary:', error);
+        return new Map();
+      }
+    }
+
+    function highlightVocabulary(text) {
+      if (!vocabularyData || vocabularyData.size === 0) return text;
+      
+      const words = text.split(/(\s+|[.,!?;:])/);
+      return words.map(word => {
+        const cleanWord = word.toLowerCase().replace(/[.,!?;:()]/g, '');
+        if (vocabularyData.has(cleanWord) && cleanWord.length > 2) {
+          const wordData = vocabularyData.get(cleanWord);
+          return `<span class="vocab-word bg-yellow-100 text-yellow-800 px-1 rounded cursor-pointer hover:bg-yellow-200" 
+                         onclick="showWordDetailFromWriting('${wordData['Base Word']}')" 
+                         title="${wordData.Translate || wordData.Guideword || ''}">
+                  ${word}
+                </span>`;
+        }
+        return word;
+      }).join('');
+    }
+
+    async function showWordDetailFromWriting(word) {
+      // Load vocabulary data if not loaded
+      await loadVocabularyData();
+      
+      // Find word index
+      try {
+        const response = await fetch(`/api/vocabulary/words?search=${encodeURIComponent(word)}&limit=1`);
+        const data = await response.json();
+        if (data.data && data.data.length > 0) {
+          // Open in new tab or modal
+          window.open(`/learn?word=${encodeURIComponent(word)}`, '_blank');
+        } else {
+          // Fallback: open dictionary
+          window.open(`https://dictionary.cambridge.org/dictionary/english/${encodeURIComponent(word)}`, '_blank');
+        }
+      } catch (error) {
+        console.error('Error opening word detail:', error);
+        window.open(`https://dictionary.cambridge.org/dictionary/english/${encodeURIComponent(word)}`, '_blank');
+      }
+    }
+
+    // 3. Grammar Hints
+    async function findGrammarHints(errorType, errorText) {
+      try {
+        const response = await fetch(`/api/grammar/points?search=${encodeURIComponent(errorType)}&limit=3`);
+        const data = await response.json();
+        return data.data || [];
+      } catch (error) {
+        console.error('Error finding grammar hints:', error);
+        return [];
+      }
+    }
+
+    async function displayGrammarHintsForErrors(errors) {
+      const grammarErrors = errors.filter(e => e.type === 'grammar');
+      if (grammarErrors.length === 0) return;
+
+      // Find grammar hints for each error
+      for (const error of grammarErrors) {
+        const hints = await findGrammarHints(error.explanation || error.original, error.original);
+        if (hints.length > 0) {
+          error.grammarHints = hints;
+        }
+      }
+    }
+
+    // 4. Export & Download
+    function exportWriting() {
+      const original = document.getElementById('originalText').textContent;
+      const corrected = document.getElementById('correctedText').textContent;
+      const errors = Array.from(document.querySelectorAll('#errorsList > div')).map(el => ({
+        original: el.querySelector('.error-highlight')?.textContent || '',
+        corrected: el.querySelector('.correction-highlight')?.textContent || '',
+        explanation: el.querySelector('.text-sm.text-gray-600')?.textContent || ''
+      }));
+      const suggestions = Array.from(document.querySelectorAll('#suggestionsList > div')).map(el => 
+        el.querySelector('.text-gray-700')?.textContent || ''
+      );
+      const score = document.getElementById('scoreValue')?.textContent || 'N/A';
+      const level = document.getElementById('levelValue')?.textContent || 'N/A';
+
+      // Create markdown content
+      const markdown = `# Writing Practice Report
+
+## Score: ${score} | Level: ${level}
+
+### Original Text
+${original}
+
+### Corrected Text
+${corrected}
+
+### Errors Found (${errors.length})
+${errors.map((e, i) => `${i + 1}. **${e.original}** → **${e.corrected}**\n   ${e.explanation}`).join('\n\n')}
+
+### Suggestions
+${suggestions.map((s, i) => `${i + 1}. ${s}`).join('\n')}
+
+---
+Generated on ${new Date().toLocaleString('vi-VN')}
+`;
+
+      // Download as text file
+      const blob = new Blob([markdown], { type: 'text/markdown' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `writing-practice-${Date.now()}.md`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // Store original displayResults function
+    const originalDisplayResultsFunction = displayResults;
+    
+    // Enhanced displayResults with vocabulary highlighting and grammar hints
+    async function displayResultsEnhanced(result) {
+      // Load vocabulary data
+      await loadVocabularyData();
+      
+      // Find grammar hints for errors
+      if (result.errors && result.errors.length > 0) {
+        await displayGrammarHintsForErrors(result.errors);
+      }
+
+      // Call original function
+      originalDisplayResultsFunction(result);
+
+      // Highlight vocabulary in corrected text
+      const correctedEl = document.getElementById('correctedText');
+      if (correctedEl && result.corrected) {
+        const highlighted = highlightVocabulary(result.corrected);
+        correctedEl.innerHTML = highlighted;
+      }
+
+      // Add grammar hints to error display
+      setTimeout(() => {
+        const errorsListEl = document.getElementById('errorsList');
+        if (errorsListEl && result.errors) {
+          result.errors.forEach((error, index) => {
+            if (error.grammarHints && error.grammarHints.length > 0) {
+              const errorEl = errorsListEl.children[index];
+              if (errorEl) {
+                const flexEl = errorEl.querySelector('.flex-1');
+                if (flexEl && !flexEl.querySelector('.grammar-hints')) {
+                  const grammarHintsHtml = `
+                    <div class="grammar-hints mt-2 pt-2 border-t border-gray-200">
+                      <p class="text-xs font-semibold text-blue-600 mb-1">Grammar Hints:</p>
+                      ${error.grammarHints.map(hint => `
+                        <a href="/grammar?search=${encodeURIComponent(hint.Guideword)}" 
+                           target="_blank"
+                           class="block text-xs text-blue-600 hover:text-blue-800 mb-1">
+                          <i class="fas fa-external-link-alt mr-1"></i>
+                          ${escapeHtml(hint.Guideword || 'N/A')} (${escapeHtml(hint.Level || 'N/A')})
+                        </a>
+                      `).join('')}
+                    </div>
+                  `;
+                  flexEl.insertAdjacentHTML('beforeend', grammarHintsHtml);
+                }
+              }
+            }
+          });
+        }
+      }, 100);
+    }
+
+
+    // Initialize
+    document.getElementById('correctBtn').disabled = true;
+    loadHistory();
+    renderHistory();
+    loadVocabularyData(); // Preload vocabulary
+
+    // Load voices for Web Speech API
+    if (checkWebSpeechAvailable()) {
+      speechSynthesis.getVoices();
+      speechSynthesis.onvoiceschanged = () => {
+        speechSynthesis.getVoices();
+      };
+    }
+  </script>
+</body>
+</html>
+

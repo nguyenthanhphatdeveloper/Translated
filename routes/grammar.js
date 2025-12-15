@@ -7,6 +7,7 @@ const express = require('express');
 const router = express.Router();
 const fs = require('fs');
 const path = require('path');
+const logger = require('../utils/logger');
 
 let grammarData = null;
 
@@ -18,7 +19,7 @@ const loadGrammar = () => {
     grammarData = JSON.parse(raw);
     return grammarData;
   } catch (e) {
-    console.error('Error loading grammar data:', e);
+    logger.error('Error loading grammar data', e);
     return [];
   }
 };
@@ -70,7 +71,7 @@ router.get('/points', (req, res) => {
       }
     });
   } catch (e) {
-    console.error('Error fetching grammar points:', e);
+    logger.error('Error fetching grammar points', e);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -98,7 +99,7 @@ router.get('/stats', (req, res) => {
 
     res.json(stats);
   } catch (e) {
-    console.error('Error fetching grammar stats:', e);
+    logger.error('Error fetching grammar stats', e);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

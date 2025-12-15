@@ -7,6 +7,7 @@ const express = require('express');
 const router = express.Router();
 const fs = require('fs');
 const path = require('path');
+const logger = require('../utils/logger');
 
 // Load dữ liệu từ vựng (cache in-memory)
 let vocabularyData = null;
@@ -20,7 +21,7 @@ const loadVocabularyData = () => {
     vocabularyData = JSON.parse(rawData);
     return vocabularyData;
   } catch (error) {
-    console.error('Error loading vocabulary data:', error);
+    logger.error('Error loading vocabulary data', error);
     return [];
   }
 };
@@ -141,7 +142,7 @@ router.get('/words/:id', (req, res) => {
 
     res.json(words[id]);
   } catch (error) {
-    console.error('Error fetching word:', error);
+    logger.error('Error fetching word', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -191,7 +192,7 @@ router.get('/random', (req, res) => {
     const words = loadVocabularyData();
     
     if (!words || words.length === 0) {
-      console.error('Vocabulary data is empty or not loaded');
+      logger.error('Vocabulary data is empty or not loaded');
       return res.status(500).json({ error: 'Vocabulary data not available' });
     }
     
@@ -210,10 +211,10 @@ router.get('/random', (req, res) => {
           return wordLevel && levels.includes(wordLevel);
         });
         
-        console.log(`[Random API] Direct filter result: ${filteredPool.length} words`);
+        logger.debug(`[Random API] Direct filter result: ${filteredPool.length} words`);
         
         if (levels.length >= 5 || filteredPool.length === 0) {
-          console.log(`[Random API] Multiple levels (${levels.length}) or empty result, merging from individual levels...`);
+          logger.debug(`[Random API] Multiple levels (${levels.length}) or empty result, merging from individual levels...`);
           const mergedPool = [];
           for (const singleLevel of levels) {
             const testPool = words.filter(w => {
@@ -221,20 +222,20 @@ router.get('/random', (req, res) => {
               return wordLevel === singleLevel;
             });
             if (testPool.length > 0) {
-              console.log(`[Random API] Found ${testPool.length} words for level "${singleLevel}"`);
+              logger.debug(`[Random API] Found ${testPool.length} words for level "${singleLevel}"`);
               mergedPool.push(...testPool);
             } else {
-              console.warn(`[Random API] No words found for level "${singleLevel}"`);
+              logger.warn(`[Random API] No words found for level "${singleLevel}"`);
             }
           }
           // Remove duplicates dựa trên Base Word
           const uniquePool = Array.from(new Map(mergedPool.map(w => [w['Base Word'], w])).values());
-          console.log(`[Random API] Merged pool: ${uniquePool.length} unique words from ${levels.length} levels`);
+          logger.debug(`[Random API] Merged pool: ${uniquePool.length} unique words from ${levels.length} levels`);
           pool = uniquePool.length > 0 ? uniquePool : filteredPool; // Fallback về filtered nếu merge cũng rỗng
         } else {
           // Với ít levels và có kết quả, dùng filtered
           pool = filteredPool;
-          console.log(`[Random API] Using filtered pool: ${pool.length} words`);
+          logger.debug(`[Random API] Using filtered pool: ${pool.length} words`);
         }
       }
     }
@@ -244,26 +245,26 @@ router.get('/random', (req, res) => {
     if (maxLen > 0) {
       const beforeCount = pool.length;
       pool = pool.filter(w => (w['Base Word'] || '').length <= maxLen);
-      console.log(`[Random API] After maxLen filter (${maxLen}): ${pool.length} words (was ${beforeCount})`);
+      logger.debug(`[Random API] After maxLen filter (${maxLen}): ${pool.length} words (was ${beforeCount})`);
     }
 
     // Lọc theo hasGuide / hasTranslate
     if (req.query.hasGuide === 'true') {
       const beforeCount = pool.length;
       pool = pool.filter(w => (w.Guideword || '').trim().length >= 2);
-      console.log(`[Random API] After hasGuide filter: ${pool.length} words (was ${beforeCount})`);
+      logger.debug(`[Random API] After hasGuide filter: ${pool.length} words (was ${beforeCount})`);
     }
     if (req.query.hasTranslate === 'true') {
       const beforeCount = pool.length;
       pool = pool.filter(w => (w.Translate || '').trim().length >= 2);
-      console.log(`[Random API] After hasTranslate filter: ${pool.length} words (was ${beforeCount})`);
+      logger.debug(`[Random API] After hasTranslate filter: ${pool.length} words (was ${beforeCount})`);
     }
 
     // Lấy số lượng
     const count = clamp(parseInt(req.query.count) || 10, 1, 200);
     
     if (pool.length === 0) {
-      console.warn(`[Random API] Pool is empty after filters. Query:`, req.query);
+      logger.warn(`[Random API] Pool is empty after filters`, { query: req.query });
       return res.json([]);
     }
 
@@ -271,13 +272,13 @@ router.get('/random', (req, res) => {
     const shuffled = pool.sort(() => 0.5 - Math.random());
     const randomWords = shuffled.slice(0, Math.min(count, shuffled.length));
     
-    console.log(`[Random API] Returning ${randomWords.length} random words (requested ${count})`);
+    logger.debug(`[Random API] Returning ${randomWords.length} random words (requested ${count})`);
 
     const data = pickFields(randomWords, req.query.fields);
 
     res.json(data);
   } catch (error) {
-    console.error('Error fetching random words:', error);
+    logger.error('Error fetching random words', error);
     res.status(500).json({ error: 'Internal server error', details: error.message });
   }
 });
@@ -309,7 +310,7 @@ router.get('/topics', (req, res) => {
       totalTopics: data.length,
     });
   } catch (error) {
-    console.error('Error fetching topics:', error);
+    logger.error('Error fetching topics', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
