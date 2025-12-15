@@ -6,13 +6,22 @@
   <title>Ôn từ (SRS)</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    @media (max-width: 640px) {
+      .nav-links { gap: 8px; padding: 8px 0 6px; }
+      .nav-links a { white-space: nowrap; padding: 8px 10px; border-radius: 9999px; background: #f9fafb; }
+      .nav-links a.active-nav { background: #ede9fe; color: #5b21b6; font-weight: 600; }
+    }
+  </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
   <nav class="bg-white shadow-sm border-b">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex justify-between h-16 items-center">
         <a href="/" class="text-xl font-bold text-purple-600">📚 English Vocab</a>
-        <div class="flex items-center space-x-4 text-sm">
+        <div class="nav-links flex items-center space-x-2 sm:space-x-4 text-sm overflow-x-auto no-scrollbar py-2 sm:py-0" aria-label="Điều hướng chính">
           <a href="/learn" class="text-gray-600 hover:text-purple-600">Học từ</a>
           <a href="/assessment" class="text-gray-600 hover:text-purple-600">Test Level</a>
           <a href="/ipa" class="text-gray-600 hover:text-purple-600">IPA</a>
@@ -21,8 +30,9 @@
           <a href="/grammar" class="text-gray-600 hover:text-purple-600">Grammar</a>
           <a href="/writing-practice" class="text-gray-600 hover:text-purple-600">Luyện Viết</a>
           <a href="/conversation-practice" class="text-gray-600 hover:text-purple-600">Luyện Hội thoại</a>
-          <a href="/review" class="text-purple-600 font-semibold">Ôn từ</a>
+          <a href="/review" class="text-purple-600 font-semibold active-nav">Ôn từ</a>
           <a href="/review-grammar" class="text-gray-600 hover:text-purple-600">Ôn Grammar</a>
+          <a href="/voice-chat" class="text-gray-600 hover:text-purple-600">Voice Chat</a>
           <div class="border-l pl-4 ml-2 flex items-center gap-2">
             <button onclick="openPreferencesModal()" class="text-gray-600 hover:text-purple-600 flex items-center gap-1 transition-colors" title="Tùy chọn học tập">
               <i class="fas fa-cog"></i>
@@ -36,29 +46,33 @@
     </div>
   </nav>
 
-  <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <div class="flex items-center justify-between mb-4">
+  <main class="max-w-5xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
       <div>
-        <h1 class="text-2xl font-bold text-gray-900">Ôn tập từ vựng (SRS)</h1>
-        <p class="text-gray-600 text-sm">Đánh giá: Again / Hard / Good / Easy để lên lịch ôn.</p>
+        <h1 class="text-xl sm:text-2xl font-bold text-gray-900 mb-1">Ôn tập từ vựng (SRS)</h1>
+        <p class="text-gray-600 text-xs sm:text-sm">Đánh giá: Again / Hard / Good / Easy để lên lịch ôn.</p>
       </div>
-      <div class="flex items-center gap-2 text-sm">
-        <span class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full">Cần ôn: <span id="needReview">0</span></span>
-        <span class="px-3 py-1 bg-gray-100 text-gray-700 rounded-full">Tổng đã lưu: <span id="total">0</span></span>
+      <div class="flex items-center gap-2 text-xs sm:text-sm flex-wrap">
+        <span class="px-2.5 sm:px-3 py-1.5 bg-purple-100 text-purple-700 rounded-full whitespace-nowrap">
+          <span class="font-semibold">Cần ôn:</span> <span id="needReview" class="font-bold">0</span>
+        </span>
+        <span class="px-2.5 sm:px-3 py-1.5 bg-gray-100 text-gray-700 rounded-full whitespace-nowrap">
+          <span class="font-semibold">Đã lưu:</span> <span id="total" class="font-bold">0</span>
+        </span>
       </div>
     </div>
 
     <div id="list" class="space-y-4"></div>
     <div id="empty" class="hidden text-center py-10 text-gray-500">Chưa có từ trong queue. Hãy học từ trong trang Learn để thêm vào.</div>
 
-    <div class="mt-10 border-t pt-6">
-      <div class="flex items-center justify-between flex-wrap gap-3 mb-3">
+    <div class="mt-6 sm:mt-10 border-t pt-4 sm:pt-6">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
         <div>
-          <h2 class="text-xl font-bold text-gray-900">Chế độ Matching (kéo thả)</h2>
-          <p class="text-gray-600 text-sm">Kéo từ đúng sang nghĩa/guideword tương ứng.</p>
+          <h2 class="text-lg sm:text-xl font-bold text-gray-900 mb-1">Chế độ Matching (kéo thả)</h2>
+          <p class="text-gray-600 text-xs sm:text-sm">Kéo từ đúng sang nghĩa/guideword tương ứng.</p>
         </div>
-        <div class="flex items-center gap-2">
-          <select id="matchingLevel" class="px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-purple-500">
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+          <select id="matchingLevel" class="px-3 sm:px-4 py-2.5 sm:py-2 border rounded-lg text-xs sm:text-sm focus:ring-2 focus:ring-purple-500 flex-1 sm:flex-none">
             <option value="">Tất cả level</option>
             <option value="A1">A1</option>
             <option value="A2">A2</option>
@@ -67,11 +81,11 @@
             <option value="C1">C1</option>
             <option value="C2">C2</option>
           </select>
-          <button id="btnMatching" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700">
-            <i class="fas fa-shuffle mr-2"></i>Tạo bộ kéo thả
+          <button id="btnMatching" class="px-4 sm:px-5 py-2.5 sm:py-2 bg-blue-600 text-white rounded-lg text-xs sm:text-sm hover:bg-blue-700 font-medium min-h-[44px] sm:min-h-0 whitespace-nowrap">
+            <i class="fas fa-shuffle mr-2"></i><span class="hidden sm:inline">Tạo bộ kéo thả</span><span class="sm:hidden">Tạo bộ</span>
           </button>
-          <button id="btnResetMatching" class="px-4 py-2 bg-gray-100 text-gray-800 rounded-lg text-sm hover:bg-gray-200">
-            <i class="fas fa-rotate mr-2"></i>Làm lại bộ hiện tại
+          <button id="btnResetMatching" class="px-4 sm:px-5 py-2.5 sm:py-2 bg-gray-100 text-gray-800 rounded-lg text-xs sm:text-sm hover:bg-gray-200 font-medium min-h-[44px] sm:min-h-0 whitespace-nowrap">
+            <i class="fas fa-rotate mr-2"></i><span class="hidden sm:inline">Làm lại bộ hiện tại</span><span class="sm:hidden">Làm lại</span>
           </button>
         </div>
       </div>
@@ -101,17 +115,23 @@
       }
       document.getElementById('empty').classList.add('hidden');
       list.innerHTML = queue.map(it=>`
-        <div class="bg-white rounded-lg shadow p-4">
-          <div class="flex items-center justify-between mb-1">
-            <span class="text-xs px-2 py-1 rounded bg-blue-50 text-blue-700">${it.level||'N/A'}</span>
-            <span class="text-xs text-gray-500">Lần ôn: ${it.reviewCount||0}</span>
+        <div class="bg-white rounded-lg shadow p-3 sm:p-4">
+          <div class="flex items-center justify-between mb-2 flex-wrap gap-2">
+            <span class="text-xs sm:text-sm px-2 sm:px-2.5 py-1 sm:py-1.5 rounded bg-blue-50 text-blue-700 font-semibold">${it.level||'N/A'}</span>
+            <span class="text-xs sm:text-sm text-gray-500">Lần ôn: ${it.reviewCount||0}</span>
           </div>
-          <p class="font-semibold text-gray-900 mb-1">${it.word}</p>
-          <p class="text-sm text-gray-600 mb-2">Mastery: ${(it.masteryScore||0).toFixed(2)} · Difficulty: ${it.difficulty||'medium'}</p>
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-3">
-            ${['again','hard','good','easy'].map(r=>`
-              <button data-id="${it.id}" data-rate="${r}" class="btn-rate px-3 py-2 text-sm rounded bg-gray-100 hover:bg-gray-200">
-                ${r === 'again' ? 'Again' : r.charAt(0).toUpperCase()+r.slice(1)}
+          <p class="font-semibold text-gray-900 mb-2 text-base sm:text-lg">${it.word}</p>
+          <p class="text-xs sm:text-sm text-gray-600 mb-3">Mastery: ${(it.masteryScore||0).toFixed(2)} · Difficulty: ${it.difficulty||'medium'}</p>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mt-3">
+            ${['again','hard','good','easy'].map((r, i)=>`
+              <button data-id="${it.id}" data-rate="${r}" class="btn-rate px-3 sm:px-4 py-3 sm:py-2.5 text-xs sm:text-sm rounded font-semibold transition-all active:scale-95 sm:hover:scale-105 min-h-[44px] sm:min-h-0 ${
+                r === 'again' ? 'bg-red-100 text-red-700 active:bg-red-200 sm:hover:bg-red-200' :
+                r === 'hard' ? 'bg-yellow-100 text-yellow-700 active:bg-yellow-200 sm:hover:bg-yellow-200' :
+                r === 'good' ? 'bg-green-100 text-green-700 active:bg-green-200 sm:hover:bg-green-200' :
+                'bg-blue-100 text-blue-700 active:bg-blue-200 sm:hover:bg-blue-200'
+              }">
+                <span class="text-xs opacity-70 block sm:inline">${i+1}. </span>
+                <span class="block sm:inline">${r === 'again' ? 'Again' : r.charAt(0).toUpperCase()+r.slice(1)}</span>
               </button>
             `).join('')}
           </div>

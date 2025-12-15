@@ -6,13 +6,22 @@
   <title>Ôn tập Grammar (SRS)</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    @media (max-width: 640px) {
+      .nav-links { gap: 8px; padding: 8px 0 6px; }
+      .nav-links a { white-space: nowrap; padding: 8px 10px; border-radius: 9999px; background: #f9fafb; }
+      .nav-links a.active-nav { background: #ede9fe; color: #5b21b6; font-weight: 600; }
+    }
+  </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
   <nav class="bg-white shadow-sm border-b">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex justify-between h-16 items-center">
         <a href="/" class="text-xl font-bold text-purple-600">📚 English Vocab</a>
-        <div class="flex items-center space-x-4 text-sm">
+        <div class="nav-links flex items-center space-x-2 sm:space-x-4 text-sm overflow-x-auto no-scrollbar py-2 sm:py-0" aria-label="Điều hướng chính">
           <a href="/learn" class="text-gray-600 hover:text-purple-600">Học từ</a>
           <a href="/assessment" class="text-gray-600 hover:text-purple-600">Test Level</a>
           <a href="/ipa" class="text-gray-600 hover:text-purple-600">Luyện IPA</a>
@@ -22,7 +31,8 @@
           <a href="/grammar" class="text-gray-600 hover:text-purple-600">Grammar</a>
           <a href="/writing-practice" class="text-gray-600 hover:text-purple-600">Luyện Viết</a>
           <a href="/conversation-practice" class="text-gray-600 hover:text-purple-600">Luyện Hội thoại</a>
-          <a href="/review-grammar" class="text-purple-600 font-semibold">Ôn Grammar</a>
+          <a href="/review-grammar" class="text-purple-600 font-semibold active-nav">Ôn Grammar</a>
+          <a href="/voice-chat" class="text-gray-600 hover:text-purple-600">Voice Chat</a>
           <div class="border-l pl-4 ml-2 flex items-center gap-2">
             <button onclick="openPreferencesModal()" class="text-gray-600 hover:text-purple-600 flex items-center gap-1 transition-colors" title="Tùy chọn học tập">
               <i class="fas fa-cog"></i>
@@ -36,20 +46,96 @@
     </div>
   </nav>
 
-  <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <div class="flex items-center justify-between mb-4">
-      <div>
-        <h1 class="text-2xl font-bold text-gray-900">Ôn tập Grammar (SRS)</h1>
-        <p class="text-gray-600 text-sm">Đánh giá: Again / Hard / Good / Easy để lên lịch ôn.</p>
+  <main class="max-w-5xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
+    <div class="mb-4 sm:mb-6">
+      <div class="mb-3 sm:mb-4">
+        <h1 class="text-xl sm:text-2xl font-bold text-gray-900 mb-1">Ôn tập Grammar (SRS)</h1>
+        <p class="text-gray-600 text-xs sm:text-sm">Đánh giá: Again / Hard / Good / Easy để lên lịch ôn.</p>
+        <p class="text-xs text-gray-500 mt-1 hidden sm:inline">(Phím tắt: 1=Again, 2=Hard, 3=Good, 4=Easy)</p>
       </div>
-      <div class="flex items-center gap-2 text-sm">
-        <span class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full">Cần ôn: <span id="needReview">0</span></span>
-        <span class="px-3 py-1 bg-gray-100 text-gray-700 rounded-full">Tổng đã lưu: <span id="total">0</span></span>
+      <div class="flex flex-wrap items-center gap-2 text-xs sm:text-sm">
+        <span class="px-2.5 sm:px-3 py-1.5 bg-purple-100 text-purple-700 rounded-full whitespace-nowrap">
+          <span class="font-semibold">Cần ôn:</span> <span id="needReview" class="font-bold">0</span>
+        </span>
+        <span class="px-2.5 sm:px-3 py-1.5 bg-gray-100 text-gray-700 rounded-full whitespace-nowrap">
+          <span class="font-semibold">Đã lưu:</span> <span id="total" class="font-bold">0</span>
+        </span>
+        <span class="px-2.5 sm:px-3 py-1.5 bg-green-100 text-green-700 rounded-full whitespace-nowrap">
+          <span class="font-semibold">Streak:</span> <span id="streak" class="font-bold">0</span> ngày
+        </span>
+        <a href="/grammar" class="px-3 sm:px-4 py-1.5 sm:py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 text-xs sm:text-sm flex items-center gap-1.5 whitespace-nowrap font-medium">
+          <i class="fas fa-plus"></i>
+          <span class="hidden sm:inline">Thêm Grammar</span>
+          <span class="sm:hidden">Thêm</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="bg-white rounded-lg shadow p-3 sm:p-4 mb-3 sm:mb-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+        <div class="sm:col-span-2 lg:col-span-1">
+          <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">Tìm kiếm</label>
+          <input 
+            type="text" 
+            id="searchInput" 
+            placeholder="Tìm theo guideword, cando..."
+            class="w-full px-3 sm:px-4 py-2.5 sm:py-2 border border-gray-300 rounded-lg text-sm sm:text-base focus:ring-2 focus:ring-purple-500"
+          />
+        </div>
+        <div>
+          <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">Lọc theo Level</label>
+          <select id="levelFilter" class="w-full px-3 sm:px-4 py-2.5 sm:py-2 border border-gray-300 rounded-lg text-sm sm:text-base focus:ring-2 focus:ring-purple-500">
+            <option value="">Tất cả</option>
+            <option value="A1">A1</option>
+            <option value="A2">A2</option>
+            <option value="B1">B1</option>
+            <option value="B2">B2</option>
+            <option value="C1">C1</option>
+            <option value="C2">C2</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">Sắp xếp</label>
+          <select id="sortFilter" class="w-full px-3 sm:px-4 py-2.5 sm:py-2 border border-gray-300 rounded-lg text-sm sm:text-base focus:ring-2 focus:ring-purple-500">
+            <option value="due">Đến hạn (sớm nhất)</option>
+            <option value="reviewCount">Lần ôn (ít nhất)</option>
+            <option value="level">Level (A1→C2)</option>
+            <option value="difficulty">Độ khó</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Progress Stats -->
+    <div class="bg-white rounded-lg shadow p-3 sm:p-4 mb-3 sm:mb-4">
+      <h3 class="text-xs sm:text-sm font-semibold text-gray-700 mb-2 sm:mb-3">Thống kê</h3>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+        <div class="text-center sm:text-left">
+          <div class="text-xs sm:text-sm text-gray-600 mb-1">Tổng đã ôn</div>
+          <div class="text-lg sm:text-xl md:text-2xl font-bold text-purple-600" id="totalReviews">0</div>
+        </div>
+        <div class="text-center sm:text-left">
+          <div class="text-xs sm:text-sm text-gray-600 mb-1">Độ chính xác</div>
+          <div class="text-lg sm:text-xl md:text-2xl font-bold text-green-600" id="accuracy">0%</div>
+        </div>
+        <div class="text-center sm:text-left">
+          <div class="text-xs sm:text-sm text-gray-600 mb-1">Đã master</div>
+          <div class="text-lg sm:text-xl md:text-2xl font-bold text-blue-600" id="mastered">0</div>
+        </div>
+        <div class="text-center sm:text-left">
+          <div class="text-xs sm:text-sm text-gray-600 mb-1">Cần cải thiện</div>
+          <div class="text-lg sm:text-xl md:text-2xl font-bold text-red-600" id="needsImprovement">0</div>
+        </div>
       </div>
     </div>
 
     <div id="list" class="space-y-4"></div>
-    <div id="empty" class="hidden text-center py-10 text-gray-500">Chưa có grammar trong queue. Hãy thêm từ trang Grammar.</div>
+    <div id="empty" class="hidden text-center py-10 text-gray-500">
+      <i class="fas fa-inbox text-4xl mb-4 text-gray-300"></i>
+      <p class="text-lg font-semibold mb-2">Chưa có grammar trong queue</p>
+      <p class="text-sm">Hãy thêm grammar từ trang <a href="/grammar" class="text-purple-600 hover:underline">Grammar</a> để bắt đầu ôn tập.</p>
+    </div>
   </main>
 
   <script>
@@ -77,9 +163,82 @@
     function getQueue(){
       const state = loadState();
       const today = todayStr();
-      return Object.entries(state.items||{})
+      let queue = Object.entries(state.items||{})
         .map(([id,it])=>({id,...it}))
         .filter(it=>!it.nextReview || it.nextReview <= today);
+      
+      // Apply filters
+      const search = document.getElementById('searchInput')?.value.toLowerCase() || '';
+      const levelFilter = document.getElementById('levelFilter')?.value || '';
+      const sortFilter = document.getElementById('sortFilter')?.value || 'due';
+      
+      if (search) {
+        queue = queue.filter(it => 
+          (it.guideword || '').toLowerCase().includes(search) ||
+          (it.cando || '').toLowerCase().includes(search) ||
+          (it.example || '').toLowerCase().includes(search)
+        );
+      }
+      
+      if (levelFilter) {
+        queue = queue.filter(it => it.level === levelFilter);
+      }
+      
+      // Sort
+      if (sortFilter === 'due') {
+        queue.sort((a, b) => {
+          const aDate = a.nextReview || '9999-12-31';
+          const bDate = b.nextReview || '9999-12-31';
+          return aDate.localeCompare(bDate);
+        });
+      } else if (sortFilter === 'reviewCount') {
+        queue.sort((a, b) => (a.reviewCount || 0) - (b.reviewCount || 0));
+      } else if (sortFilter === 'level') {
+        const levelOrder = { 'A1': 1, 'A2': 2, 'B1': 3, 'B2': 4, 'C1': 5, 'C2': 6 };
+        queue.sort((a, b) => (levelOrder[a.level] || 99) - (levelOrder[b.level] || 99));
+      } else if (sortFilter === 'difficulty') {
+        const diffOrder = { 'again': 1, 'hard': 2, 'good': 3, 'easy': 4 };
+        queue.sort((a, b) => (diffOrder[a.difficulty] || 5) - (diffOrder[b.difficulty] || 5));
+      }
+      
+      return queue;
+    }
+
+    function calculateStats(){
+      const state = loadState();
+      const items = Object.values(state.items || {});
+      const totalReviews = items.reduce((sum, it) => sum + (it.reviewCount || 0), 0);
+      const ratings = items.map(it => it.difficulty).filter(Boolean);
+      const easyCount = ratings.filter(r => r === 'easy').length;
+      const accuracy = ratings.length > 0 ? Math.round((easyCount / ratings.length) * 100) : 0;
+      const mastered = items.filter(it => (it.reviewCount || 0) >= 5 && it.difficulty === 'easy').length;
+      const needsImprovement = items.filter(it => it.difficulty === 'again' || it.difficulty === 'hard').length;
+      
+      // Calculate streak
+      const today = todayStr();
+      let streak = 0;
+      const reviewDates = new Set();
+      items.forEach(it => {
+        if (it.lastReviewed) {
+          reviewDates.add(it.lastReviewed);
+        }
+      });
+      const sortedDates = Array.from(reviewDates).sort().reverse();
+      let checkDate = today;
+      for (const date of sortedDates) {
+        if (date === checkDate || date === addDays(checkDate, -1)) {
+          streak++;
+          checkDate = addDays(date, -1);
+        } else {
+          break;
+        }
+      }
+      
+      document.getElementById('totalReviews').textContent = totalReviews;
+      document.getElementById('accuracy').textContent = accuracy + '%';
+      document.getElementById('mastered').textContent = mastered;
+      document.getElementById('needsImprovement').textContent = needsImprovement;
+      document.getElementById('streak').textContent = streak;
     }
 
     function render(){
@@ -87,6 +246,8 @@
       const state = loadState();
       document.getElementById('needReview').textContent = queue.length;
       document.getElementById('total').textContent = Object.keys(state.items||{}).length;
+      calculateStats();
+      
       const list = document.getElementById('list');
       if(!queue.length){
         document.getElementById('empty').classList.remove('hidden');
@@ -94,25 +255,54 @@
         return;
       }
       document.getElementById('empty').classList.add('hidden');
-      list.innerHTML = queue.map(it=>`
-        <div class="bg-white rounded-lg shadow p-4">
-          <div class="flex items-center justify-between mb-1">
-            <span class="text-xs px-2 py-1 rounded bg-blue-50 text-blue-700">${it.level||'N/A'}</span>
-            <span class="text-xs text-gray-500">Lần ôn: ${it.reviewCount||0}</span>
+      
+      // Store queue for keyboard shortcuts
+      window.currentQueue = queue;
+      
+      list.innerHTML = queue.map((it, idx)=>`
+        <div class="bg-white rounded-lg shadow p-3 sm:p-4 md:p-5 hover:shadow-md transition-shadow" data-grammar-id="${it.id}">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 gap-2">
+            <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+              <span class="text-xs sm:text-sm px-2 sm:px-2.5 py-1 sm:py-1.5 rounded bg-blue-50 text-blue-700 font-semibold">${it.level||'N/A'}</span>
+              <span class="text-xs sm:text-sm px-2 sm:px-2.5 py-1 sm:py-1.5 rounded bg-gray-100 text-gray-700">Lần ôn: ${it.reviewCount||0}</span>
+              ${it.difficulty ? `<span class="text-xs sm:text-sm px-2 sm:px-2.5 py-1 sm:py-1.5 rounded ${
+                it.difficulty === 'easy' ? 'bg-green-100 text-green-700' :
+                it.difficulty === 'good' ? 'bg-blue-100 text-blue-700' :
+                it.difficulty === 'hard' ? 'bg-yellow-100 text-yellow-700' :
+                'bg-red-100 text-red-700'
+              }">${it.difficulty}</span>` : ''}
+            </div>
+            <button onclick="askAIAboutGrammarReview('${it.id}')" 
+              class="w-full sm:w-auto px-3 sm:px-4 py-2 sm:py-1.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-xs sm:text-sm flex items-center justify-center gap-1.5 sm:gap-1 transition-colors font-medium">
+              <i class="fas fa-robot"></i>
+              <span>Hỏi AI</span>
+            </button>
           </div>
-          <p class="font-semibold text-gray-900 mb-1">${it.guideword||''}</p>
-          <p class="text-sm text-gray-700 whitespace-pre-line mb-2">${it.cando||''}</p>
-          ${it.example ? `<div class="text-sm text-gray-600 bg-gray-50 rounded p-3 whitespace-pre-line">${it.example}</div>` : ''}
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-3">
-            ${['again','hard','good','easy'].map(r=>`
-              <button data-id="${it.id}" data-rate="${r}" class="btn-rate px-3 py-2 text-sm rounded bg-gray-100 hover:bg-gray-200">
-                ${r === 'again' ? 'Again' : r.charAt(0).toUpperCase()+r.slice(1)}
+          <p class="font-semibold text-gray-900 mb-2 text-base sm:text-lg md:text-xl">${escapeHtml(it.guideword||'')}</p>
+          <p class="text-xs sm:text-sm text-gray-700 whitespace-pre-line mb-3 leading-relaxed">${escapeHtml(it.cando||'')}</p>
+          ${it.example ? `<div class="text-xs sm:text-sm text-gray-600 bg-gray-50 rounded p-3 sm:p-4 whitespace-pre-line border-l-4 border-purple-500 mb-3 leading-relaxed">${escapeHtml(it.example)}</div>` : ''}
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mt-4">
+            ${['again','hard','good','easy'].map((r, i)=>`
+              <button data-id="${it.id}" data-rate="${r}" data-index="${idx}" class="btn-rate px-3 sm:px-4 py-3 sm:py-2.5 text-xs sm:text-sm rounded font-semibold transition-all active:scale-95 sm:hover:scale-105 min-h-[44px] sm:min-h-0 ${
+                r === 'again' ? 'bg-red-100 text-red-700 active:bg-red-200 sm:hover:bg-red-200' :
+                r === 'hard' ? 'bg-yellow-100 text-yellow-700 active:bg-yellow-200 sm:hover:bg-yellow-200' :
+                r === 'good' ? 'bg-green-100 text-green-700 active:bg-green-200 sm:hover:bg-green-200' :
+                'bg-blue-100 text-blue-700 active:bg-blue-200 sm:hover:bg-blue-200'
+              }">
+                <span class="text-xs opacity-70 block sm:inline">${i+1}. </span>
+                <span class="block sm:inline">${r === 'again' ? 'Again' : r.charAt(0).toUpperCase()+r.slice(1)}</span>
               </button>
             `).join('')}
           </div>
         </div>
       `).join('');
       bindActions();
+    }
+    
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
     }
 
     function updateItem(id, rating){
@@ -123,6 +313,7 @@
       const days = {again:1, hard:3, good:7, easy:14}[rating] || 3;
       it.nextReview = addDays(todayStr(), days);
       it.difficulty = rating;
+      it.lastReviewed = todayStr();
       saveState(state);
       render();
     }
@@ -131,6 +322,206 @@
       document.querySelectorAll('.btn-rate').forEach(btn=>{
         btn.onclick = ()=> updateItem(btn.dataset.id, btn.dataset.rate);
       });
+    }
+    
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
+        return;
+      }
+      const key = e.key;
+      if (key >= '1' && key <= '4') {
+        const queue = window.currentQueue || [];
+        if (queue.length === 0) return;
+        
+        const firstItem = queue[0];
+        const ratings = ['again', 'hard', 'good', 'easy'];
+        const rating = ratings[parseInt(key) - 1];
+        if (rating) {
+          updateItem(firstItem.id, rating);
+          // Scroll to top to see next item
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      }
+    });
+    
+    // Filter event listeners
+    document.addEventListener('DOMContentLoaded', () => {
+      const searchInput = document.getElementById('searchInput');
+      const levelFilter = document.getElementById('levelFilter');
+      const sortFilter = document.getElementById('sortFilter');
+      
+      if (searchInput) {
+        searchInput.addEventListener('input', () => render());
+      }
+      if (levelFilter) {
+        levelFilter.addEventListener('change', () => render());
+      }
+      if (sortFilter) {
+        sortFilter.addEventListener('change', () => render());
+      }
+    });
+    
+    // AI Grammar Tutor for review page
+    async function askAIAboutGrammarReview(grammarId) {
+      const state = loadState();
+      const item = state.items[grammarId];
+      if (!item) return;
+      
+      // Use the same AI modal logic from grammar.html
+      const guideword = item.guideword || '';
+      const level = item.level || '';
+      const cando = item.cando || '';
+      const example = item.example || '';
+      
+      // Open AI modal (reuse from grammar.html if available, otherwise create inline)
+      if (typeof openGrammarAIModal === 'function') {
+        openGrammarAIModal(guideword, level, '', cando, example);
+      } else {
+        // Create simple modal
+        const modal = document.createElement('div');
+        modal.className = 'fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-2 sm:p-4';
+        modal.innerHTML = `
+          <div class="bg-white rounded-lg max-w-3xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto flex flex-col">
+            <div class="sticky top-0 bg-white border-b p-3 sm:p-4 flex justify-between items-center z-10">
+              <h2 class="text-lg sm:text-xl font-bold">AI Grammar Tutor</h2>
+              <button onclick="this.closest('.fixed').remove()" class="text-gray-500 hover:text-gray-700 p-1 sm:p-2">
+                <i class="fas fa-times text-xl sm:text-2xl"></i>
+              </button>
+            </div>
+            <div class="p-3 sm:p-4 flex-1 overflow-y-auto">
+              <div id="grammarChatMessages" class="space-y-3 sm:space-y-4 mb-3 sm:mb-4"></div>
+              <div class="flex gap-2 sticky bottom-0 bg-white pt-2 pb-1">
+                <input type="text" id="grammarQuestionInput" placeholder="Đặt câu hỏi về ngữ pháp này..."
+                  class="flex-1 px-3 sm:px-4 py-2.5 sm:py-2 border rounded-lg text-sm sm:text-base">
+                <button onclick="sendGrammarQuestionReview('${grammarId}')" class="px-4 sm:px-6 py-2.5 sm:py-2 bg-purple-600 text-white rounded-lg text-sm sm:text-base font-medium whitespace-nowrap">
+                  Gửi
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(modal);
+        
+        // Initialize chat with context
+        const chatMessages = modal.querySelector('#grammarChatMessages');
+        chatMessages.innerHTML = `
+          <div class="bg-purple-50 border border-purple-200 rounded-lg p-3 sm:p-4 text-xs sm:text-sm">
+            <div class="mb-2"><strong>Grammar Point:</strong> ${escapeHtml(guideword)}</div>
+            <div class="mb-2"><strong>Level:</strong> ${escapeHtml(level)}</div>
+            <div class="mb-2"><strong>Can-do:</strong> ${escapeHtml(cando)}</div>
+            ${example ? `<div><strong>Example:</strong> ${escapeHtml(example)}</div>` : ''}
+          </div>
+        `;
+        
+        window.currentGrammarContext = { guideword, level, cando, example };
+        window.currentGrammarModal = modal;
+      }
+    }
+    
+    async function sendGrammarQuestionReview(grammarId) {
+      const input = document.getElementById('grammarQuestionInput');
+      const question = input?.value.trim();
+      if (!question) return;
+      
+      const state = loadState();
+      const item = state.items[grammarId];
+      if (!item) return;
+      
+      const chatMessages = document.getElementById('grammarChatMessages');
+      if (!chatMessages) return;
+      
+      // Add user message
+      chatMessages.innerHTML += `
+        <div class="flex justify-end">
+          <div class="bg-purple-600 text-white rounded-lg px-3 sm:px-4 py-2 sm:py-2.5 max-w-[85%] sm:max-w-[80%] text-xs sm:text-sm">
+            ${escapeHtml(question)}
+          </div>
+        </div>
+      `;
+      input.value = '';
+      
+      // Add typing indicator
+      const typingDiv = document.createElement('div');
+      typingDiv.className = 'flex justify-start';
+      typingDiv.innerHTML = `
+        <div class="bg-gray-100 rounded-lg px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm">
+          <i class="fas fa-spinner fa-spin"></i> AI đang suy nghĩ...
+        </div>
+      `;
+      chatMessages.appendChild(typingDiv);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+      
+      // Check Puter.js
+      const puterClient = checkPuterAvailable();
+      if (!puterClient) {
+        typingDiv.innerHTML = '<div class="bg-red-100 text-red-700 rounded-lg px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm">Puter.js không khả dụng. Vui lòng kiểm tra kết nối.</div>';
+        return;
+      }
+      
+      const prompt = `Bạn là giáo viên tiếng Anh chuyên nghiệp. Giải thích ngắn gọn, dễ hiểu bằng tiếng Việt:
+Grammar point: ${item.guideword} (Level ${item.level})
+Can-do statement: ${item.cando}
+Example: ${item.example || 'N/A'}
+Câu hỏi: ${question}
+Yêu cầu: Giải thích rõ ràng, có ví dụ, so sánh nếu cần, không dùng markdown.`;
+      
+      try {
+        const modelsToTry = ["gpt-4o-mini", "gpt-3.5-turbo", "gpt-5-mini", "gpt-5-nano", "gpt-4o"];
+        let response = null;
+        
+        for (const model of modelsToTry) {
+          try {
+            try {
+              response = await puterClient.ai.chat(prompt, { model: model, max_tokens: 200 });
+              break;
+            } catch (optionsError) {
+              response = await puterClient.ai.chat(prompt, { model: model });
+              break;
+            }
+          } catch (modelError) {
+            if (model === modelsToTry[modelsToTry.length - 1]) throw modelError;
+            continue;
+          }
+        }
+        
+        if (!response) throw new Error('Không thể kết nối với AI');
+        
+        let responseText = '';
+        if (typeof response === 'string') {
+          responseText = response;
+        } else if (response && typeof response === 'object') {
+          responseText = response.message?.content || 
+                        response.choices?.[0]?.message?.content || 
+                        response.text || 
+                        response.content || 
+                        '';
+        }
+        
+        typingDiv.outerHTML = `
+          <div class="flex justify-start">
+            <div class="bg-gray-100 rounded-lg px-3 sm:px-4 py-2 sm:py-2.5 max-w-[85%] sm:max-w-[80%] whitespace-pre-wrap text-xs sm:text-sm leading-relaxed">
+              ${escapeHtml(responseText.trim())}
+            </div>
+          </div>
+        `;
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+      } catch (error) {
+        typingDiv.outerHTML = `
+          <div class="flex justify-start">
+            <div class="bg-red-100 text-red-700 rounded-lg px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm">
+              Lỗi: ${escapeHtml(error.message || 'Không thể kết nối với AI')}
+            </div>
+          </div>
+        `;
+      }
+    }
+    
+    function checkPuterAvailable() {
+      if (typeof Puter !== 'undefined' && Puter.ai && Puter.ai.chat) return Puter;
+      if (typeof puter !== 'undefined' && puter.ai && puter.ai.chat) return puter;
+      if (typeof window.puter !== 'undefined' && window.puter.ai && window.puter.ai.chat) return window.puter;
+      return null;
     }
 
     // Helper để thêm grammar vào queue từ console: addGrammarToSRS(item)

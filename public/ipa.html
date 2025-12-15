@@ -10,6 +10,13 @@
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
     * { font-family: 'Inter', sans-serif; }
     .ipa { font-family: 'Courier New', monospace; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    @media (max-width: 640px) {
+      .nav-links { gap: 8px; padding: 8px 0 6px; }
+      .nav-links a { white-space: nowrap; padding: 8px 10px; border-radius: 9999px; background: #f9fafb; }
+      .nav-links a.active-nav { background: #ede9fe; color: #5b21b6; font-weight: 600; }
+    }
   </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
@@ -17,10 +24,10 @@
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex justify-between h-16 items-center">
         <a href="/" class="text-xl font-bold text-purple-600">📚 English Vocab</a>
-        <div class="flex items-center space-x-4 text-sm">
+        <div class="nav-links flex items-center space-x-2 sm:space-x-4 text-sm overflow-x-auto no-scrollbar py-2 sm:py-0" aria-label="Điều hướng chính">
           <a href="/learn" class="text-gray-600 hover:text-purple-600">Học từ</a>
           <a href="/assessment" class="text-gray-600 hover:text-purple-600">Test Level</a>
-          <a href="/ipa" class="text-purple-600 font-semibold">IPA</a>
+          <a href="/ipa" class="text-purple-600 font-semibold active-nav">IPA</a>
           <a href="/combo" class="text-gray-600 hover:text-purple-600">Combo</a>
           <a href="/quiz-mix" class="text-gray-600 hover:text-purple-600">Quiz Mix</a>
           <a href="/grammar" class="text-gray-600 hover:text-purple-600">Grammar</a>
@@ -28,6 +35,7 @@
           <a href="/conversation-practice" class="text-gray-600 hover:text-purple-600">Luyện Hội thoại</a>
           <a href="/review" class="text-gray-600 hover:text-purple-600">Ôn từ</a>
           <a href="/review-grammar" class="text-gray-600 hover:text-purple-600">Ôn Grammar</a>
+          <a href="/voice-chat" class="text-gray-600 hover:text-purple-600">Voice Chat</a>
           <div class="border-l pl-4 ml-2 flex items-center gap-2">
             <button onclick="openPreferencesModal()" class="text-gray-600 hover:text-purple-600 flex items-center gap-1 transition-colors" title="Tùy chọn học tập">
               <i class="fas fa-cog"></i>
@@ -41,18 +49,18 @@
     </div>
   </nav>
 
-  <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6">
+  <main class="max-w-6xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4 sm:mb-6">
       <div>
-        <h1 class="text-2xl font-bold text-gray-900">Luyện IPA theo cấp độ</h1>
-        <p class="text-gray-600 text-sm" id="modeDescription">Hiển thị IPA, bạn nhập từ gốc. Mỗi lượt tối đa 20 từ.</p>
+        <h1 class="text-xl sm:text-2xl font-bold text-gray-900 mb-1">Luyện IPA theo cấp độ</h1>
+        <p class="text-gray-600 text-xs sm:text-sm" id="modeDescription">Hiển thị IPA, bạn nhập từ gốc. Mỗi lượt tối đa 20 từ.</p>
       </div>
-      <div class="flex items-center gap-2">
-        <select id="modeSelect" class="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 text-sm">
+      <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+        <select id="modeSelect" class="px-3 sm:px-4 py-2.5 sm:py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 text-xs sm:text-sm flex-1 sm:flex-none">
           <option value="ipa">IPA + Nhập từ</option>
           <option value="typing">Nghe và gõ</option>
         </select>
-        <select id="levelSelect" class="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 text-sm">
+        <select id="levelSelect" class="px-3 sm:px-4 py-2.5 sm:py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 text-xs sm:text-sm flex-1 sm:flex-none">
           <option value="A1">A1</option>
           <option value="A2">A2</option>
           <option value="B1">B1</option>
@@ -61,15 +69,19 @@
           <option value="C2">C2</option>
           <option value="">Tất cả</option>
         </select>
-        <button id="btnNew" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm">
+        <button id="btnNew" class="px-4 sm:px-5 py-2.5 sm:py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 active:bg-purple-800 text-xs sm:text-sm font-medium min-h-[44px] sm:min-h-0 whitespace-nowrap">
           <i class="fas fa-rotate-right mr-2"></i>Bộ từ mới
         </button>
       </div>
     </div>
 
-    <div class="flex items-center gap-3 text-sm mb-4">
-      <span class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full">Đã tải: <span id="loadedCount">0</span>/20</span>
-      <span class="px-3 py-1 bg-gray-100 text-gray-700 rounded-full">Điểm: <span id="score">0</span></span>
+    <div class="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm mb-4 flex-wrap">
+      <span class="px-2.5 sm:px-3 py-1.5 bg-purple-100 text-purple-700 rounded-full whitespace-nowrap">
+        <span class="font-semibold">Đã tải:</span> <span id="loadedCount" class="font-bold">0</span>/20
+      </span>
+      <span class="px-2.5 sm:px-3 py-1.5 bg-gray-100 text-gray-700 rounded-full whitespace-nowrap">
+        <span class="font-semibold">Điểm:</span> <span id="score" class="font-bold">0</span>
+      </span>
     </div>
 
     <div id="loading" class="hidden text-center py-8 text-gray-500">
@@ -80,9 +92,9 @@
     <div id="list" class="space-y-3"></div>
     <div id="empty" class="hidden text-center py-10 text-gray-500">Không đủ dữ liệu IPA cho cấp độ này, hãy thử lại hoặc đổi cấp.</div>
 
-    <div class="mt-6 flex flex-wrap gap-3">
-      <button id="btnCheck" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm">Chấm điểm</button>
-      <button id="btnShow" class="px-4 py-2 bg-gray-100 text-gray-800 rounded-lg hover:bg-gray-200 text-sm">Hiện đáp án</button>
+    <div class="mt-4 sm:mt-6 flex flex-wrap gap-2 sm:gap-3">
+      <button id="btnCheck" class="px-4 sm:px-5 py-2.5 sm:py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 active:bg-green-800 text-xs sm:text-sm font-medium min-h-[44px] sm:min-h-0 flex-1 sm:flex-none">Chấm điểm</button>
+      <button id="btnShow" class="px-4 sm:px-5 py-2.5 sm:py-2 bg-gray-100 text-gray-800 rounded-lg hover:bg-gray-200 active:bg-gray-300 text-xs sm:text-sm font-medium min-h-[44px] sm:min-h-0 flex-1 sm:flex-none">Hiện đáp án</button>
     </div>
   </main>
 
@@ -208,56 +220,56 @@
       if (mode === 'typing') {
         // Chế độ Nghe và gõ
         list.innerHTML = items.map((it, idx) => `
-          <div class="bg-white rounded-lg shadow p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+          <div class="bg-white rounded-lg shadow p-3 sm:p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
             <div class="flex-1">
-              <p class="text-xs text-gray-500 mb-2">${it.level || 'N/A'} ${it.topic ? '· ' + it.topic : ''}</p>
-              <div class="flex items-center gap-3 mb-2">
+              <p class="text-xs sm:text-sm text-gray-500 mb-2">${it.level || 'N/A'} ${it.topic ? '· ' + it.topic : ''}</p>
+              <div class="flex flex-wrap items-center gap-2 sm:gap-3 mb-2">
                 ${it.audioUrl ? `
                   <audio id="audio-${idx}" src="${it.audioUrl}" preload="auto"></audio>
-                  <button onclick="playAudio(${idx})" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm flex items-center gap-2">
-                    <i class="fas fa-volume-up"></i> Phát âm
+                  <button onclick="playAudio(${idx})" class="px-3 sm:px-4 py-2 sm:py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 active:bg-blue-800 text-xs sm:text-sm flex items-center justify-center gap-1.5 sm:gap-2 font-medium min-h-[44px] sm:min-h-0">
+                    <i class="fas fa-volume-up"></i> <span>Phát âm</span>
                   </button>
                 ` : `
-                  <button onclick="playAudio(${idx})" class="px-4 py-2 bg-gray-400 text-white rounded-lg cursor-not-allowed text-sm flex items-center gap-2" disabled>
-                    <i class="fas fa-volume-mute"></i> Không có audio
+                  <button onclick="playAudio(${idx})" class="px-3 sm:px-4 py-2 sm:py-2 bg-gray-400 text-white rounded-lg cursor-not-allowed text-xs sm:text-sm flex items-center justify-center gap-1.5 sm:gap-2 font-medium min-h-[44px] sm:min-h-0" disabled>
+                    <i class="fas fa-volume-mute"></i> <span>Không có audio</span>
                   </button>
                 `}
-                <span class="ipa text-lg font-semibold text-gray-900 px-3 py-2 bg-gray-50 rounded-lg border border-gray-200">${it.ipa || 'N/A'}</span>
-                <button onclick="showHint(${idx})" class="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-sm">
-                  <i class="fas fa-lightbulb"></i> Gợi ý
+                <span class="ipa text-base sm:text-lg font-semibold text-gray-900 px-2 sm:px-3 py-1.5 sm:py-2 bg-gray-50 rounded-lg border border-gray-200">${it.ipa || 'N/A'}</span>
+                <button onclick="showHint(${idx})" class="px-3 sm:px-4 py-2 sm:py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 active:bg-gray-300 text-xs sm:text-sm font-medium min-h-[44px] sm:min-h-0">
+                  <i class="fas fa-lightbulb"></i> <span>Gợi ý</span>
                 </button>
               </div>
-              ${it.translate ? `<p class="text-xs text-purple-600 mt-1 font-medium hidden" id="hint-${idx}">${it.translate}</p>` : ''}
+              ${it.translate ? `<p class="text-xs sm:text-sm text-purple-600 mt-1 font-medium hidden" id="hint-${idx}">${it.translate}</p>` : ''}
             </div>
             <div class="flex flex-col gap-2 w-full md:w-auto">
               <div class="flex items-center gap-2 w-full">
-                <input data-idx="${idx}" type="text" class="answer word w-full md:w-64 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 text-lg" placeholder="Gõ từ bạn nghe được...">
+                <input data-idx="${idx}" type="text" class="answer word w-full md:w-64 px-3 sm:px-4 py-2.5 sm:py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 text-sm sm:text-base min-h-[44px] sm:min-h-0" placeholder="Gõ từ bạn nghe được...">
                 <span class="text-xs text-gray-500 hidden" id="ans-${idx}">${it.word}</span>
               </div>
-              <div class="text-xs text-gray-500" id="feedback-${idx}"></div>
+              <div class="text-xs sm:text-sm text-gray-500" id="feedback-${idx}"></div>
             </div>
           </div>
         `).join('');
       } else {
         // Chế độ IPA + Nhập từ (mặc định)
         list.innerHTML = items.map((it, idx) => `
-          <div class="bg-white rounded-lg shadow p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-            <div>
-              <p class="text-xs text-gray-500 mb-1">${it.level || 'N/A'} ${it.topic ? '· ' + it.topic : ''}</p>
-              <p class="ipa text-lg font-semibold text-gray-900">${it.ipa}</p>
-              ${it.guide ? `<p class="text-xs text-gray-500 mt-1">Guideword: ${it.guide}</p>` : ''}
-              ${it.translate ? `<p class="text-xs text-purple-600 mt-1 font-medium">${it.translate}</p>` : ''}
+          <div class="bg-white rounded-lg shadow p-3 sm:p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            <div class="flex-1">
+              <p class="text-xs sm:text-sm text-gray-500 mb-1 sm:mb-2">${it.level || 'N/A'} ${it.topic ? '· ' + it.topic : ''}</p>
+              <p class="ipa text-base sm:text-lg font-semibold text-gray-900 mb-1">${it.ipa}</p>
+              ${it.guide ? `<p class="text-xs sm:text-sm text-gray-500 mt-1">Guideword: ${it.guide}</p>` : ''}
+              ${it.translate ? `<p class="text-xs sm:text-sm text-purple-600 mt-1 font-medium">${it.translate}</p>` : ''}
             </div>
             <div class="flex flex-col md:flex-row gap-2 w-full md:w-auto">
               <div class="flex items-center gap-2 w-full">
-                <input data-idx="${idx}" type="text" class="answer word w-full md:w-48 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500" placeholder="Nhập từ...">
+                <input data-idx="${idx}" type="text" class="answer word w-full md:w-48 px-3 sm:px-4 py-2.5 sm:py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 text-sm sm:text-base min-h-[44px] sm:min-h-0" placeholder="Nhập từ...">
                 <span class="text-xs text-gray-500 hidden" id="ans-${idx}">${it.word}</span>
               </div>
               <div class="flex items-center gap-2 w-full">
-                <input data-idx="${idx}" type="text" class="answer meaning w-full md:w-56 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500" placeholder="Nhập nghĩa (theo guideword)...">
+                <input data-idx="${idx}" type="text" class="answer meaning w-full md:w-56 px-3 sm:px-4 py-2.5 sm:py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 text-sm sm:text-base min-h-[44px] sm:min-h-0" placeholder="Nhập nghĩa (theo guideword)...">
                 <span class="text-xs text-gray-500 hidden" id="mean-${idx}">${it.guide || 'N/A'}</span>
               </div>
-              <div class="text-xs text-gray-500" id="vi-${idx}"></div>
+              <div class="text-xs sm:text-sm text-gray-500" id="vi-${idx}"></div>
             </div>
           </div>
         `).join('');

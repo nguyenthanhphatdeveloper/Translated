@@ -6,23 +6,33 @@
   <title>Quiz đa kỹ năng</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    @media (max-width: 640px) {
+      .nav-links { gap: 8px; padding: 8px 0 6px; }
+      .nav-links a { white-space: nowrap; padding: 8px 10px; border-radius: 9999px; background: #f9fafb; }
+      .nav-links a.active-nav { background: #ede9fe; color: #5b21b6; font-weight: 600; }
+    }
+  </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
   <nav class="bg-white shadow-sm border-b">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex justify-between h-16 items-center">
         <a href="/" class="text-xl font-bold text-purple-600">📚 English Vocab</a>
-        <div class="flex items-center space-x-4 text-sm">
+        <div class="nav-links flex items-center space-x-2 sm:space-x-4 text-sm overflow-x-auto no-scrollbar py-2 sm:py-0" aria-label="Điều hướng chính">
           <a href="/learn" class="text-gray-600 hover:text-purple-600">Học từ</a>
           <a href="/assessment" class="text-gray-600 hover:text-purple-600">Test Level</a>
           <a href="/ipa" class="text-gray-600 hover:text-purple-600">IPA</a>
           <a href="/combo" class="text-gray-600 hover:text-purple-600">Combo</a>
-          <a href="/quiz-mix" class="text-purple-600 font-semibold">Quiz Mix</a>
+          <a href="/quiz-mix" class="text-purple-600 font-semibold active-nav">Quiz Mix</a>
           <a href="/grammar" class="text-gray-600 hover:text-purple-600">Grammar</a>
           <a href="/writing-practice" class="text-gray-600 hover:text-purple-600">Luyện Viết</a>
           <a href="/conversation-practice" class="text-gray-600 hover:text-purple-600">Luyện Hội thoại</a>
           <a href="/review" class="text-gray-600 hover:text-purple-600">Ôn từ</a>
           <a href="/review-grammar" class="text-gray-600 hover:text-purple-600">Ôn Grammar</a>
+          <a href="/voice-chat" class="text-gray-600 hover:text-purple-600">Voice Chat</a>
           <div class="border-l pl-4 ml-2 flex items-center gap-2">
             <button onclick="openPreferencesModal()" class="text-gray-600 hover:text-purple-600 flex items-center gap-1 transition-colors" title="Tùy chọn học tập">
               <i class="fas fa-cog"></i>
@@ -36,14 +46,14 @@
     </div>
   </nav>
 
-  <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6">
+  <main class="max-w-6xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4 sm:mb-6">
       <div>
-        <h1 class="text-2xl font-bold text-gray-900">Quiz đa kỹ năng</h1>
-        <p class="text-gray-600 text-sm">Trộn: nghĩa, điền từ, chọn IPA, chọn cấu trúc grammar, nghe chọn từ.</p>
+        <h1 class="text-xl sm:text-2xl font-bold text-gray-900 mb-1">Quiz đa kỹ năng</h1>
+        <p class="text-gray-600 text-xs sm:text-sm">Trộn: nghĩa, điền từ, chọn IPA, chọn cấu trúc grammar, nghe chọn từ.</p>
       </div>
-      <div class="flex flex-wrap items-center gap-2">
-        <select id="levelSelect" class="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 text-sm">
+      <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+        <select id="levelSelect" class="px-3 sm:px-4 py-2.5 sm:py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 text-xs sm:text-sm flex-1 sm:flex-none">
           <option value="">Auto</option>
           <option value="A1">A1</option>
           <option value="A2">A2</option>
@@ -52,25 +62,29 @@
           <option value="C1">C1</option>
           <option value="C2">C2</option>
         </select>
-        <select id="countSelect" class="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 text-sm">
+        <select id="countSelect" class="px-3 sm:px-4 py-2.5 sm:py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 text-xs sm:text-sm flex-1 sm:flex-none">
           <option value="10">10 câu</option>
           <option value="15">15 câu</option>
         </select>
-        <button id="btnNew" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm">
+        <button id="btnNew" class="px-4 sm:px-5 py-2.5 sm:py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 active:bg-purple-800 text-xs sm:text-sm font-medium min-h-[44px] sm:min-h-0 whitespace-nowrap">
           <i class="fas fa-rotate-right mr-2"></i>Bộ quiz mới
         </button>
       </div>
     </div>
 
-    <div class="flex items-center gap-3 text-sm mb-4">
-      <span class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full">Điểm: <span id="score">0</span></span>
-      <span class="px-3 py-1 bg-gray-100 text-gray-700 rounded-full">Câu: <span id="current">0</span>/<span id="total">0</span></span>
+    <div class="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm mb-4 flex-wrap">
+      <span class="px-2.5 sm:px-3 py-1.5 bg-purple-100 text-purple-700 rounded-full whitespace-nowrap">
+        <span class="font-semibold">Điểm:</span> <span id="score" class="font-bold">0</span>
+      </span>
+      <span class="px-2.5 sm:px-3 py-1.5 bg-gray-100 text-gray-700 rounded-full whitespace-nowrap">
+        <span class="font-semibold">Câu:</span> <span id="current" class="font-bold">0</span>/<span id="total" class="font-bold">0</span>
+      </span>
     </div>
 
     <div id="quiz" class="space-y-4"></div>
-    <div id="actions" class="mt-6 hidden">
-      <button id="btnSubmit" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm">Nộp bài</button>
-      <button id="btnReset" class="px-4 py-2 bg-gray-100 text-gray-800 rounded-lg hover:bg-gray-200 text-sm">Làm lại</button>
+    <div id="actions" class="mt-4 sm:mt-6 hidden flex flex-wrap gap-2 sm:gap-3">
+      <button id="btnSubmit" class="px-4 sm:px-5 py-2.5 sm:py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 active:bg-green-800 text-xs sm:text-sm font-medium min-h-[44px] sm:min-h-0 flex-1 sm:flex-none">Nộp bài</button>
+      <button id="btnReset" class="px-4 sm:px-5 py-2.5 sm:py-2 bg-gray-100 text-gray-800 rounded-lg hover:bg-gray-200 active:bg-gray-300 text-xs sm:text-sm font-medium min-h-[44px] sm:min-h-0 flex-1 sm:flex-none">Làm lại</button>
     </div>
 
     <div id="loading" class="hidden text-center py-8 text-gray-500">
@@ -212,14 +226,14 @@
       document.getElementById('current').textContent = 0;
       document.getElementById('total').textContent = questions.length;
       container.innerHTML = questions.map((q,idx)=>`
-        <div class="bg-white rounded-lg shadow p-4">
-          <div class="flex items-center justify-between mb-2">
-            <span class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-700">Câu ${idx+1}</span>
-            <span class="text-xs px-2 py-1 rounded bg-blue-50 text-blue-700">${q.type.toUpperCase()}</span>
+        <div class="bg-white rounded-lg shadow p-3 sm:p-4">
+          <div class="flex items-center justify-between mb-2 sm:mb-3 flex-wrap gap-2">
+            <span class="text-xs sm:text-sm px-2 sm:px-2.5 py-1 sm:py-1.5 rounded bg-gray-100 text-gray-700 font-semibold">Câu ${idx+1}</span>
+            <span class="text-xs sm:text-sm px-2 sm:px-2.5 py-1 sm:py-1.5 rounded bg-blue-50 text-blue-700 font-semibold">${q.type.toUpperCase()}</span>
           </div>
-          <p class="font-semibold text-gray-900 mb-2">${q.prompt}</p>
+          <p class="text-sm sm:text-base font-semibold text-gray-900 mb-2 sm:mb-3 leading-relaxed">${q.prompt}</p>
           ${q.type==='fill' ? `
-            <input type="text" name="q-${idx}" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-purple-500" placeholder="Nhập từ...">
+            <input type="text" name="q-${idx}" class="w-full px-3 sm:px-4 py-2.5 sm:py-2 border rounded focus:ring-2 focus:ring-purple-500 text-sm sm:text-base min-h-[44px] sm:min-h-0" placeholder="Nhập từ...">
           ` : q.type==='listen' ? `
             ${q.audio ? `<audio controls class="mb-2"><source src="${q.audio}" type="audio/mpeg"></audio>` : ''}
             <div class="space-y-2">

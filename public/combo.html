@@ -6,23 +6,33 @@
   <title>Combo lesson 10 phút</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    @media (max-width: 640px) {
+      .nav-links { gap: 8px; padding: 8px 0 6px; }
+      .nav-links a { white-space: nowrap; padding: 8px 10px; border-radius: 9999px; background: #f9fafb; }
+      .nav-links a.active-nav { background: #ede9fe; color: #5b21b6; font-weight: 600; }
+    }
+  </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
   <nav class="bg-white shadow-sm border-b">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex justify-between h-16 items-center">
         <a href="/" class="text-xl font-bold text-purple-600">📚 English Vocab</a>
-        <div class="flex items-center space-x-4 text-sm">
+        <div class="nav-links flex items-center space-x-2 sm:space-x-4 text-sm overflow-x-auto no-scrollbar py-2 sm:py-0" aria-label="Điều hướng chính">
           <a href="/learn" class="text-gray-600 hover:text-purple-600">Học từ</a>
           <a href="/assessment" class="text-gray-600 hover:text-purple-600">Test Level</a>
           <a href="/ipa" class="text-gray-600 hover:text-purple-600">IPA</a>
-          <a href="/combo" class="text-purple-600 font-semibold">Combo</a>
+          <a href="/combo" class="text-purple-600 font-semibold active-nav">Combo</a>
           <a href="/quiz-mix" class="text-gray-600 hover:text-purple-600">Quiz Mix</a>
           <a href="/grammar" class="text-gray-600 hover:text-purple-600">Grammar</a>
           <a href="/writing-practice" class="text-gray-600 hover:text-purple-600">Luyện Viết</a>
           <a href="/conversation-practice" class="text-gray-600 hover:text-purple-600">Luyện Hội thoại</a>
           <a href="/review" class="text-gray-600 hover:text-purple-600">Ôn từ</a>
           <a href="/review-grammar" class="text-gray-600 hover:text-purple-600">Ôn Grammar</a>
+          <a href="/voice-chat" class="text-gray-600 hover:text-purple-600">Voice Chat</a>
           <div class="border-l pl-4 ml-2 flex items-center gap-2">
             <button onclick="openPreferencesModal()" class="text-gray-600 hover:text-purple-600 flex items-center gap-1 transition-colors" title="Tùy chọn học tập">
               <i class="fas fa-cog"></i>
@@ -36,14 +46,14 @@
     </div>
   </nav>
 
-  <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6">
+  <main class="max-w-6xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4 sm:mb-6">
       <div>
-        <h1 class="text-2xl font-bold text-gray-900">Combo lesson 10 phút</h1>
-        <p class="text-gray-600 text-sm">1 từ vựng + 1 grammar + 1 IPA/nghe + 1 shadowing ngắn. Chọn level để sinh nội dung.</p>
+        <h1 class="text-xl sm:text-2xl font-bold text-gray-900 mb-1">Combo lesson 10 phút</h1>
+        <p class="text-gray-600 text-xs sm:text-sm">1 từ vựng + 1 grammar + 1 IPA/nghe + 1 shadowing ngắn. Chọn level để sinh nội dung.</p>
       </div>
-      <div class="flex items-center gap-2">
-        <select id="levelSelect" class="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 text-sm">
+      <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+        <select id="levelSelect" class="px-3 sm:px-4 py-2.5 sm:py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 text-xs sm:text-sm flex-1 sm:flex-none">
           <option value="">Auto</option>
           <option value="A1">A1</option>
           <option value="A2">A2</option>
@@ -52,7 +62,7 @@
           <option value="C1">C1</option>
           <option value="C2">C2</option>
         </select>
-        <button id="btnNew" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm">
+        <button id="btnNew" class="px-4 sm:px-5 py-2.5 sm:py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 active:bg-purple-800 text-xs sm:text-sm font-medium min-h-[44px] sm:min-h-0 whitespace-nowrap">
           <i class="fas fa-rotate-right mr-2"></i>Bộ mới
         </button>
       </div>
@@ -107,35 +117,35 @@
         const shadowSentence = dictData?.definition?.[0]?.example?.[0]?.text || 'Try shadowing this sentence.';
 
         const comboHtml = `
-          <div class="bg-white rounded-lg shadow p-4">
-            <h3 class="text-lg font-semibold text-gray-900 mb-2">Từ vựng</h3>
+          <div class="bg-white rounded-lg shadow p-3 sm:p-4">
+            <h3 class="text-base sm:text-lg font-semibold text-gray-900 mb-2">Từ vựng</h3>
             ${vocab ? `
-              <p class="text-xl font-bold text-gray-900">${vocab['Base Word']}</p>
-              <p class="text-sm text-gray-600">${vocab.Guideword || ''}</p>
+              <p class="text-lg sm:text-xl font-bold text-gray-900">${vocab['Base Word']}</p>
+              <p class="text-xs sm:text-sm text-gray-600">${vocab.Guideword || ''}</p>
               <p class="text-xs text-gray-500 mt-1">Level: ${vocab.Level || 'N/A'} · Topic: ${vocab.Topic || 'N/A'}</p>
-            ` : '<p class="text-gray-500">Không lấy được từ vựng.</p>'}
+            ` : '<p class="text-xs sm:text-sm text-gray-500">Không lấy được từ vựng.</p>'}
           </div>
-          <div class="bg-white rounded-lg shadow p-4">
-            <h3 class="text-lg font-semibold text-gray-900 mb-2">Grammar</h3>
+          <div class="bg-white rounded-lg shadow p-3 sm:p-4">
+            <h3 class="text-base sm:text-lg font-semibold text-gray-900 mb-2">Grammar</h3>
             ${grammar ? `
-              <p class="font-semibold text-gray-900 mb-1">${grammar['Guideword'] || ''}</p>
-              <p class="text-sm text-gray-700 mb-2 whitespace-pre-line">${grammar['Can-do statement'] || ''}</p>
-              ${grammar.Example ? `<div class="text-sm text-gray-600 bg-gray-50 rounded p-3 whitespace-pre-line">${grammar.Example}</div>` : ''}
+              <p class="text-sm sm:text-base font-semibold text-gray-900 mb-1">${grammar['Guideword'] || ''}</p>
+              <p class="text-xs sm:text-sm text-gray-700 mb-2 whitespace-pre-line leading-relaxed">${grammar['Can-do statement'] || ''}</p>
+              ${grammar.Example ? `<div class="text-xs sm:text-sm text-gray-600 bg-gray-50 rounded p-2 sm:p-3 whitespace-pre-line leading-relaxed">${grammar.Example}</div>` : ''}
               <p class="text-xs text-gray-500 mt-1">Level: ${grammar.Level || 'N/A'} · ${grammar.SuperCategory || ''}</p>
-            ` : '<p class="text-gray-500">Không lấy được grammar.</p>'}
+            ` : '<p class="text-xs sm:text-sm text-gray-500">Không lấy được grammar.</p>'}
           </div>
-          <div class="bg-white rounded-lg shadow p-4">
-            <h3 class="text-lg font-semibold text-gray-900 mb-2">IPA / Nghe</h3>
+          <div class="bg-white rounded-lg shadow p-3 sm:p-4">
+            <h3 class="text-base sm:text-lg font-semibold text-gray-900 mb-2">IPA / Nghe</h3>
             ${ipa ? `
-              <p class="font-mono text-lg text-gray-900">${ipa.pron}</p>
-              <p class="text-sm text-gray-600">${ipa.lang || ''}</p>
-              ${audio ? `<audio controls class="mt-2"><source src="${audio}" type="audio/mpeg"></audio>` : ''}
-            ` : '<p class="text-gray-500">Không lấy được IPA.</p>'}
+              <p class="font-mono text-base sm:text-lg text-gray-900">${ipa.pron}</p>
+              <p class="text-xs sm:text-sm text-gray-600">${ipa.lang || ''}</p>
+              ${audio ? `<audio controls class="mt-2 w-full"><source src="${audio}" type="audio/mpeg"></audio>` : ''}
+            ` : '<p class="text-xs sm:text-sm text-gray-500">Không lấy được IPA.</p>'}
           </div>
-          <div class="bg-white rounded-lg shadow p-4">
-            <h3 class="text-lg font-semibold text-gray-900 mb-2">Shadowing</h3>
-            <p class="text-gray-800 mb-2">${shadowSentence}</p>
-            ${audio ? `<audio controls class="mt-2"><source src="${audio}" type="audio/mpeg"></audio>` : '<p class="text-xs text-gray-500">Dùng câu trên để tự thu âm.</p>'}
+          <div class="bg-white rounded-lg shadow p-3 sm:p-4">
+            <h3 class="text-base sm:text-lg font-semibold text-gray-900 mb-2">Shadowing</h3>
+            <p class="text-xs sm:text-sm text-gray-800 mb-2 leading-relaxed">${shadowSentence}</p>
+            ${audio ? `<audio controls class="mt-2 w-full"><source src="${audio}" type="audio/mpeg"></audio>` : '<p class="text-xs text-gray-500">Dùng câu trên để tự thu âm.</p>'}
           </div>
         `;
         document.getElementById('combo').innerHTML = comboHtml;

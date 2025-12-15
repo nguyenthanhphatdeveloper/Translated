@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Voice Chat English Tutor</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://js.puter.com/v2/"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    * { font-family: 'Inter', sans-serif; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    @media (max-width: 640px) {
+      .nav-links { gap: 8px; padding: 8px 0 6px; }
+      .nav-links a { white-space: nowrap; padding: 8px 10px; border-radius: 9999px; background: #f9fafb; }
+      .nav-links a.active-nav { background: #ede9fe; color: #5b21b6; font-weight: 600; }
+    }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+  <!-- Navigation -->
+  <nav class="bg-white shadow-sm border-b">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-16 items-center">
+        <a href="/" class="text-xl font-bold text-purple-600">📚 English Vocab</a>
+        <div class="nav-links flex items-center space-x-2 sm:space-x-4 text-sm overflow-x-auto no-scrollbar py-2 sm:py-0" aria-label="Điều hướng chính">
+          <a href="/learn" class="text-gray-600 hover:text-purple-600">Học từ</a>
+          <a href="/assessment" class="text-gray-600 hover:text-purple-600">Test Level</a>
+          <a href="/ipa" class="text-gray-600 hover:text-purple-600">Luyện IPA</a>
+          <a href="/combo" class="text-gray-600 hover:text-purple-600">Combo</a>
+          <a href="/quiz-mix" class="text-gray-600 hover:text-purple-600">Quiz Mix</a>
+          <a href="/grammar" class="text-gray-600 hover:text-purple-600">Grammar</a>
+          <a href="/writing-practice" class="text-gray-600 hover:text-purple-600">Luyện Viết</a>
+          <a href="/conversation-practice" class="text-gray-600 hover:text-purple-600">Luyện Hội thoại</a>
+          <a href="/review" class="text-gray-600 hover:text-purple-600">Ôn từ</a>
+          <a href="/review-grammar" class="text-gray-600 hover:text-purple-600">Ôn Grammar</a>
+          <a href="/voice-chat" class="text-purple-600 font-semibold active-nav">Voice Chat</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <main class="max-w-5xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
+    <!-- Header -->
+    <div class="mb-4 sm:mb-6">
+      <h1 class="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-1">Voice Chat English Tutor</h1>
+      <p class="text-xs sm:text-sm text-gray-600">Nhấn giữ để nói, AI trả lời ngắn (1-2 câu), kèm audio để bạn lặp lại.</p>
+    </div>
+
+    <!-- Controls -->
+    <div class="bg-white rounded-lg shadow p-3 sm:p-4 md:p-5 mb-4 sm:mb-6">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div>
+          <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">Level</label>
+          <select id="levelSelect" class="w-full px-3 sm:px-4 py-2.5 sm:py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 text-sm">
+            <option value="A1">A1</option>
+            <option value="A2" selected>A2</option>
+            <option value="B1">B1</option>
+            <option value="B2">B2</option>
+            <option value="C1">C1</option>
+            <option value="C2">C2</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">Topic</label>
+          <select id="topicSelect" class="w-full px-3 sm:px-4 py-2.5 sm:py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 text-sm">
+            <option value="greetings" selected>Greetings</option>
+            <option value="introductions">Introductions</option>
+            <option value="small-talk">Small talk</option>
+            <option value="directions">Asking for directions</option>
+            <option value="shopping">Shopping</option>
+            <option value="restaurant">Restaurants</option>
+            <option value="travel">Travel</option>
+            <option value="hotel">Hotels</option>
+            <option value="transportation">Transportation</option>
+            <option value="sightseeing">Sightseeing</option>
+            <option value="entertainment">Entertainment</option>
+            <option value="sports">Sports</option>
+            <option value="health">Health</option>
+            <option value="doctor">Doctor & appointments</option>
+            <option value="food">Food & cooking</option>
+            <option value="exercise">Exercise & fitness</option>
+            <option value="emergencies">Emergencies</option>
+            <option value="appointments">Making appointments</option>
+            <option value="complaints">Complaints</option>
+            <option value="apologies">Apologies</option>
+            <option value="requests">Requests</option>
+            <option value="advice">Giving advice</option>
+            <option value="decisions">Decision making</option>
+            <option value="job-interview">Job interviews</option>
+            <option value="workplace">Workplace</option>
+            <option value="meetings">Meetings</option>
+            <option value="email-writing">Email writing</option>
+            <option value="presentations">Presentations</option>
+            <option value="studying">Studying</option>
+            <option value="banking">Banking & finance</option>
+            <option value="customer-service">Customer service</option>
+            <option value="online-shopping">Online shopping</option>
+            <option value="social-media">Social media</option>
+            <option value="technology">Technology</option>
+            <option value="digital-marketing">Digital marketing</option>
+            <option value="e-commerce">E-commerce</option>
+            <option value="hobbies">Hobbies</option>
+            <option value="family">Family & relationships</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">Voice</label>
+          <select id="voiceSelect" class="w-full px-3 sm:px-4 py-2.5 sm:py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 text-sm">
+            <option value="en-US">en-US</option>
+            <option value="en-GB">en-GB</option>
+          </select>
+        </div>
+        <div class="flex items-end gap-2 flex-col sm:flex-row sm:items-center">
+          <label class="flex items-center gap-2 text-xs sm:text-sm text-gray-700">
+            <input type="checkbox" id="muteToggle" class="h-4 w-4">
+            Tắt tiếng AI
+          </label>
+          <label class="flex items-center gap-2 text-xs sm:text-sm text-gray-700">
+            <input type="checkbox" id="autoListenToggle" class="h-4 w-4">
+            Auto nghe sau khi AI nói
+          </label>
+        </div>
+        <div>
+          <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">Tốc độ AI (playback)</label>
+          <div class="flex items-center gap-2">
+            <input type="range" id="ttsRate" min="0.7" max="1.2" step="0.1" value="1.0" class="w-full">
+            <span id="ttsRateValue" class="text-xs text-gray-700 w-10 text-right">1.0x</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-4 flex flex-wrap items-center gap-3">
+        <button id="recordBtn" class="px-4 sm:px-5 py-2.5 sm:py-2 bg-purple-600 text-white rounded-lg font-semibold text-sm flex items-center gap-2 min-h-[44px]">
+          <i class="fas fa-microphone"></i>
+          <span>Hold to talk</span>
+        </button>
+        <button id="stopBtn" class="px-4 sm:px-5 py-2.5 sm:py-2 bg-gray-100 text-gray-800 rounded-lg font-semibold text-sm flex items-center gap-2 min-h-[44px]" disabled>
+          <i class="fas fa-stop"></i>
+          <span>Stop</span>
+        </button>
+        <button id="replayBtn" class="px-4 sm:px-5 py-2.5 sm:py-2 bg-blue-100 text-blue-700 rounded-lg font-semibold text-sm flex items-center gap-2 min-h-[44px]" disabled>
+          <i class="fas fa-volume-up"></i>
+          <span>Replay AI</span>
+        </button>
+        <button id="repeatCheckBtn" class="px-4 sm:px-5 py-2.5 sm:py-2 bg-green-100 text-green-700 rounded-lg font-semibold text-sm flex items-center gap-2 min-h-[44px]" disabled>
+          <i class="fas fa-headset"></i>
+          <span>Repeat & Check</span>
+        </button>
+        <button id="clearBtn" class="px-4 sm:px-5 py-2.5 sm:py-2 bg-red-100 text-red-700 rounded-lg font-semibold text-sm flex items-center gap-2 min-h-[44px]">
+          <i class="fas fa-trash"></i>
+          <span>Clear</span>
+        </button>
+        <div id="statusBadge" class="text-xs sm:text-sm px-3 py-1.5 rounded-full bg-gray-100 text-gray-700">
+          Idle
+        </div>
+      </div>
+    </div>
+
+    <!-- Transcript -->
+    <div class="bg-white rounded-lg shadow p-3 sm:p-4 md:p-5">
+      <h3 class="text-sm sm:text-base font-semibold text-gray-800 mb-3 flex items-center gap-2">
+        <i class="fas fa-comments text-purple-600"></i> Transcript
+      </h3>
+      <div id="transcript" class="space-y-3 text-sm sm:text-base max-h-[60vh] overflow-y-auto">
+        <p class="text-gray-500 text-sm">Chưa có đoạn hội thoại. Nhấn giữ “Hold to talk” để bắt đầu.</p>
+      </div>
+      <div id="pronunciationResult" class="mt-4 hidden">
+        <div class="text-sm font-semibold text-gray-800 mb-2 flex items-center gap-2">
+          <i class="fas fa-wave-square text-green-600"></i> Kết quả lặp lại
+        </div>
+        <div id="pronunciationScore" class="text-xs sm:text-sm text-gray-700 mb-2"></div>
+        <div id="pronunciationDiff" class="text-sm text-gray-800 bg-gray-50 rounded-lg p-3 border border-gray-200"></div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // State
+    let mediaRecorder;
+    let chunks = [];
+    let state = 'idle'; // idle | recording | transcribing | thinking | speaking
+    let lastAIAudio = null;
+    let history = [];
+    let lastAIText = '';
+    let repeatMode = false;
+
+    const recordBtn = document.getElementById('recordBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const replayBtn = document.getElementById('replayBtn');
+    const repeatCheckBtn = document.getElementById('repeatCheckBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const statusBadge = document.getElementById('statusBadge');
+    const transcriptEl = document.getElementById('transcript');
+    const levelSelect = document.getElementById('levelSelect');
+    const topicSelect = document.getElementById('topicSelect');
+    const voiceSelect = document.getElementById('voiceSelect');
+    const muteToggle = document.getElementById('muteToggle');
+    const autoListenToggle = document.getElementById('autoListenToggle');
+    const ttsRate = document.getElementById('ttsRate');
+    const ttsRateValue = document.getElementById('ttsRateValue');
+    const pronunciationResult = document.getElementById('pronunciationResult');
+    const pronunciationScore = document.getElementById('pronunciationScore');
+    const pronunciationDiff = document.getElementById('pronunciationDiff');
+
+    function setState(next) {
+      state = next;
+      const map = {
+        idle: { text: 'Idle', cls: 'bg-gray-100 text-gray-700' },
+        recording: { text: 'Recording…', cls: 'bg-red-100 text-red-700' },
+        transcribing: { text: 'Transcribing…', cls: 'bg-yellow-100 text-yellow-700' },
+        thinking: { text: 'Thinking…', cls: 'bg-blue-100 text-blue-700' },
+        speaking: { text: 'Speaking…', cls: 'bg-green-100 text-green-700' },
+      };
+      const m = map[next] || map.idle;
+      statusBadge.textContent = m.text;
+      statusBadge.className = `text-xs sm:text-sm px-3 py-1.5 rounded-full ${m.cls}`;
+      const disabledRecordingFlow = ['transcribing','thinking','speaking'].includes(next);
+      recordBtn.disabled = disabledRecordingFlow;
+      stopBtn.disabled = next !== 'recording';
+    }
+
+    function appendMessage(sender, text) {
+      if (!text) return;
+      const time = new Date().toLocaleTimeString();
+      const bubbleClass = sender === 'user'
+        ? 'bg-purple-600 text-white rounded-lg px-3 py-2 max-w-[85%] sm:max-w-[75%]'
+        : 'bg-gray-100 text-gray-800 rounded-lg px-3 py-2 max-w-[85%] sm:max-w-[75%]';
+      const alignClass = sender === 'user' ? 'items-end' : 'items-start';
+      const who = sender === 'user' ? 'Bạn' : 'AI';
+      const el = document.createElement('div');
+      el.className = `flex ${alignClass}`;
+      el.innerHTML = `
+        <div class="${bubbleClass}">
+          <div class="text-xs opacity-70 mb-1">${who} • ${time}</div>
+          <div>${escapeHtml(text)}</div>
+        </div>
+      `;
+      transcriptEl.appendChild(el);
+      transcriptEl.scrollTop = transcriptEl.scrollHeight;
+    }
+
+    function escapeHtml(str='') {
+      return str.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+
+    async function startRecording() {
+      if (state !== 'idle') return;
+      chunks = [];
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+        mediaRecorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
+        mediaRecorder.onstop = handleRecordingStop;
+        mediaRecorder.start();
+        setState('recording');
+      } catch (e) {
+        console.error(e);
+        alert('Không thể truy cập microphone. Kiểm tra quyền.');
+      }
+    }
+
+    function stopRecording() {
+      if (state !== 'recording' || !mediaRecorder) return;
+      mediaRecorder.stop();
+      mediaRecorder.stream.getTracks().forEach(t => t.stop());
+    }
+
+    async function handleRecordingStop() {
+      if (!chunks.length) { setState('idle'); return; }
+      setState('transcribing');
+      const blob = new Blob(chunks, { type: 'audio/webm' });
+      chunks = [];
+      let userText = '';
+      try {
+        userText = await puter.ai.speech2txt({ audio: blob, language: 'en-US' });
+      } catch (e) {
+        console.warn('speech2txt with blob failed, fallback mic:', e);
+        try {
+          userText = await puter.ai.speech2txt({ language: 'en-US' });
+        } catch (err) {
+          console.error(err);
+          setState('idle');
+          alert('Không nhận được giọng nói, hãy thử lại.');
+          return;
+        }
+      }
+      if (!userText || !userText.trim()) {
+        setState('idle');
+        alert('Không nghe rõ, hãy nói lại chậm hơn.');
+        return;
+      }
+      const cleanedUserText = userText.trim();
+      if (repeatMode) {
+        repeatMode = false;
+        appendMessage('user', `[Repeat] ${cleanedUserText}`);
+        evaluatePronunciation(cleanedUserText, lastAIText);
+        setState('idle');
+        return;
+      }
+      appendMessage('user', cleanedUserText);
+      await processAI(cleanedUserText);
+    }
+
+    function buildSystemPrompt() {
+      const level = levelSelect.value || 'A2';
+      const topic = topicSelect.value || 'daily life';
+      const levelRules = {
+        A1: 'Use only very simple words (CEFR A1), max 1 short sentence (<=10 words). No idioms.',
+        A2: 'Use simple words (CEFR A2), 1-2 short sentences (<=16 words each). Keep grammar basic.',
+        B1: 'Use everyday words (CEFR B1), 1-2 sentences (<=20 words), add one phrasal verb or collocation.',
+        B2: 'Use upper-intermediate words (CEFR B2), 2 sentences (<=22 words), include a collocation or phrasal verb.',
+        C1: 'Use advanced but concise English (CEFR C1), 2 sentences (<=24 words), include a natural collocation; stay clear and slow.',
+        C2: 'Use concise near-native English (CEFR C2), 2 sentences (<=24 words), natural collocations; stay clear and slow.'
+      };
+      const rule = levelRules[level] || levelRules.A2;
+      return `You are an English tutor. ${rule}
+Topic: ${topic}. Encourage the learner to reply. End with one short question. Speak slowly.`;
+    }
+
+    async function processAI(userText) {
+      setState('thinking');
+      let aiText = '';
+      try {
+        const resp = await puter.ai.chat({
+          messages: [
+            { role: 'system', content: buildSystemPrompt() },
+            { role: 'user', content: userText }
+          ],
+          model: 'gpt-4o-mini'
+        });
+        aiText = typeof resp === 'string'
+          ? resp
+          : resp?.message?.content || resp?.choices?.[0]?.message?.content || '';
+      } catch (e) {
+        console.warn('chat failed, fallback nano', e);
+        try {
+          const resp2 = await puter.ai.chat({
+            messages: [
+              { role: 'system', content: buildSystemPrompt() },
+              { role: 'user', content: userText }
+            ],
+            model: 'gpt-5-nano'
+          });
+          aiText = typeof resp2 === 'string'
+            ? resp2
+            : resp2?.message?.content || resp2?.choices?.[0]?.message?.content || '';
+        } catch (err) {
+          console.error(err);
+          setState('idle');
+          alert('AI đang bận, hãy thử lại.');
+          return;
+        }
+      }
+      aiText = (aiText || '').toString().trim();
+      if (!aiText) {
+        setState('idle');
+        alert('AI không trả lời, thử lại.');
+        return;
+      }
+      lastAIText = aiText;
+      appendMessage('ai', aiText);
+      history.push({ user: userText, ai: aiText, ts: Date.now() });
+      repeatCheckBtn.disabled = false;
+      await speakAI(aiText);
+      setState('idle');
+    }
+
+    async function speakAI(text) {
+      if (muteToggle.checked) {
+        return;
+      }
+      setState('speaking');
+      try {
+        const audioUrl = await puter.ai.txt2speech({ text, voice: voiceSelect.value || 'en-US' });
+        if (audioUrl) {
+          lastAIAudio = new Audio(audioUrl);
+          const rate = parseFloat(ttsRate.value || '1.0') || 1.0;
+          lastAIAudio.playbackRate = rate;
+          lastAIAudio.onended = () => {
+            if (autoListenToggle.checked && state === 'idle') {
+              setTimeout(() => { if (state === 'idle') startRecording(); }, 300);
+            }
+          };
+          await lastAIAudio.play();
+          replayBtn.disabled = false;
+        }
+      } catch (e) {
+        console.error('TTS error', e);
+      } finally {
+        setState('idle');
+      }
+    }
+
+    // Events
+    recordBtn.addEventListener('mousedown', startRecording);
+    recordBtn.addEventListener('touchstart', (e) => { e.preventDefault(); startRecording(); }, { passive: false });
+    recordBtn.addEventListener('mouseup', stopRecording);
+    recordBtn.addEventListener('mouseleave', () => { if (state === 'recording') stopRecording(); });
+    recordBtn.addEventListener('touchend', (e) => { e.preventDefault(); stopRecording(); }, { passive: false });
+    stopBtn.addEventListener('click', stopRecording);
+    replayBtn.addEventListener('click', () => { if (lastAIAudio) lastAIAudio.play(); });
+    repeatCheckBtn.addEventListener('click', () => {
+      if (state !== 'idle') return;
+      if (!lastAIText) { alert('Chưa có câu AI để luyện.'); return; }
+      repeatMode = true;
+      startRecording();
+    });
+    clearBtn.addEventListener('click', () => {
+      history = [];
+      transcriptEl.innerHTML = '<p class="text-gray-500 text-sm">Đã xóa lịch sử. Nhấn giữ “Hold to talk” để bắt đầu.</p>';
+      pronunciationResult.classList.add('hidden');
+      lastAIText = '';
+      repeatCheckBtn.disabled = true;
+    });
+
+    // Keyboard shortcut: Space to talk
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'Space' && !e.repeat && state === 'idle') {
+        e.preventDefault();
+        startRecording();
+      }
+    });
+    window.addEventListener('keyup', (e) => {
+      if (e.code === 'Space' && state === 'recording') {
+        e.preventDefault();
+        stopRecording();
+      }
+    });
+
+    // TTS rate display
+    ttsRate.addEventListener('input', () => {
+      ttsRateValue.textContent = `${parseFloat(ttsRate.value).toFixed(1)}x`;
+    });
+
+    function normalizeWords(str='') {
+      return str
+        .toLowerCase()
+        .replace(/[^a-z0-9\s']/gi, ' ')
+        .split(/\s+/)
+        .filter(Boolean);
+    }
+
+    function evaluatePronunciation(userText, targetText) {
+      if (!targetText) return;
+      const uWords = normalizeWords(userText);
+      const tWords = normalizeWords(targetText);
+      if (!uWords.length || !tWords.length) {
+        pronunciationResult.classList.add('hidden');
+        return;
+      }
+      const matched = tWords.reduce((acc, w) => acc + (uWords.includes(w) ? 1 : 0), 0);
+      const precision = Math.round((matched / tWords.length) * 100);
+      pronunciationScore.textContent = `Độ khớp từ: ${precision}% (${matched}/${tWords.length})`;
+      const highlighted = tWords.map(w => uWords.includes(w)
+        ? `<span class="text-green-700 font-semibold">${escapeHtml(w)}</span>`
+        : `<span class="text-red-600 font-semibold">${escapeHtml(w)}</span>`).join(' ');
+      pronunciationDiff.innerHTML = `AI: ${highlighted}<br> Bạn: ${escapeHtml(userText)}`;
+      pronunciationResult.classList.remove('hidden');
+    }
+  </script>
+</body>
+</html>
+
