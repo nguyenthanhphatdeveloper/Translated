@@ -16,7 +16,7 @@ const loadVocabularyData = () => {
   if (vocabularyData) return vocabularyData;
 
   try {
-    const filePath = path.join(__dirname, '../API/evp_merged.json');
+    const filePath = path.join(__dirname, '../API/evp_merged_2.json');
     const rawData = fs.readFileSync(filePath, 'utf8');
     vocabularyData = JSON.parse(rawData);
     return vocabularyData;

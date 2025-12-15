@@ -345,6 +345,24 @@
               <i class="fas fa-store mr-1"></i>E-commerce
             </button>
           </div>
+
+          <!-- Chủ đề mở rộng (từ evp_merged_2) -->
+          <h4 class="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2 mt-4">
+            <i class="fas fa-layer-group text-pink-600"></i>
+            Chủ đề mở rộng
+          </h4>
+          <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
+            <button onclick="selectTopic('social-small-talk', event)" class="topic-btn px-3 py-2 border-2 border-gray-200 rounded-lg hover:border-pink-500 hover:bg-pink-50 transition-colors text-xs text-center">Giao tiếp xã giao</button>
+            <button onclick="selectTopic('home-daily-life', event)" class="topic-btn px-3 py-2 border-2 border-gray-200 rounded-lg hover:border-amber-500 hover:bg-amber-50 transition-colors text-xs text-center">Nhà cửa & đời sống</button>
+            <button onclick="selectTopic('money-personal-finance', event)" class="topic-btn px-3 py-2 border-2 border-gray-200 rounded-lg hover:border-yellow-500 hover:bg-yellow-50 transition-colors text-xs text-center">Tiền bạc & tài chính</button>
+            <button onclick="selectTopic('friends-relationships', event)" class="topic-btn px-3 py-2 border-2 border-gray-200 rounded-lg hover:border-lime-500 hover:bg-lime-50 transition-colors text-xs text-center">Bạn bè & quan hệ</button>
+            <button onclick="selectTopic('school-education', event)" class="topic-btn px-3 py-2 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors text-xs text-center">Trường học & giáo dục</button>
+            <button onclick="selectTopic('free-time-entertainment', event)" class="topic-btn px-3 py-2 border-2 border-gray-200 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition-colors text-xs text-center">Giải trí & rảnh</button>
+            <button onclick="selectTopic('lifestyle-wellbeing', event)" class="topic-btn px-3 py-2 border-2 border-gray-200 rounded-lg hover:border-green-500 hover:bg-green-50 transition-colors text-xs text-center">Lối sống & sức khoẻ</button>
+            <button onclick="selectTopic('public-rules-problems', event)" class="topic-btn px-3 py-2 border-2 border-gray-200 rounded-lg hover:border-red-500 hover:bg-red-50 transition-colors text-xs text-center">Luật lệ & tình huống</button>
+            <button onclick="selectTopic('online-communication', event)" class="topic-btn px-3 py-2 border-2 border-gray-200 rounded-lg hover:border-indigo-500 hover:bg-indigo-50 transition-colors text-xs text-center">Online & giao tiếp số</button>
+            <button onclick="selectTopic('culture-celebrations', event)" class="topic-btn px-3 py-2 border-2 border-gray-200 rounded-lg hover:border-amber-600 hover:bg-amber-50 transition-colors text-xs text-center">Văn hoá & lễ nghi</button>
+          </div>
         </div>
       </div>
       <div id="topicPrompt" class="mt-4 p-4 bg-purple-50 border border-purple-200 rounded-lg hidden">
@@ -1719,7 +1737,18 @@ Trả về JSON format chính xác (không markdown, chỉ JSON):
           'online-shopping': { border: 'border-indigo-500', bg: 'bg-indigo-50' },
           'banking': { border: 'border-indigo-500', bg: 'bg-indigo-50' },
           'customer-service': { border: 'border-indigo-500', bg: 'bg-indigo-50' },
-          'emergency': { border: 'border-indigo-500', bg: 'bg-indigo-50' }
+          'emergency': { border: 'border-indigo-500', bg: 'bg-indigo-50' },
+          // Mở rộng
+          'social-small-talk': { border: 'border-pink-500', bg: 'bg-pink-50' },
+          'home-daily-life': { border: 'border-amber-500', bg: 'bg-amber-50' },
+          'money-personal-finance': { border: 'border-yellow-500', bg: 'bg-yellow-50' },
+          'friends-relationships': { border: 'border-lime-500', bg: 'bg-lime-50' },
+          'school-education': { border: 'border-blue-500', bg: 'bg-blue-50' },
+          'free-time-entertainment': { border: 'border-purple-500', bg: 'bg-purple-50' },
+          'lifestyle-wellbeing': { border: 'border-green-500', bg: 'bg-green-50' },
+          'public-rules-problems': { border: 'border-red-500', bg: 'bg-red-50' },
+          'online-communication': { border: 'border-indigo-500', bg: 'bg-indigo-50' },
+          'culture-celebrations': { border: 'border-amber-600', bg: 'bg-amber-50' }
         };
         
         const colors = categoryColors[topic] || { border: 'border-purple-500', bg: 'bg-purple-50' };
@@ -1790,24 +1819,36 @@ Trả về JSON format chính xác (không markdown, chỉ JSON):
         'customer-service': 'Customer Service',
         'emergency': 'Emergency Situations',
         'digital-marketing': 'Digital Marketing',
-        'e-commerce': 'E-commerce'
+        'e-commerce': 'E-commerce',
+        // Chủ đề mở rộng (evp_merged_2)
+        'social-small-talk': 'Social small talk & feelings',
+        'home-daily-life': 'Home & daily life',
+        'money-personal-finance': 'Money & personal finance',
+        'friends-relationships': 'Friends & relationships',
+        'school-education': 'School & education',
+        'free-time-entertainment': 'Free time & entertainment',
+        'lifestyle-wellbeing': 'Lifestyle & wellbeing',
+        'public-rules-problems': 'Public rules & daily problems',
+        'online-communication': 'Online life & communication',
+        'culture-celebrations': 'Culture & celebrations'
       };
 
       showLoading(true);
       try {
-        const prompt = `Tạo một đề bài viết tiếng Anh về chủ đề "${topicNames[currentTopic]}". 
-Yêu cầu:
-1. Đề bài ngắn gọn, rõ ràng (1-2 câu)
-2. Phù hợp với level B1-B2
-3. Gợi ý 5-7 từ vựng liên quan (kèm nghĩa tiếng Việt)
-
-Trả về JSON:
+        const prompt = `You are an English tutor creating a writing prompt for a beginner (CEFR A2).
+Topic: "${topicNames[currentTopic]}".
+Requirements:
+1) Write a short, clear task (1–2 sentences) with context and a guiding question.
+2) Target length: 80–120 words. Use simple vocabulary and short sentences.
+3) Give 3–4 concrete points to cover (bullets), suitable for A2.
+4) Provide 5–7 very simple topic words (ENGLISH ONLY, no translations).
+Return JSON:
 {
-  "prompt": "Đề bài viết",
+  "prompt": "Write 80-120 words about ...",
   "vocabulary": [
-    {"word": "từ vựng", "meaning": "nghĩa tiếng Việt"}
+    {"word": "vocabulary word"}
   ]
-}`;
+}`; 
 
         const response = await puterClient.ai.chat(prompt, { model: 'gpt-4o-mini' });
         let responseText = '';
@@ -1836,13 +1877,17 @@ Trả về JSON:
           vocabEl.innerHTML = `
             <h5 class="font-semibold text-purple-900 mb-2">Gợi ý từ vựng:</h5>
             <div class="flex flex-wrap gap-2">
-              ${result.vocabulary.map(v => `
-                <span class="px-3 py-1 bg-white border border-purple-200 rounded-lg text-sm cursor-pointer hover:bg-purple-100" 
-                      onclick="addVocabularyToInput('${v.word}')" 
-                      title="${v.meaning}">
-                  ${v.word} <span class="text-gray-500 text-xs">(${v.meaning})</span>
-                </span>
-              `).join('')}
+              ${result.vocabulary.map(v => {
+                const meaning = v.meaning ? ` (${v.meaning})` : '';
+                const title = v.meaning ? v.meaning : '';
+                return `
+                  <span class="px-3 py-1 bg-white border border-purple-200 rounded-lg text-sm cursor-pointer hover:bg-purple-100" 
+                        onclick="addVocabularyToInput('${v.word}')" 
+                        title="${title}">
+                    ${v.word}${meaning ? `<span class="text-gray-500 text-xs">${meaning}</span>` : ''}
+                  </span>
+                `;
+              }).join('')}
             </div>
           `;
         } else {
