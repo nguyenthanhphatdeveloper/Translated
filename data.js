@@ -389,6 +389,10 @@ app.get("/writing-practice", (req, res) => {
   res.sendFile(__dirname + "/public/writing-practice.html");
 });
 
+app.get("/conversation-practice", (req, res) => {
+  res.sendFile(__dirname + "/public/conversation-practice.html");
+});
+
 // Allow slash in entry (e.g., "know of sth/sb") by using wildcard
 app.get("/api/dictionary/:language/:entry(*)", async (req, res, next) => {
   try {

@@ -62,6 +62,7 @@
           <a href="/quiz-mix" class="text-gray-600 hover:text-purple-600">Quiz Mix</a>
           <a href="/grammar" class="text-gray-600 hover:text-purple-600">Grammar</a>
           <a href="/writing-practice" class="text-purple-600 font-medium">Luyện Viết</a>
+          <a href="/conversation-practice" class="text-gray-600 hover:text-purple-600">Luyện Hội thoại</a>
           <a href="/review" class="text-gray-600 hover:text-purple-600">Ôn từ</a>
           <a href="/review-grammar" class="text-gray-600 hover:text-purple-600">Ôn Grammar</a>
           <div class="border-l pl-4 ml-2 flex items-center gap-2">
@@ -97,6 +98,26 @@
         <i class="fas fa-history"></i>
         <span>Lịch sử</span>
       </button>
+    </div>
+
+    <!-- Writing Progress Dashboard -->
+    <div id="writingProgressModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+      <div class="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="sticky top-0 bg-white border-b p-6 flex justify-between items-center">
+          <h2 class="text-2xl font-bold text-gray-900">
+            <i class="fas fa-chart-line text-purple-600 mr-2"></i>
+            Tiến độ Luyện Viết
+          </h2>
+          <button onclick="toggleWritingProgress()" class="text-gray-500 hover:text-gray-700">
+            <i class="fas fa-times text-2xl"></i>
+          </button>
+        </div>
+        <div class="p-6">
+          <div id="writingProgressContent">
+            <!-- Progress content will be loaded here -->
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Writing History Sidebar -->
@@ -291,7 +312,7 @@
             <i class="fas fa-laptop-code text-indigo-600"></i>
             Công nghệ & Hiện đại
           </h4>
-          <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
+          <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-2">
             <button onclick="selectTopic('technology', event)" class="topic-btn px-3 py-2 border-2 border-gray-200 rounded-lg hover:border-indigo-500 hover:bg-indigo-50 transition-colors text-xs text-center">
               <i class="fas fa-laptop mr-1"></i>Công nghệ
             </button>
@@ -309,6 +330,12 @@
             </button>
             <button onclick="selectTopic('emergency', event)" class="topic-btn px-3 py-2 border-2 border-gray-200 rounded-lg hover:border-indigo-500 hover:bg-indigo-50 transition-colors text-xs text-center">
               <i class="fas fa-phone-alt mr-1"></i>Khẩn cấp
+            </button>
+            <button onclick="selectTopic('digital-marketing', event)" class="topic-btn px-3 py-2 border-2 border-gray-200 rounded-lg hover:border-indigo-500 hover:bg-indigo-50 transition-colors text-xs text-center">
+              <i class="fas fa-bullhorn mr-1"></i>Digital Marketing
+            </button>
+            <button onclick="selectTopic('e-commerce', event)" class="topic-btn px-3 py-2 border-2 border-gray-200 rounded-lg hover:border-indigo-500 hover:bg-indigo-50 transition-colors text-xs text-center">
+              <i class="fas fa-store mr-1"></i>E-commerce
             </button>
           </div>
         </div>
@@ -335,14 +362,33 @@
         <i class="fas fa-edit mr-2"></i>
         Viết bài của bạn (tiếng Anh)
       </label>
-      <textarea 
-        id="writingInput" 
-        class="w-full h-48 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
-        placeholder="Ví dụ: I go to school yesterday. I am very happy because I learn many new things."
-      ></textarea>
+      <div class="relative">
+        <textarea 
+          id="writingInput" 
+          class="w-full h-48 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
+          placeholder="Ví dụ: I go to school yesterday. I am very happy because I learn many new things."
+          spellcheck="false"
+        ></textarea>
+        <div id="grammarCheckOverlay" class="absolute inset-0 pointer-events-none overflow-hidden rounded-lg" style="padding: 12px; line-height: 1.5; white-space: pre-wrap; word-wrap: break-word; color: transparent; z-index: 1;"></div>
+      </div>
       <div class="mt-4 flex items-center justify-between">
-        <div class="text-sm text-gray-500">
-          <span id="charCount">0</span> ký tự
+        <div class="flex items-center gap-4 text-sm text-gray-500">
+          <div class="flex items-center gap-1">
+            <i class="fas fa-font text-xs"></i>
+            <span id="wordCount">0</span> từ
+          </div>
+          <div class="flex items-center gap-1">
+            <i class="fas fa-keyboard text-xs"></i>
+            <span id="charCount">0</span> ký tự
+          </div>
+          <div id="autoSaveStatus" class="flex items-center gap-1 text-green-600 hidden">
+            <i class="fas fa-check-circle text-xs"></i>
+            <span class="text-xs">Đã lưu</span>
+          </div>
+          <div id="autoSaveSaving" class="flex items-center gap-1 text-blue-600 hidden">
+            <i class="fas fa-spinner fa-spin text-xs"></i>
+            <span class="text-xs">Đang lưu...</span>
+          </div>
         </div>
         <button 
           id="correctBtn" 
@@ -367,26 +413,31 @@
     <!-- Results -->
     <div id="resultsContainer" class="hidden">
       <!-- Score & Level -->
-      <div id="scoreContainer" class="bg-white rounded-lg shadow-lg p-6 mb-6">
-        <div class="flex items-center justify-between">
-          <div>
-            <h2 class="text-xl font-bold text-gray-900 mb-2">Đánh giá</h2>
-            <div class="flex items-center gap-4">
-              <div class="text-center">
-                <div id="scoreValue" class="text-4xl font-bold text-purple-600">-</div>
-                <div class="text-sm text-gray-500">Điểm</div>
-              </div>
-              <div class="text-center">
-                <div id="levelValue" class="text-2xl font-bold text-blue-600">-</div>
-                <div class="text-sm text-gray-500">Level</div>
-              </div>
-              <div class="text-center">
-                <div id="errorCountBadge" class="text-2xl font-bold text-red-600">-</div>
-                <div class="text-sm text-gray-500">Lỗi</div>
-              </div>
-            </div>
+      <div id="scoreContainer" class="bg-white rounded-lg shadow-lg p-6 mb-6 hidden">
+        <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+          <i class="fas fa-star text-yellow-500"></i>
+          Đánh giá bài viết
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center mb-4">
+          <div class="p-4 bg-blue-50 rounded-lg">
+            <p class="text-4xl font-bold text-blue-600" id="scoreValue">N/A</p>
+            <p class="text-sm text-gray-600">Điểm số</p>
           </div>
-          <div id="feedbackText" class="text-gray-600 text-sm max-w-md"></div>
+          <div class="p-4 bg-purple-50 rounded-lg">
+            <p class="text-4xl font-bold text-purple-600" id="levelValue">N/A</p>
+            <p class="text-sm text-gray-600">Cấp độ</p>
+          </div>
+          <div class="p-4 bg-red-50 rounded-lg">
+            <p class="text-4xl font-bold text-red-600" id="errorCountBadge">N/A</p>
+            <p class="text-sm text-gray-600">Tổng lỗi</p>
+          </div>
+        </div>
+        <div id="errorBreakdown" class="mb-4 hidden">
+          <!-- Error breakdown will be displayed here -->
+        </div>
+        <div class="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+          <p class="text-sm font-semibold text-gray-700 mb-2">Phản hồi từ AI:</p>
+          <p id="feedbackText" class="text-gray-800 italic">Không có phản hồi</p>
         </div>
       </div>
 
@@ -488,12 +539,249 @@
   </div>
 
   <script>
-    // Character counter
-    document.getElementById('writingInput').addEventListener('input', function() {
-      const count = this.value.length;
-      document.getElementById('charCount').textContent = count;
-      document.getElementById('correctBtn').disabled = count === 0;
+    // Real-time Grammar Check
+    const grammarCheckOverlay = document.getElementById('grammarCheckOverlay');
+    let grammarCheckTimer = null;
+
+    // Simple grammar rules for real-time checking
+    const grammarRules = [
+      {
+        pattern: /\s{2,}/g, // Double spaces
+        type: 'warning',
+        message: 'Nhiều khoảng trắng liên tiếp'
+      },
+      {
+        pattern: /([.!?])\s*([a-z])/g, // Missing capital after sentence end
+        type: 'error',
+        message: 'Thiếu chữ hoa sau dấu câu'
+      },
+      {
+        pattern: /\b(i)\b/g, // Lowercase 'i' (should be 'I')
+        type: 'error',
+        message: "'i' nên viết hoa thành 'I'"
+      },
+      {
+        pattern: /\b(very\s+very|really\s+really)\b/gi, // Very very, really really
+        type: 'warning',
+        message: 'Tránh lặp từ "very" hoặc "really"'
+      },
+      {
+        pattern: /([a-z])([A-Z])/g, // Missing space between words
+        type: 'error',
+        message: 'Thiếu khoảng trắng giữa các từ'
+      },
+      {
+        pattern: /([a-z])([.!?])([a-z])/g, // Missing space after punctuation
+        type: 'error',
+        message: 'Thiếu khoảng trắng sau dấu câu'
+      }
+    ];
+
+    function performGrammarCheck(text) {
+      if (!text || text.trim().length === 0) {
+        if (grammarCheckOverlay) {
+          grammarCheckOverlay.textContent = '';
+        }
+        return;
+      }
+
+      // Create a copy of text with highlights
+      const errors = [];
+
+      // Apply grammar rules
+      grammarRules.forEach((rule) => {
+        const matches = [...text.matchAll(rule.pattern)];
+        matches.forEach(match => {
+          const start = match.index;
+          const end = start + match[0].length;
+          errors.push({
+            start,
+            end,
+            type: rule.type,
+            message: rule.message,
+            text: match[0]
+          });
+        });
+      });
+
+      // Sort errors by position
+      errors.sort((a, b) => a.start - b.start);
+
+      // Build highlighted HTML
+      let html = '';
+      let lastIndex = 0;
+
+      errors.forEach(error => {
+        // Add text before error
+        if (error.start > lastIndex) {
+          html += escapeHtml(text.substring(lastIndex, error.start));
+        }
+
+        // Add highlighted error
+        const errorClass = `grammar-${error.type}`;
+        const errorText = escapeHtml(text.substring(error.start, error.end));
+        html += `<span class="${errorClass}" title="${escapeHtml(error.message)}">${errorText}</span>`;
+
+        lastIndex = error.end;
+      });
+
+      // Add remaining text
+      if (lastIndex < text.length) {
+        html += escapeHtml(text.substring(lastIndex));
+      }
+
+      if (grammarCheckOverlay) {
+        grammarCheckOverlay.innerHTML = html || escapeHtml(text);
+      }
+    }
+
+    // Auto-save draft key
+    const DRAFT_KEY = 'writing_practice_draft';
+    const AUTO_SAVE_INTERVAL = 30000; // 30 seconds
+    let autoSaveTimer = null;
+    let lastSavedText = '';
+
+    // Word count function
+    function countWords(text) {
+      if (!text || !text.trim()) return 0;
+      return text.trim().split(/\s+/).filter(word => word.length > 0).length;
+    }
+
+    // Update counters (word count + char count)
+    function updateCounters() {
+      const text = document.getElementById('writingInput').value;
+      const charCount = text.length;
+      const wordCount = countWords(text);
+      
+      const charCountEl = document.getElementById('charCount');
+      const wordCountEl = document.getElementById('wordCount');
+      const correctBtn = document.getElementById('correctBtn');
+      
+      if (charCountEl) charCountEl.textContent = charCount;
+      if (wordCountEl) wordCountEl.textContent = wordCount;
+      if (correctBtn) correctBtn.disabled = charCount === 0;
+    }
+
+    // Auto-save function
+    function autoSaveDraft() {
+      const text = document.getElementById('writingInput').value;
+      
+      // Only save if text has changed
+      if (text === lastSavedText) return;
+      
+      // Show saving indicator
+      const savingEl = document.getElementById('autoSaveSaving');
+      const savedEl = document.getElementById('autoSaveStatus');
+      if (savingEl) savingEl.classList.remove('hidden');
+      if (savedEl) savedEl.classList.add('hidden');
+      
+      try {
+        const draft = {
+          text: text,
+          timestamp: new Date().toISOString(),
+          wordCount: countWords(text),
+          charCount: text.length
+        };
+        localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+        lastSavedText = text;
+        
+        // Show saved indicator
+        setTimeout(() => {
+          if (savingEl) savingEl.classList.add('hidden');
+          if (savedEl) savedEl.classList.remove('hidden');
+          
+          // Hide saved indicator after 2 seconds
+          setTimeout(() => {
+            if (savedEl) savedEl.classList.add('hidden');
+          }, 2000);
+        }, 300);
+      } catch (e) {
+        console.warn('Failed to auto-save draft:', e);
+        if (savingEl) savingEl.classList.add('hidden');
+      }
+    }
+
+    // Load draft on page load
+    function loadDraft() {
+      try {
+        const draftJson = localStorage.getItem(DRAFT_KEY);
+        if (draftJson) {
+          const draft = JSON.parse(draftJson);
+          if (draft.text && draft.text.trim()) {
+            const writingInput = document.getElementById('writingInput');
+            if (writingInput) {
+              writingInput.value = draft.text;
+              lastSavedText = draft.text;
+              updateCounters();
+              
+              // Show notification that draft was loaded
+              const savedEl = document.getElementById('autoSaveStatus');
+              if (savedEl) {
+                savedEl.innerHTML = '<i class="fas fa-file-alt text-xs"></i><span class="text-xs">Đã tải bản nháp</span>';
+                savedEl.classList.remove('hidden');
+                setTimeout(() => {
+                  savedEl.classList.add('hidden');
+                  savedEl.innerHTML = '<i class="fas fa-check-circle text-xs"></i><span class="text-xs">Đã lưu</span>';
+                }, 3000);
+              }
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to load draft:', e);
+      }
+    }
+
+    // Setup input listener with auto-save and grammar check
+    const writingInput = document.getElementById('writingInput');
+    
+    if (writingInput) {
+      writingInput.addEventListener('input', function() {
+        updateCounters();
+        
+        // Real-time grammar check (debounced)
+        if (grammarCheckTimer) {
+          clearTimeout(grammarCheckTimer);
+        }
+        grammarCheckTimer = setTimeout(() => {
+          performGrammarCheck(this.value);
+        }, 300); // Check after 300ms of no typing
+        
+        // Clear existing timer
+        if (autoSaveTimer) {
+          clearTimeout(autoSaveTimer);
+        }
+        
+        // Set new timer for auto-save (debounce 2 seconds after user stops typing)
+        autoSaveTimer = setTimeout(() => {
+          autoSaveDraft();
+        }, 2000);
+      });
+
+      // Sync scroll between textarea and overlay
+      if (grammarCheckOverlay) {
+        writingInput.addEventListener('scroll', () => {
+          grammarCheckOverlay.scrollTop = writingInput.scrollTop;
+          grammarCheckOverlay.scrollLeft = writingInput.scrollLeft;
+        });
+      }
+    }
+
+    // Also auto-save on interval (every 30 seconds)
+    setInterval(() => {
+      const text = document.getElementById('writingInput')?.value || '';
+      if (text && text.trim() && text !== lastSavedText) {
+        autoSaveDraft();
+      }
+    }, AUTO_SAVE_INTERVAL);
+
+    // Save before page unload
+    window.addEventListener('beforeunload', () => {
+      autoSaveDraft();
     });
+
+    // Load draft on page load
+    loadDraft();
 
     // Kiểm tra Puter.js availability
     function checkPuterAvailable() {
@@ -547,6 +835,11 @@
         return;
       }
 
+      // Clear draft after successful correction (optional - user might want to keep it)
+      // Uncomment if you want to clear draft after correction:
+      // localStorage.removeItem(DRAFT_KEY);
+      // lastSavedText = '';
+
       // Check cache first
       const cacheKey = inputText.toLowerCase().trim();
       if (writingCache.has(cacheKey)) {
@@ -581,10 +874,14 @@ Bài viết của học sinh:
 "${inputText}"
 
 Yêu cầu:
-1. Sửa tất cả lỗi ngữ pháp, chính tả
+1. Sửa tất cả lỗi ngữ pháp, chính tả, dấu câu
 2. Cải thiện cách diễn đạt nếu cần
-3. Liệt kê các lỗi đã sửa với giải thích
-4. Đưa ra gợi ý cải thiện
+3. Liệt kê các lỗi đã sửa với giải thích chi tiết
+4. Phân loại từng lỗi: "grammar" (ngữ pháp), "spelling" (chính tả), "expression" (diễn đạt), "punctuation" (dấu câu)
+5. Đưa ra gợi ý cải thiện
+6. Đánh giá bài viết với điểm số từ 0-100
+7. Đánh giá cấp độ tiếng Anh (A1, A2, B1, B2, C1, C2)
+8. Đưa ra phản hồi tổng quan về bài viết
 
 Trả về JSON format chính xác (không markdown, chỉ JSON):
 {
@@ -593,10 +890,20 @@ Trả về JSON format chính xác (không markdown, chỉ JSON):
     {
       "original": "Từ/câu sai",
       "corrected": "Từ/câu đúng",
-      "explanation": "Giải thích lỗi"
+      "explanation": "Giải thích lỗi chi tiết",
+      "type": "grammar"
     }
   ],
-  "suggestions": ["Gợi ý 1", "Gợi ý 2"]
+  "suggestions": ["Gợi ý 1", "Gợi ý 2"],
+  "score": 85,
+  "level": "B1",
+  "errorBreakdown": {
+    "grammar": 3,
+    "spelling": 1,
+    "expression": 2,
+    "punctuation": 0
+  },
+  "feedback": "Bài viết tốt, cần cải thiện ngữ pháp. Bạn đã sử dụng từ vựng phong phú nhưng còn một số lỗi về thì động từ..."
 }`;
 
         const modelsToTry = ["gpt-4o-mini", "gpt-3.5-turbo", "gpt-5-mini", "gpt-5-nano", "gpt-4o"];
@@ -682,6 +989,9 @@ Trả về JSON format chính xác (không markdown, chỉ JSON):
 
         const duration = Date.now() - startTime;
         console.log(`✅ AI response time: ${duration}ms (${(duration / 1000).toFixed(1)}s)`);
+
+        // Update writing progress
+        updateWritingProgress(result);
 
         // Display results
         displayResults(result);
@@ -797,6 +1107,237 @@ Trả về JSON format chính xác (không markdown, chỉ JSON):
       const overlay = document.getElementById('historyOverlay');
       sidebar.classList.toggle('hidden');
       overlay.classList.toggle('hidden');
+    }
+
+    // Writing Progress Dashboard
+    const WRITING_PROGRESS_KEY = 'writing_progress_stats';
+
+    function getWritingProgress() {
+      try {
+        const saved = localStorage.getItem(WRITING_PROGRESS_KEY);
+        if (saved) {
+          return JSON.parse(saved);
+        }
+      } catch (e) {
+        console.warn('Failed to load writing progress:', e);
+      }
+      return {
+        totalWritings: 0,
+        totalErrors: 0,
+        averageScore: 0,
+        currentLevel: 'A1',
+        streak: 0,
+        lastWritingDate: null,
+        errorBreakdown: {
+          grammar: 0,
+          spelling: 0,
+          expression: 0,
+          punctuation: 0
+        },
+        dailyStats: {},
+        levelProgression: []
+      };
+    }
+
+    function saveWritingProgress(progress) {
+      try {
+        localStorage.setItem(WRITING_PROGRESS_KEY, JSON.stringify(progress));
+      } catch (e) {
+        console.warn('Failed to save writing progress:', e);
+      }
+    }
+
+    function updateWritingProgress(result) {
+      const progress = getWritingProgress();
+      const today = new Date().toISOString().split('T')[0];
+      
+      // Update totals
+      progress.totalWritings += 1;
+      progress.totalErrors += result.errors?.length || 0;
+      
+      // Update average score
+      const currentAvg = progress.averageScore;
+      const newScore = result.score || 0;
+      progress.averageScore = Math.round(
+        (currentAvg * (progress.totalWritings - 1) + newScore) / progress.totalWritings
+      );
+      
+      // Update level
+      if (result.level) {
+        progress.currentLevel = result.level;
+        if (!progress.levelProgression.find(l => l.level === result.level)) {
+          progress.levelProgression.push({
+            level: result.level,
+            date: today,
+            score: newScore
+          });
+        }
+      }
+      
+      // Update error breakdown
+      if (result.errorBreakdown) {
+        Object.keys(result.errorBreakdown).forEach(key => {
+          progress.errorBreakdown[key] = (progress.errorBreakdown[key] || 0) + 
+                                         (result.errorBreakdown[key] || 0);
+        });
+      }
+      
+      // Update streak
+      const lastDate = progress.lastWritingDate;
+      if (lastDate === today) {
+        // Already wrote today, no change
+      } else if (lastDate) {
+        const lastDateObj = new Date(lastDate);
+        const todayObj = new Date(today);
+        const daysDiff = Math.floor((todayObj - lastDateObj) / (1000 * 60 * 60 * 24));
+        if (daysDiff === 1) {
+          progress.streak += 1;
+        } else {
+          progress.streak = 1;
+        }
+      } else {
+        progress.streak = 1;
+      }
+      progress.lastWritingDate = today;
+      
+      // Update daily stats
+      if (!progress.dailyStats[today]) {
+        progress.dailyStats[today] = {
+          writings: 0,
+          errors: 0,
+          averageScore: 0,
+          scores: []
+        };
+      }
+      const daily = progress.dailyStats[today];
+      daily.writings += 1;
+      daily.errors += result.errors?.length || 0;
+      daily.scores.push(newScore);
+      daily.averageScore = Math.round(
+        daily.scores.reduce((a, b) => a + b, 0) / daily.scores.length
+      );
+      
+      saveWritingProgress(progress);
+      return progress;
+    }
+
+    function renderWritingProgress() {
+      const progress = getWritingProgress();
+      const content = document.getElementById('writingProgressContent');
+      if (!content) return;
+
+      // Get last 7 days stats
+      const last7Days = [];
+      for (let i = 6; i >= 0; i--) {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+        const dateStr = date.toISOString().split('T')[0];
+        const dayStats = progress.dailyStats[dateStr] || {
+          writings: 0,
+          errors: 0,
+          averageScore: 0
+        };
+        last7Days.push({
+          date: dateStr,
+          dayName: date.toLocaleDateString('vi-VN', { weekday: 'short' }),
+          ...dayStats
+        });
+      }
+
+      const maxErrors = Math.max(...last7Days.map(d => d.errors), 1);
+      const maxWritings = Math.max(...last7Days.map(d => d.writings), 1);
+
+      content.innerHTML = `
+        <!-- Overall Stats -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <div class="bg-blue-50 p-4 rounded-lg text-center">
+            <div class="text-3xl font-bold text-blue-600">${progress.totalWritings}</div>
+            <div class="text-sm text-gray-600 mt-1">Tổng bài viết</div>
+          </div>
+          <div class="bg-purple-50 p-4 rounded-lg text-center">
+            <div class="text-3xl font-bold text-purple-600">${progress.streak}</div>
+            <div class="text-sm text-gray-600 mt-1">Ngày liên tiếp</div>
+          </div>
+          <div class="bg-green-50 p-4 rounded-lg text-center">
+            <div class="text-3xl font-bold text-green-600">${progress.averageScore}</div>
+            <div class="text-sm text-gray-600 mt-1">Điểm trung bình</div>
+          </div>
+          <div class="bg-orange-50 p-4 rounded-lg text-center">
+            <div class="text-3xl font-bold text-orange-600">${progress.currentLevel}</div>
+            <div class="text-sm text-gray-600 mt-1">Cấp độ hiện tại</div>
+          </div>
+        </div>
+
+        <!-- Error Breakdown -->
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+          <h3 class="text-lg font-bold text-gray-900 mb-4">Phân tích Lỗi</h3>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="text-center p-3 bg-orange-50 rounded">
+              <div class="text-2xl font-bold text-orange-600">${progress.errorBreakdown.grammar || 0}</div>
+              <div class="text-xs text-gray-600">Ngữ pháp</div>
+            </div>
+            <div class="text-center p-3 bg-red-50 rounded">
+              <div class="text-2xl font-bold text-red-600">${progress.errorBreakdown.spelling || 0}</div>
+              <div class="text-xs text-gray-600">Chính tả</div>
+            </div>
+            <div class="text-center p-3 bg-blue-50 rounded">
+              <div class="text-2xl font-bold text-blue-600">${progress.errorBreakdown.expression || 0}</div>
+              <div class="text-xs text-gray-600">Diễn đạt</div>
+            </div>
+            <div class="text-center p-3 bg-purple-50 rounded">
+              <div class="text-2xl font-bold text-purple-600">${progress.errorBreakdown.punctuation || 0}</div>
+              <div class="text-xs text-gray-600">Dấu câu</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Last 7 Days Chart -->
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+          <h3 class="text-lg font-bold text-gray-900 mb-4">7 Ngày Gần Đây</h3>
+          <div class="space-y-4">
+            ${last7Days.map(day => `
+              <div>
+                <div class="flex justify-between items-center mb-1">
+                  <span class="text-sm font-medium text-gray-700">${day.dayName}</span>
+                  <span class="text-xs text-gray-500">${day.writings} bài, ${day.errors} lỗi</span>
+                </div>
+                <div class="flex gap-2">
+                  <div class="flex-1 bg-gray-200 rounded-full h-4 overflow-hidden">
+                    <div class="bg-red-500 h-full" style="width: ${(day.errors / maxErrors) * 100}%"></div>
+                  </div>
+                  <div class="text-xs text-gray-600 w-12 text-right">${day.averageScore || 0}</div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+
+        <!-- Level Progression -->
+        ${progress.levelProgression.length > 0 ? `
+          <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-bold text-gray-900 mb-4">Tiến trình Cấp độ</h3>
+            <div class="space-y-2">
+              ${progress.levelProgression.map(lp => `
+                <div class="flex items-center justify-between p-2 bg-gray-50 rounded">
+                  <span class="font-semibold text-purple-600">${lp.level}</span>
+                  <span class="text-sm text-gray-600">${new Date(lp.date).toLocaleDateString('vi-VN')}</span>
+                  <span class="text-sm text-gray-500">Điểm: ${lp.score}</span>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        ` : ''}
+      `;
+    }
+
+    function toggleWritingProgress() {
+      const modal = document.getElementById('writingProgressModal');
+      if (modal) {
+        modal.classList.toggle('hidden');
+        if (!modal.classList.contains('hidden')) {
+          renderWritingProgress();
+        }
+      }
     }
 
     function clearHistory() {
@@ -948,12 +1489,56 @@ Trả về JSON format chính xác (không markdown, chỉ JSON):
 
       // Display score and level
       const scoreContainer = document.getElementById('scoreContainer');
-      if (result.score !== undefined) {
+      if (result.score !== undefined || result.level || result.errorBreakdown) {
         scoreContainer.classList.remove('hidden');
-        document.getElementById('scoreValue').textContent = result.score || 0;
+        document.getElementById('scoreValue').textContent = result.score !== undefined ? result.score : 'N/A';
         document.getElementById('levelValue').textContent = result.level || 'N/A';
         document.getElementById('errorCountBadge').textContent = result.errors?.length || 0;
         document.getElementById('feedbackText').textContent = result.feedback || 'Không có phản hồi';
+        
+        // Display error breakdown if available
+        if (result.errorBreakdown) {
+          const breakdownEl = document.getElementById('errorBreakdown');
+          if (breakdownEl) {
+            const breakdown = result.errorBreakdown;
+            const total = (breakdown.grammar || 0) + (breakdown.spelling || 0) + 
+                         (breakdown.expression || 0) + (breakdown.punctuation || 0);
+            
+            if (total > 0) {
+              breakdownEl.classList.remove('hidden');
+              breakdownEl.innerHTML = `
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2">
+                  ${breakdown.grammar ? `
+                    <div class="text-center p-2 bg-orange-50 rounded">
+                      <div class="text-lg font-bold text-orange-600">${breakdown.grammar}</div>
+                      <div class="text-xs text-gray-600">Ngữ pháp</div>
+                    </div>
+                  ` : ''}
+                  ${breakdown.spelling ? `
+                    <div class="text-center p-2 bg-red-50 rounded">
+                      <div class="text-lg font-bold text-red-600">${breakdown.spelling}</div>
+                      <div class="text-xs text-gray-600">Chính tả</div>
+                    </div>
+                  ` : ''}
+                  ${breakdown.expression ? `
+                    <div class="text-center p-2 bg-blue-50 rounded">
+                      <div class="text-lg font-bold text-blue-600">${breakdown.expression}</div>
+                      <div class="text-xs text-gray-600">Diễn đạt</div>
+                    </div>
+                  ` : ''}
+                  ${breakdown.punctuation ? `
+                    <div class="text-center p-2 bg-purple-50 rounded">
+                      <div class="text-lg font-bold text-purple-600">${breakdown.punctuation}</div>
+                      <div class="text-xs text-gray-600">Dấu câu</div>
+                    </div>
+                  ` : ''}
+                </div>
+              `;
+            } else {
+              breakdownEl.classList.add('hidden');
+            }
+          }
+        }
       } else {
         scoreContainer.classList.add('hidden');
       }
@@ -1196,7 +1781,9 @@ Trả về JSON format chính xác (không markdown, chỉ JSON):
         'online-shopping': 'Online Shopping',
         'banking': 'Banking and Finance',
         'customer-service': 'Customer Service',
-        'emergency': 'Emergency Situations'
+        'emergency': 'Emergency Situations',
+        'digital-marketing': 'Digital Marketing',
+        'e-commerce': 'E-commerce'
       };
 
       showLoading(true);
@@ -1411,6 +1998,9 @@ Generated on ${new Date().toLocaleString('vi-VN')}
     
     // Enhanced displayResults with vocabulary highlighting and grammar hints
     async function displayResultsEnhanced(result) {
+      // Update writing progress
+      updateWritingProgress(result);
+
       // Load vocabulary data
       await loadVocabularyData();
       

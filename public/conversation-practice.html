@@ -1,0 +1,1127 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Luyện Hội thoại - AI Conversation Practice</title>
+  <script>
+    // Suppress Tailwind CDN warning
+    const originalWarn = console.warn;
+    console.warn = function(...args) {
+      if (args[0] && typeof args[0] === 'string' && args[0].includes('cdn.tailwindcss.com should not be used')) {
+        return;
+      }
+      originalWarn.apply(console, args);
+    };
+  </script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://js.puter.com/v2/"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    * { font-family: 'Inter', sans-serif; }
+
+    .message-user {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border-radius: 18px 18px 4px 18px;
+    }
+
+    .message-ai {
+      background: #f3f4f6;
+      color: #1f2937;
+      border-radius: 18px 18px 18px 4px;
+    }
+
+    .chat-container {
+      height: calc(100vh - 300px);
+      min-height: 500px;
+    }
+
+    .typing-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .typing-indicator span {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #9ca3af;
+      animation: typing 1.4s infinite;
+    }
+
+    .typing-indicator span:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+
+    .typing-indicator span:nth-child(3) {
+      animation-delay: 0.4s;
+    }
+
+    @keyframes typing {
+      0%, 60%, 100% {
+        transform: translateY(0);
+        opacity: 0.7;
+      }
+      30% {
+        transform: translateY(-10px);
+        opacity: 1;
+      }
+    }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+  <!-- Navigation -->
+  <nav class="bg-white shadow-sm border-b">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-16">
+        <div class="flex items-center">
+          <a href="/" class="text-xl font-bold text-purple-600">📚 English Vocab</a>
+        </div>
+        <div class="flex items-center space-x-4">
+          <a href="/learn" class="text-gray-600 hover:text-purple-600">Học từ</a>
+          <a href="/assessment" class="text-gray-600 hover:text-purple-600">Test Level</a>
+          <a href="/ipa" class="text-gray-600 hover:text-purple-600">Luyện IPA</a>
+          <a href="/combo" class="text-gray-600 hover:text-purple-600">Combo</a>
+          <a href="/quiz-mix" class="text-gray-600 hover:text-purple-600">Quiz Mix</a>
+          <a href="/grammar" class="text-gray-600 hover:text-purple-600">Grammar</a>
+          <a href="/writing-practice" class="text-gray-600 hover:text-purple-600">Luyện Viết</a>
+          <a href="/conversation-practice" class="text-purple-600 font-medium">Luyện Hội thoại</a>
+          <a href="/review" class="text-gray-600 hover:text-purple-600">Ôn từ</a>
+          <a href="/review-grammar" class="text-gray-600 hover:text-purple-600">Ôn Grammar</a>
+          <div class="border-l pl-4 ml-2 flex items-center gap-2">
+            <button onclick="openPreferencesModal()" class="text-gray-600 hover:text-purple-600 flex items-center gap-1 transition-colors" title="Tùy chọn học tập">
+              <i class="fas fa-cog"></i>
+              <span class="hidden md:inline text-sm">Tùy chọn</span>
+            </button>
+            <button onclick="openDashboardModal()" class="text-gray-600 hover:text-purple-600 flex items-center gap-1 transition-colors" title="Bảng tiến độ">
+              <i class="fas fa-chart-line"></i>
+              <span class="hidden md:inline text-sm">Tiến độ</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="mb-6">
+      <h1 class="text-3xl font-bold text-gray-900 mb-2">
+        <i class="fas fa-comments text-purple-600 mr-2"></i>
+        AI Conversation Practice
+      </h1>
+      <p class="text-gray-600">Luyện hội thoại tiếng Anh với AI - Chọn chủ đề và bắt đầu trò chuyện</p>
+    </div>
+
+    <!-- Settings Panel -->
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            <i class="fas fa-layer-group mr-1"></i>
+            Cấp độ
+          </label>
+          <select id="levelSelect" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500">
+            <option value="A1">A1 - Beginner</option>
+            <option value="A2">A2 - Elementary</option>
+            <option value="B1" selected>B1 - Intermediate</option>
+            <option value="B2">B2 - Upper Intermediate</option>
+            <option value="C1">C1 - Advanced</option>
+            <option value="C2">C2 - Proficient</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            <i class="fas fa-book-open mr-1"></i>
+            Chủ đề (38 chủ đề)
+          </label>
+          <div class="max-h-64 overflow-y-auto border border-gray-300 rounded-lg p-3 bg-gray-50">
+            <div class="space-y-3">
+              <!-- Giao tiếp Hàng ngày -->
+              <div>
+                <h5 class="text-xs font-semibold text-gray-600 mb-1 flex items-center gap-1">
+                  <i class="fas fa-comments text-blue-600"></i>
+                  Giao tiếp Hàng ngày
+                </h5>
+                <div class="grid grid-cols-3 gap-1">
+                  <button onclick="selectConversationTopic('greetings')" class="topic-option-btn px-2 py-1 text-xs border border-gray-200 rounded hover:border-blue-500 hover:bg-blue-50 transition-colors">Chào hỏi</button>
+                  <button onclick="selectConversationTopic('introductions')" class="topic-option-btn px-2 py-1 text-xs border border-gray-200 rounded hover:border-blue-500 hover:bg-blue-50 transition-colors">Giới thiệu</button>
+                  <button onclick="selectConversationTopic('small-talk')" class="topic-option-btn px-2 py-1 text-xs border border-gray-200 rounded hover:border-blue-500 hover:bg-blue-50 transition-colors">Trò chuyện</button>
+                  <button onclick="selectConversationTopic('asking-directions')" class="topic-option-btn px-2 py-1 text-xs border border-gray-200 rounded hover:border-blue-500 hover:bg-blue-50 transition-colors">Hỏi đường</button>
+                  <button onclick="selectConversationTopic('shopping')" class="topic-option-btn px-2 py-1 text-xs border border-gray-200 rounded hover:border-blue-500 hover:bg-blue-50 transition-colors">Mua sắm</button>
+                  <button onclick="selectConversationTopic('restaurant')" class="topic-option-btn px-2 py-1 text-xs border border-gray-200 rounded hover:border-blue-500 hover:bg-blue-50 transition-colors">Nhà hàng</button>
+                </div>
+              </div>
+              <!-- Tình huống Thực tế -->
+              <div>
+                <h5 class="text-xs font-semibold text-gray-600 mb-1 flex items-center gap-1">
+                  <i class="fas fa-life-ring text-green-600"></i>
+                  Tình huống Thực tế
+                </h5>
+                <div class="grid grid-cols-3 gap-1">
+                  <button onclick="selectConversationTopic('making-appointments')" class="topic-option-btn px-2 py-1 text-xs border border-gray-200 rounded hover:border-green-500 hover:bg-green-50 transition-colors">Đặt lịch</button>
+                  <button onclick="selectConversationTopic('complaints')" class="topic-option-btn px-2 py-1 text-xs border border-gray-200 rounded hover:border-green-500 hover:bg-green-50 transition-colors">Khiếu nại</button>
+                  <button onclick="selectConversationTopic('apologies')" class="topic-option-btn px-2 py-1 text-xs border border-gray-200 rounded hover:border-green-500 hover:bg-green-50 transition-colors">Xin lỗi</button>
+                  <button onclick="selectConversationTopic('requests')" class="topic-option-btn px-2 py-1 text-xs border border-gray-200 rounded hover:border-green-500 hover:bg-green-50 transition-colors">Yêu cầu</button>
+                  <button onclick="selectConversationTopic('giving-advice')" class="topic-option-btn px-2 py-1 text-xs border border-gray-200 rounded hover:border-green-500 hover:bg-green-50 transition-colors">Lời khuyên</button>
+                  <button onclick="selectConversationTopic('making-decisions')" class="topic-option-btn px-2 py-1 text-xs border border-gray-200 rounded hover:border-green-500 hover:bg-green-50 transition-colors">Quyết định</button>
+                </div>
+              </div>
+              <!-- Công việc & Học tập -->
+              <div>
+                <h5 class="text-xs font-semibold text-gray-600 mb-1 flex items-center gap-1">
+                  <i class="fas fa-briefcase text-purple-600"></i>
+                  Công việc & Học tập
+                </h5>
+                <div class="grid grid-cols-3 gap-1">
+                  <button onclick="selectConversationTopic('job-interview')" class="topic-option-btn px-2 py-1 text-xs border border-gray-200 rounded hover:border-purple-500 hover:bg-purple-50 transition-colors">Phỏng vấn</button>
+                  <button onclick="selectConversationTopic('workplace')" class="topic-option-btn px-2 py-1 text-xs border border-gray-200 rounded hover:border-purple-500 hover:bg-purple-50 transition-colors">Nơi làm việc</button>
+                  <button onclick="selectConversationTopic('meetings')" class="topic-option-btn px-2 py-1 text-xs border border-gray-200 rounded hover:border-purple-500 hover:bg-purple-50 transition-colors">Cuộc họp</button>
+                  <button onclick="selectConversationTopic('email-writing')" class="topic-option-btn px-2 py-1 text-xs border border-gray-200 rounded hover:border-purple-500 hover:bg-purple-50 transition-colors">Email</button>
+                  <button onclick="selectConversationTopic('presentations')" class="topic-option-btn px-2 py-1 text-xs border border-gray-200 rounded hover:border-purple-500 hover:bg-purple-50 transition-colors">Thuyết trình</button>
+                  <button onclick="selectConversationTopic('studying')" class="topic-option-btn px-2 py-1 text-xs border border-gray-200 rounded hover:border-purple-500 hover:bg-purple-50 transition-colors">Học tập</button>
+                </div>
+              </div>
+              <!-- Du lịch & Giải trí -->
+              <div>
+                <h5 class="text-xs font-semibold text-gray-600 mb-1 flex items-center gap-1">
+                  <i class="fas fa-plane text-orange-600"></i>
+                  Du lịch & Giải trí
+                </h5>
+                <div class="grid grid-cols-3 gap-1">
+                  <button onclick="selectConversationTopic('travel')" class="topic-option-btn px-2 py-1 text-xs border border-gray-200 rounded hover:border-orange-500 hover:bg-orange-50 transition-colors">Du lịch</button>
+                  <button onclick="selectConversationTopic('hotel')" class="topic-option-btn px-2 py-1 text-xs border border-gray-200 rounded hover:border-orange-500 hover:bg-orange-50 transition-colors">Khách sạn</button>
+                  <button onclick="selectConversationTopic('transportation')" class="topic-option-btn px-2 py-1 text-xs border border-gray-200 rounded hover:border-orange-500 hover:bg-orange-50 transition-colors">Giao thông</button>
+                  <button onclick="selectConversationTopic('sightseeing')" class="topic-option-btn px-2 py-1 text-xs border border-gray-200 rounded hover:border-orange-500 hover:bg-orange-50 transition-colors">Tham quan</button>
+                  <button onclick="selectConversationTopic('entertainment')" class="topic-option-btn px-2 py-1 text-xs border border-gray-200 rounded hover:border-orange-500 hover:bg-orange-50 transition-colors">Giải trí</button>
+                  <button onclick="selectConversationTopic('sports')" class="topic-option-btn px-2 py-1 text-xs border border-gray-200 rounded hover:border-orange-500 hover:bg-orange-50 transition-colors">Thể thao</button>
+                </div>
+              </div>
+              <!-- Sức khỏe & Cuộc sống -->
+              <div>
+                <h5 class="text-xs font-semibold text-gray-600 mb-1 flex items-center gap-1">
+                  <i class="fas fa-heartbeat text-red-600"></i>
+                  Sức khỏe & Cuộc sống
+                </h5>
+                <div class="grid grid-cols-3 gap-1">
+                  <button onclick="selectConversationTopic('health')" class="topic-option-btn px-2 py-1 text-xs border border-gray-200 rounded hover:border-red-500 hover:bg-red-50 transition-colors">Sức khỏe</button>
+                  <button onclick="selectConversationTopic('doctor')" class="topic-option-btn px-2 py-1 text-xs border border-gray-200 rounded hover:border-red-500 hover:bg-red-50 transition-colors">Bác sĩ</button>
+                  <button onclick="selectConversationTopic('food')" class="topic-option-btn px-2 py-1 text-xs border border-gray-200 rounded hover:border-red-500 hover:bg-red-50 transition-colors">Ẩm thực</button>
+                  <button onclick="selectConversationTopic('exercise')" class="topic-option-btn px-2 py-1 text-xs border border-gray-200 rounded hover:border-red-500 hover:bg-red-50 transition-colors">Tập thể dục</button>
+                  <button onclick="selectConversationTopic('family')" class="topic-option-btn px-2 py-1 text-xs border border-gray-200 rounded hover:border-red-500 hover:bg-red-50 transition-colors">Gia đình</button>
+                  <button onclick="selectConversationTopic('hobbies')" class="topic-option-btn px-2 py-1 text-xs border border-gray-200 rounded hover:border-red-500 hover:bg-red-50 transition-colors">Sở thích</button>
+                </div>
+              </div>
+              <!-- Công nghệ & Hiện đại -->
+              <div>
+                <h5 class="text-xs font-semibold text-gray-600 mb-1 flex items-center gap-1">
+                  <i class="fas fa-laptop-code text-indigo-600"></i>
+                  Công nghệ & Hiện đại
+                </h5>
+                <div class="grid grid-cols-4 gap-1">
+                  <button onclick="selectConversationTopic('technology')" class="topic-option-btn px-2 py-1 text-xs border border-gray-200 rounded hover:border-indigo-500 hover:bg-indigo-50 transition-colors">Công nghệ</button>
+                  <button onclick="selectConversationTopic('social-media')" class="topic-option-btn px-2 py-1 text-xs border border-gray-200 rounded hover:border-indigo-500 hover:bg-indigo-50 transition-colors">Mạng xã hội</button>
+                  <button onclick="selectConversationTopic('online-shopping')" class="topic-option-btn px-2 py-1 text-xs border border-gray-200 rounded hover:border-indigo-500 hover:bg-indigo-50 transition-colors">Mua sắm online</button>
+                  <button onclick="selectConversationTopic('banking')" class="topic-option-btn px-2 py-1 text-xs border border-gray-200 rounded hover:border-indigo-500 hover:bg-indigo-50 transition-colors">Ngân hàng</button>
+                  <button onclick="selectConversationTopic('customer-service')" class="topic-option-btn px-2 py-1 text-xs border border-gray-200 rounded hover:border-indigo-500 hover:bg-indigo-50 transition-colors">Chăm sóc KH</button>
+                  <button onclick="selectConversationTopic('emergency')" class="topic-option-btn px-2 py-1 text-xs border border-gray-200 rounded hover:border-indigo-500 hover:bg-indigo-50 transition-colors">Khẩn cấp</button>
+                  <button onclick="selectConversationTopic('digital-marketing')" class="topic-option-btn px-2 py-1 text-xs border border-gray-200 rounded hover:border-indigo-500 hover:bg-indigo-50 transition-colors">Digital Marketing</button>
+                  <button onclick="selectConversationTopic('e-commerce')" class="topic-option-btn px-2 py-1 text-xs border border-gray-200 rounded hover:border-indigo-500 hover:bg-indigo-50 transition-colors">E-commerce</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="mt-2 text-xs text-gray-500">
+            Đã chọn: <span id="selectedTopicDisplay" class="font-semibold text-purple-600">Chào hỏi</span>
+          </div>
+        </div>
+        <div class="flex items-end">
+          <button 
+            onclick="startNewConversation()"
+            class="w-full px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center justify-center gap-2"
+          >
+            <i class="fas fa-redo"></i>
+            <span>Bắt đầu mới</span>
+          </button>
+        </div>
+      </div>
+      <div class="mt-4 flex items-center justify-between">
+        <label class="flex items-center gap-2 cursor-pointer">
+          <input 
+            type="checkbox" 
+            id="grammarCheckMode" 
+            class="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+            onchange="toggleGrammarCheckMode()"
+          />
+          <span class="text-sm text-gray-700">
+            <i class="fas fa-spell-check mr-1"></i>
+            Kiểm tra ngữ pháp & sửa lỗi
+          </span>
+        </label>
+        <span class="text-xs text-gray-500">
+          AI sẽ phản hồi về lỗi ngữ pháp trong tin nhắn của bạn
+        </span>
+      </div>
+      </div>
+    </div>
+
+    <!-- Chat Container -->
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+      <div id="chatMessages" class="chat-container overflow-y-auto space-y-4 mb-4 p-4 bg-gray-50 rounded-lg">
+        <div class="text-center text-gray-500 py-8">
+          <i class="fas fa-comments text-4xl mb-4 text-gray-300"></i>
+          <p>Chọn cấp độ và chủ đề, sau đó bắt đầu trò chuyện!</p>
+          <p class="text-sm mt-2">AI sẽ đóng vai người đối thoại và giúp bạn luyện tập</p>
+        </div>
+      </div>
+
+      <!-- Input Area -->
+      <div class="flex gap-2">
+        <div class="flex-1 relative">
+          <input 
+            type="text" 
+            id="messageInput" 
+            placeholder="Nhập tin nhắn của bạn (tiếng Anh)..."
+            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            onkeypress="handleKeyPress(event)"
+          />
+          <button
+            id="checkGrammarBtn"
+            onclick="checkGrammarBeforeSend()"
+            class="absolute right-2 top-1/2 transform -translate-y-1/2 px-3 py-1 text-xs bg-gray-100 text-gray-600 rounded hover:bg-gray-200 transition-colors hidden"
+            title="Kiểm tra ngữ pháp trước khi gửi"
+          >
+            <i class="fas fa-spell-check mr-1"></i>
+            Kiểm tra
+          </button>
+        </div>
+        <button 
+          id="sendBtn"
+          onclick="sendMessage()"
+          class="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+        >
+          <i class="fas fa-paper-plane"></i>
+          <span class="hidden md:inline">Gửi</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Conversation Info -->
+    <div class="bg-white rounded-lg shadow-lg p-4">
+      <div class="flex items-center justify-between text-sm text-gray-600">
+        <div class="flex items-center gap-4">
+          <span>
+            <i class="fas fa-layer-group mr-1"></i>
+            Level: <span id="currentLevel" class="font-semibold text-purple-600">B1</span>
+          </span>
+          <span>
+            <i class="fas fa-book-open mr-1"></i>
+            Topic: <span id="currentTopic" class="font-semibold text-purple-600">Daily Life</span>
+          </span>
+          <span>
+            <i class="fas fa-comments mr-1"></i>
+            Messages: <span id="messageCount" class="font-semibold">0</span>
+          </span>
+        </div>
+        <button 
+          onclick="clearConversation()"
+          class="text-red-600 hover:text-red-700 flex items-center gap-1"
+        >
+          <i class="fas fa-trash"></i>
+          <span>Xóa cuộc trò chuyện</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/preferences.js"></script>
+  <script src="/js/progressDashboard.js"></script>
+  <script src="/js/weakAreas.js"></script>
+  <script src="/js/modals.js"></script>
+  <script src="/js/preferencesModal.js"></script>
+  <script src="/js/dashboardModal.js"></script>
+  <script>
+    // Conversation context
+    let conversationContext = {
+      level: 'B1',
+      topic: 'greetings', // Default to first topic
+      history: [],
+      grammarCheckEnabled: false
+    };
+
+    const CONVERSATION_KEY = 'conversation_practice_history';
+
+    // Toggle grammar check mode
+    function toggleGrammarCheckMode() {
+      const checkbox = document.getElementById('grammarCheckMode');
+      conversationContext.grammarCheckEnabled = checkbox.checked;
+      
+      const checkBtn = document.getElementById('checkGrammarBtn');
+      if (checkBtn) {
+        checkBtn.classList.toggle('hidden', !checkbox.checked);
+      }
+      
+      saveConversation();
+    }
+
+    // Check grammar in background (after sending message)
+    async function checkGrammarInBackground(userMessage) {
+      const puterClient = checkPuterAvailable();
+      if (!puterClient) return null;
+
+      try {
+        const prompt = `Kiểm tra ngữ pháp trong câu sau (tiếng Anh):
+
+"${userMessage}"
+
+Yêu cầu:
+1. Nếu có lỗi, hãy sửa và giải thích ngắn gọn (1 câu)
+2. Nếu không có lỗi, trả lời "No errors found"
+
+Trả về format:
+- Nếu có lỗi: "Corrected: [câu đã sửa]\nExplanation: [giải thích]"
+- Nếu không có lỗi: "No errors found"`;
+
+        const modelsToTry = ["gpt-4o-mini", "gpt-3.5-turbo", "gpt-5-mini", "gpt-5-nano"];
+        let response = null;
+
+        for (const model of modelsToTry) {
+          try {
+            try {
+              response = await puterClient.ai.chat(prompt, {
+                model: model,
+                max_tokens: 80
+              });
+              break;
+            } catch (optionsError) {
+              if (optionsError && typeof optionsError === 'object') {
+                const errorMsg = optionsError.error?.message || optionsError.error?.code || optionsError.message || '';
+                if (errorMsg.includes('temperature') || errorMsg.includes('max_tokens')) {
+                  response = await puterClient.ai.chat(prompt, { model: model });
+                  break;
+                }
+              }
+              throw optionsError;
+            }
+          } catch (modelError) {
+            if (model === modelsToTry[modelsToTry.length - 1]) {
+              return null;
+            }
+            continue;
+          }
+        }
+
+        if (!response) return null;
+
+        let responseText = '';
+        if (typeof response === 'string') {
+          responseText = response;
+        } else if (response && typeof response === 'object') {
+          responseText = response.message?.content || 
+                        response.choices?.[0]?.message?.content || 
+                        response.text || 
+                        response.content || 
+                        '';
+        }
+
+        if (responseText.includes('No errors found')) {
+          return { hasErrors: false };
+        }
+
+        const correctedMatch = responseText.match(/Corrected:\s*(.+?)(?:\n|Explanation:)/i);
+        const explanationMatch = responseText.match(/Explanation:\s*(.+?)$/i);
+        
+        const corrected = correctedMatch ? correctedMatch[1].trim() : null;
+        const explanation = explanationMatch ? explanationMatch[1].trim() : 'Có lỗi ngữ pháp';
+
+        if (corrected) {
+          return {
+            hasErrors: true,
+            original: userMessage,
+            corrected: corrected,
+            explanation: explanation
+          };
+        }
+
+        return null;
+      } catch (error) {
+        console.error('Background grammar check error:', error);
+        return null;
+      }
+    }
+
+    // Add grammar feedback message
+    function addGrammarFeedbackMessage(feedback) {
+      const chatMessages = document.getElementById('chatMessages');
+      
+      const messageDiv = document.createElement('div');
+      messageDiv.className = 'message-item flex justify-start';
+      
+      messageDiv.innerHTML = `
+        <div class="flex items-start gap-3 max-w-[80%]">
+          <div class="flex-shrink-0 w-8 h-8 rounded-full bg-yellow-400 flex items-center justify-center text-white">
+            <i class="fas fa-exclamation-triangle text-sm"></i>
+          </div>
+          <div class="bg-yellow-50 border border-yellow-200 px-4 py-3 shadow-sm rounded-lg">
+            <div class="text-sm font-semibold text-yellow-800 mb-2">
+              <i class="fas fa-spell-check mr-1"></i>
+              Gợi ý sửa lỗi:
+            </div>
+            <div class="text-sm text-gray-700 mb-2">
+              <span class="line-through text-red-600">${escapeHtml(feedback.original)}</span>
+              <span class="mx-2">→</span>
+              <span class="text-green-600 font-semibold">${escapeHtml(feedback.corrected)}</span>
+            </div>
+            <div class="text-xs text-gray-600 italic">
+              ${escapeHtml(feedback.explanation)}
+            </div>
+          </div>
+        </div>
+      `;
+
+      chatMessages.appendChild(messageDiv);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    // Check grammar before sending
+    async function checkGrammarBeforeSend() {
+      const input = document.getElementById('messageInput');
+      const message = input.value.trim();
+      
+      if (!message) {
+        alert('Vui lòng nhập tin nhắn trước khi kiểm tra');
+        return;
+      }
+
+      const puterClient = checkPuterAvailable();
+      if (!puterClient) {
+        alert('Puter.js không khả dụng');
+        return;
+      }
+
+      const checkBtn = document.getElementById('checkGrammarBtn');
+      const originalHTML = checkBtn.innerHTML;
+      checkBtn.disabled = true;
+      checkBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+      try {
+        const prompt = `Kiểm tra ngữ pháp và sửa lỗi trong câu sau (tiếng Anh):
+
+"${message}"
+
+Yêu cầu:
+1. Nếu có lỗi, hãy sửa và giải thích ngắn gọn (1 câu)
+2. Nếu không có lỗi, trả lời "No errors found. Your message is correct!"
+
+Trả về format:
+- Nếu có lỗi: "Corrected: [câu đã sửa]\nExplanation: [giải thích]"
+- Nếu không có lỗi: "No errors found. Your message is correct!"`;
+
+        const modelsToTry = ["gpt-4o-mini", "gpt-3.5-turbo", "gpt-5-mini", "gpt-5-nano", "gpt-4o"];
+        let response = null;
+
+        for (const model of modelsToTry) {
+          try {
+            try {
+              response = await puterClient.ai.chat(prompt, {
+                model: model,
+                max_tokens: 80
+              });
+              break;
+            } catch (optionsError) {
+              if (optionsError && typeof optionsError === 'object') {
+                const errorMsg = optionsError.error?.message || optionsError.error?.code || optionsError.message || '';
+                if (errorMsg.includes('temperature') || errorMsg.includes('max_tokens')) {
+                  response = await puterClient.ai.chat(prompt, { model: model });
+                  break;
+                }
+              }
+              throw optionsError;
+            }
+          } catch (modelError) {
+            if (model === modelsToTry[modelsToTry.length - 1]) {
+              throw modelError;
+            }
+            continue;
+          }
+        }
+
+        if (!response) {
+          throw new Error('Không thể kết nối với AI');
+        }
+
+        let responseText = '';
+        if (typeof response === 'string') {
+          responseText = response;
+        } else if (response && typeof response === 'object') {
+          responseText = response.message?.content || 
+                        response.choices?.[0]?.message?.content || 
+                        response.text || 
+                        response.content || 
+                        '';
+        }
+
+        // Parse response
+        if (responseText.includes('No errors found')) {
+          alert('✅ Không có lỗi! Tin nhắn của bạn đúng ngữ pháp.');
+        } else {
+          const correctedMatch = responseText.match(/Corrected:\s*(.+?)(?:\n|Explanation:)/i);
+          const explanationMatch = responseText.match(/Explanation:\s*(.+?)$/i);
+          
+          const corrected = correctedMatch ? correctedMatch[1].trim() : null;
+          const explanation = explanationMatch ? explanationMatch[1].trim() : 'Có lỗi ngữ pháp';
+
+          if (corrected) {
+            const useCorrected = confirm(`Lỗi phát hiện:\n\n${explanation}\n\nBản sửa: "${corrected}"\n\nBạn có muốn dùng bản đã sửa không?`);
+            if (useCorrected) {
+              input.value = corrected;
+            }
+          } else {
+            alert(`Lỗi phát hiện:\n\n${explanation}`);
+          }
+        }
+      } catch (error) {
+        console.error('Grammar check error:', error);
+        alert('Lỗi khi kiểm tra ngữ pháp: ' + (error.message || 'Vui lòng thử lại'));
+      } finally {
+        checkBtn.disabled = false;
+        checkBtn.innerHTML = originalHTML;
+      }
+    }
+
+    // Load conversation from localStorage
+    function loadConversation() {
+      try {
+        const saved = localStorage.getItem(CONVERSATION_KEY);
+        if (saved) {
+          const data = JSON.parse(saved);
+          conversationContext = data.context || conversationContext;
+          
+          // Restore grammar check mode
+          const checkbox = document.getElementById('grammarCheckMode');
+          if (checkbox) {
+            checkbox.checked = conversationContext.grammarCheckEnabled || false;
+            toggleGrammarCheckMode();
+          }
+          
+          // Restore selected topic button
+          if (conversationContext.topic) {
+            selectConversationTopic(conversationContext.topic);
+          }
+          
+          if (data.messages && data.messages.length > 0) {
+            renderMessages(data.messages);
+            updateInfo();
+          }
+        } else {
+          // First time load - initialize default topic
+          selectConversationTopic(conversationContext.topic);
+        }
+      } catch (e) {
+        console.warn('Failed to load conversation:', e);
+        // Initialize default topic on error
+        selectConversationTopic(conversationContext.topic);
+      }
+    }
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', () => {
+      loadConversation();
+      updateInfo();
+    });
+
+    // Save conversation to localStorage
+    function saveConversation() {
+      try {
+        const messages = Array.from(document.querySelectorAll('#chatMessages .message-item'))
+          .map(el => ({
+            role: el.dataset.role,
+            content: el.querySelector('.message-content').textContent
+          }));
+        
+        localStorage.setItem(CONVERSATION_KEY, JSON.stringify({
+          context: conversationContext,
+          messages: messages
+        }));
+      } catch (e) {
+        console.warn('Failed to save conversation:', e);
+      }
+    }
+
+    // Check Puter.js availability
+    function checkPuterAvailable() {
+      if (typeof Puter !== 'undefined' && Puter.ai && Puter.ai.chat) {
+        return Puter;
+      }
+      if (typeof puter !== 'undefined' && puter.ai && puter.ai.chat) {
+        return puter;
+      }
+      if (typeof window.puter !== 'undefined' && window.puter.ai && window.puter.ai.chat) {
+        return window.puter;
+      }
+      return null;
+    }
+
+    // Get topic name in Vietnamese
+    function getTopicName(topic) {
+      const topics = {
+        // Giao tiếp Hàng ngày
+        'greetings': 'Chào hỏi',
+        'introductions': 'Giới thiệu',
+        'small-talk': 'Trò chuyện',
+        'asking-directions': 'Hỏi đường',
+        'shopping': 'Mua sắm',
+        'restaurant': 'Nhà hàng',
+        // Tình huống Thực tế
+        'making-appointments': 'Đặt lịch',
+        'complaints': 'Khiếu nại',
+        'apologies': 'Xin lỗi',
+        'requests': 'Yêu cầu',
+        'giving-advice': 'Đưa lời khuyên',
+        'making-decisions': 'Quyết định',
+        // Công việc & Học tập
+        'job-interview': 'Phỏng vấn',
+        'workplace': 'Nơi làm việc',
+        'meetings': 'Cuộc họp',
+        'email-writing': 'Email công việc',
+        'presentations': 'Thuyết trình',
+        'studying': 'Học tập',
+        // Du lịch & Giải trí
+        'travel': 'Du lịch',
+        'hotel': 'Khách sạn',
+        'transportation': 'Giao thông',
+        'sightseeing': 'Tham quan',
+        'entertainment': 'Giải trí',
+        'sports': 'Thể thao',
+        // Sức khỏe & Cuộc sống
+        'health': 'Sức khỏe',
+        'doctor': 'Bác sĩ',
+        'food': 'Ẩm thực',
+        'exercise': 'Tập thể dục',
+        'family': 'Gia đình',
+        'hobbies': 'Sở thích',
+        // Công nghệ & Hiện đại
+        'technology': 'Công nghệ',
+        'social-media': 'Mạng xã hội',
+        'online-shopping': 'Mua sắm online',
+        'banking': 'Ngân hàng',
+        'customer-service': 'Chăm sóc khách hàng',
+        'emergency': 'Khẩn cấp',
+        'digital-marketing': 'Digital Marketing',
+        'e-commerce': 'E-commerce',
+        // Legacy topics (for backward compatibility)
+        'daily-life': 'Daily Life',
+        'work': 'Work',
+        'education': 'Education'
+      };
+      return topics[topic] || topic;
+    }
+
+    // Select conversation topic
+    function selectConversationTopic(topic) {
+      conversationContext.topic = topic;
+      
+      // Update button styles
+      document.querySelectorAll('.topic-option-btn').forEach(btn => {
+        btn.classList.remove('bg-purple-100', 'border-purple-500', 'text-purple-700', 'font-semibold');
+      });
+      
+      // Find and highlight selected button
+      const buttons = document.querySelectorAll('.topic-option-btn');
+      buttons.forEach(btn => {
+        if (btn.getAttribute('onclick') && btn.getAttribute('onclick').includes(`'${topic}'`)) {
+          btn.classList.add('bg-purple-100', 'border-purple-500', 'text-purple-700', 'font-semibold');
+        }
+      });
+      
+      // Update display
+      const displayEl = document.getElementById('selectedTopicDisplay');
+      if (displayEl) {
+        displayEl.textContent = getTopicName(topic);
+      }
+      
+      updateInfo();
+      saveConversation();
+    }
+
+    // Start new conversation
+    function startNewConversation() {
+      conversationContext.level = document.getElementById('levelSelect').value;
+      // Topic is already set by selectConversationTopic()
+      conversationContext.history = [];
+      
+      document.getElementById('chatMessages').innerHTML = `
+        <div class="text-center text-gray-500 py-8">
+          <i class="fas fa-comments text-4xl mb-4 text-gray-300"></i>
+          <p>Cuộc trò chuyện mới đã bắt đầu!</p>
+          <p class="text-sm mt-2">Chủ đề: <strong>${getTopicName(conversationContext.topic)}</strong> | Level: <strong>${conversationContext.level}</strong></p>
+        </div>
+      `;
+      
+      updateInfo();
+      saveConversation();
+      
+      // Auto-start with AI greeting
+      setTimeout(() => {
+        sendAIGreeting();
+      }, 500);
+    }
+
+    // Send AI greeting
+    async function sendAIGreeting() {
+      const puterClient = checkPuterAvailable();
+      if (!puterClient) {
+        addMessage('system', 'Puter.js không khả dụng. Vui lòng kiểm tra kết nối hoặc đăng nhập Puter.com');
+        return;
+      }
+
+      const topicName = getTopicName(conversationContext.topic);
+      const greetingPrompt = `Bạn là người bạn nói tiếng Anh thân thiện. Hãy bắt đầu cuộc trò chuyện về chủ đề "${topicName}" với level ${conversationContext.level}.
+      
+Hãy chào hỏi và đặt một câu hỏi đơn giản để bắt đầu cuộc trò chuyện. Trả lời ngắn gọn, tự nhiên (1-2 câu).`;
+
+      showTypingIndicator();
+      
+      try {
+        const modelsToTry = ["gpt-4o-mini", "gpt-3.5-turbo", "gpt-5-mini", "gpt-5-nano", "gpt-4o"];
+        let response = null;
+
+        for (const model of modelsToTry) {
+          try {
+            try {
+              response = await puterClient.ai.chat(greetingPrompt, {
+                model: model,
+                max_tokens: 80
+              });
+              console.log(`✅ Success with model: ${model}`);
+              break;
+            } catch (optionsError) {
+              if (optionsError && typeof optionsError === 'object') {
+                const errorMsg = optionsError.error?.message || optionsError.error?.code || optionsError.message || '';
+                if (errorMsg.includes('temperature') || errorMsg.includes('max_tokens')) {
+                  console.log(`⚠️ Options not supported for ${model}, trying without options...`);
+                  response = await puterClient.ai.chat(greetingPrompt, { model: model });
+                  console.log(`✅ Success with model: ${model} (no options)`);
+                  break;
+                }
+              }
+              throw optionsError;
+            }
+          } catch (modelError) {
+            if (modelError && typeof modelError === 'object') {
+              const errorMsg = modelError.error?.message || modelError.error?.code || modelError.message || '';
+              if (errorMsg.includes('model') && (errorMsg.includes('not found') || errorMsg.includes('not available'))) {
+                console.log(`⚠️ Model ${model} not available, trying next...`);
+                continue;
+              }
+            }
+            if (model === modelsToTry[modelsToTry.length - 1]) {
+              throw modelError;
+            }
+            continue;
+          }
+        }
+
+        if (!response) {
+          throw new Error('Không thể kết nối với AI');
+        }
+
+        // Extract text from response
+        let responseText = '';
+        if (typeof response === 'string') {
+          responseText = response;
+        } else if (response && typeof response === 'object') {
+          responseText = response.message?.content || 
+                        response.choices?.[0]?.message?.content || 
+                        response.text || 
+                        response.content || 
+                        JSON.stringify(response);
+        }
+
+        hideTypingIndicator();
+        addMessage('assistant', responseText.trim());
+        conversationContext.history.push({
+          role: 'assistant',
+          content: responseText.trim()
+        });
+        saveConversation();
+      } catch (error) {
+        hideTypingIndicator();
+        console.error('AI greeting error:', error);
+        addMessage('system', `Lỗi: ${error.message || 'Không thể kết nối với AI'}`);
+      }
+    }
+
+    // Chat with AI
+    async function chatWithAI(userMessage) {
+      const puterClient = checkPuterAvailable();
+      if (!puterClient) {
+        addMessage('system', 'Puter.js không khả dụng. Vui lòng kiểm tra kết nối hoặc đăng nhập Puter.com');
+        return null;
+      }
+
+      // Get recent conversation history (last 5 messages)
+      const recentHistory = conversationContext.history.slice(-5);
+      const context = recentHistory
+        .map(msg => `${msg.role === 'user' ? 'User' : 'AI'}: ${msg.content}`)
+        .join('\n');
+
+      const topicName = getTopicName(conversationContext.topic);
+      let prompt = `Bạn là người bạn nói tiếng Anh thân thiện. Hãy trò chuyện tự nhiên về chủ đề "${topicName}".
+Level: ${conversationContext.level}
+
+Lịch sử hội thoại gần đây:
+${context || '(Chưa có lịch sử)'}
+
+Người dùng: ${userMessage}
+Bạn (trả lời ngắn gọn, tự nhiên, 1-2 câu, phù hợp với level ${conversationContext.level}):`;
+
+      // If grammar check is enabled, also check for errors in background
+      let grammarFeedback = null;
+      if (conversationContext.grammarCheckEnabled) {
+        // Start grammar check in parallel (don't wait)
+        checkGrammarInBackground(userMessage).then(feedback => {
+          if (feedback && feedback.hasErrors) {
+            setTimeout(() => {
+              addGrammarFeedbackMessage(feedback);
+            }, 500);
+          }
+        }).catch(err => console.error('Grammar check error:', err));
+      }
+
+      showTypingIndicator();
+
+      try {
+        const modelsToTry = ["gpt-4o-mini", "gpt-3.5-turbo", "gpt-5-mini", "gpt-5-nano", "gpt-4o"];
+        let response = null;
+
+        for (const model of modelsToTry) {
+          try {
+            try {
+              response = await puterClient.ai.chat(prompt, {
+                model: model,
+                max_tokens: 100
+              });
+              console.log(`✅ Success with model: ${model}`);
+              break;
+            } catch (optionsError) {
+              if (optionsError && typeof optionsError === 'object') {
+                const errorMsg = optionsError.error?.message || optionsError.error?.code || optionsError.message || '';
+                if (errorMsg.includes('temperature') || errorMsg.includes('max_tokens')) {
+                  console.log(`⚠️ Options not supported for ${model}, trying without options...`);
+                  response = await puterClient.ai.chat(prompt, { model: model });
+                  console.log(`✅ Success with model: ${model} (no options)`);
+                  break;
+                }
+              }
+              throw optionsError;
+            }
+          } catch (modelError) {
+            if (modelError && typeof modelError === 'object') {
+              const errorMsg = modelError.error?.message || modelError.error?.code || modelError.message || '';
+              if (errorMsg.includes('model') && (errorMsg.includes('not found') || errorMsg.includes('not available'))) {
+                console.log(`⚠️ Model ${model} not available, trying next...`);
+                continue;
+              }
+            }
+            if (model === modelsToTry[modelsToTry.length - 1]) {
+              throw modelError;
+            }
+            continue;
+          }
+        }
+
+        if (!response) {
+          throw new Error('Không thể kết nối với AI');
+        }
+
+        // Extract text from response
+        let responseText = '';
+        if (typeof response === 'string') {
+          responseText = response;
+        } else if (response && typeof response === 'object') {
+          responseText = response.message?.content || 
+                        response.choices?.[0]?.message?.content || 
+                        response.text || 
+                        response.content || 
+                        JSON.stringify(response);
+        }
+
+        hideTypingIndicator();
+        const aiResponse = responseText.trim();
+        
+        // Add to history
+        conversationContext.history.push(
+          { role: 'user', content: userMessage },
+          { role: 'assistant', content: aiResponse }
+        );
+
+        addMessage('assistant', aiResponse);
+        
+        // Grammar feedback will be shown by the background check if enabled
+        // (already started above in parallel, no need to wait)
+        
+        saveConversation();
+        updateInfo();
+        
+        return aiResponse;
+      } catch (error) {
+        hideTypingIndicator();
+        console.error('AI chat error:', error);
+        addMessage('system', `Lỗi: ${error.message || 'Không thể kết nối với AI'}`);
+        return null;
+      }
+    }
+
+    // Add message to chat
+    function addMessage(role, content) {
+      const chatMessages = document.getElementById('chatMessages');
+      
+      // Remove empty state if exists
+      const emptyState = chatMessages.querySelector('.text-center');
+      if (emptyState) {
+        emptyState.remove();
+      }
+
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `message-item flex ${role === 'user' ? 'justify-end' : 'justify-start'}`;
+      messageDiv.dataset.role = role;
+
+      const messageClass = role === 'user' ? 'message-user' : 'message-ai';
+      const icon = role === 'user' ? 'fa-user' : 'fa-robot';
+      const iconBg = role === 'user' ? 'bg-purple-500' : 'bg-gray-400';
+
+      messageDiv.innerHTML = `
+        <div class="flex items-start gap-3 max-w-[80%] ${role === 'user' ? 'flex-row-reverse' : ''}">
+          <div class="flex-shrink-0 w-8 h-8 rounded-full ${iconBg} flex items-center justify-center text-white">
+            <i class="fas ${icon} text-sm"></i>
+          </div>
+          <div class="${messageClass} px-4 py-3 shadow-sm">
+            <div class="message-content whitespace-pre-wrap">${escapeHtml(content)}</div>
+          </div>
+        </div>
+      `;
+
+      chatMessages.appendChild(messageDiv);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    // Show typing indicator
+    function showTypingIndicator() {
+      const chatMessages = document.getElementById('chatMessages');
+      const typingDiv = document.createElement('div');
+      typingDiv.id = 'typingIndicator';
+      typingDiv.className = 'message-item flex justify-start';
+      typingDiv.innerHTML = `
+        <div class="flex items-start gap-3">
+          <div class="flex-shrink-0 w-8 h-8 rounded-full bg-gray-400 flex items-center justify-center text-white">
+            <i class="fas fa-robot text-sm"></i>
+          </div>
+          <div class="message-ai px-4 py-3 shadow-sm">
+            <div class="typing-indicator">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+          </div>
+        </div>
+      `;
+      chatMessages.appendChild(typingDiv);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    // Hide typing indicator
+    function hideTypingIndicator() {
+      const typingIndicator = document.getElementById('typingIndicator');
+      if (typingIndicator) {
+        typingIndicator.remove();
+      }
+    }
+
+    // Send message
+    async function sendMessage() {
+      const input = document.getElementById('messageInput');
+      const message = input.value.trim();
+      
+      if (!message) return;
+
+      // Disable input while processing
+      input.disabled = true;
+      document.getElementById('sendBtn').disabled = true;
+
+      // Add user message
+      addMessage('user', message);
+      input.value = '';
+      
+      // Update info
+      updateInfo();
+
+      // Get AI response
+      await chatWithAI(message);
+
+      // Re-enable input
+      input.disabled = false;
+      document.getElementById('sendBtn').disabled = false;
+      input.focus();
+    }
+
+    // Handle Enter key
+    function handleKeyPress(event) {
+      if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        sendMessage();
+      }
+    }
+
+    // Update conversation info
+    function updateInfo() {
+      document.getElementById('currentLevel').textContent = conversationContext.level;
+      document.getElementById('currentTopic').textContent = getTopicName(conversationContext.topic);
+      
+      const messageCount = conversationContext.history.filter(m => m.role === 'user').length;
+      document.getElementById('messageCount').textContent = messageCount;
+    }
+
+    // Clear conversation
+    function clearConversation() {
+      if (confirm('Bạn có chắc muốn xóa cuộc trò chuyện này?')) {
+        conversationContext.history = [];
+        localStorage.removeItem(CONVERSATION_KEY);
+        document.getElementById('chatMessages').innerHTML = `
+          <div class="text-center text-gray-500 py-8">
+            <i class="fas fa-comments text-4xl mb-4 text-gray-300"></i>
+            <p>Cuộc trò chuyện đã được xóa</p>
+            <p class="text-sm mt-2">Chọn cấp độ và chủ đề, sau đó bắt đầu trò chuyện mới!</p>
+          </div>
+        `;
+        updateInfo();
+      }
+    }
+
+    // Escape HTML
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Initialize
+    document.getElementById('levelSelect').addEventListener('change', function() {
+      conversationContext.level = this.value;
+      saveConversation();
+    });
+
+    document.getElementById('topicSelect').addEventListener('change', function() {
+      conversationContext.topic = this.value;
+      saveConversation();
+    });
+
+    // Page initialization is handled by DOMContentLoaded event above
+  </script>
+</body>
+</html>
+
