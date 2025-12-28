@@ -1,15 +1,16 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Test Level</title>
   <script>
     // Suppress Tailwind CDN warning BEFORE loading Tailwind
-    (function() {
+    (function () {
       if (typeof console !== 'undefined' && console.warn) {
         const originalWarn = console.warn;
-        console.warn = function(...args) {
+        console.warn = function (...args) {
           const firstArg = args[0];
           if (typeof firstArg === 'string' && (
             firstArg.includes('cdn.tailwindcss.com should not be used') ||
@@ -26,52 +27,50 @@
   <script src="https://js.puter.com/v2/"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    .no-scrollbar::-webkit-scrollbar { display: none; }
-    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
     @media (max-width: 640px) {
-      .nav-links { gap: 8px; padding: 8px 0 6px; }
-      .nav-links a { white-space: nowrap; padding: 8px 10px; border-radius: 9999px; background: #f9fafb; }
-      .nav-links a.active-nav { background: #ede9fe; color: #5b21b6; font-weight: 600; }
+      .nav-links {
+        gap: 8px;
+        padding: 8px 0 6px;
+      }
+
+      .nav-links a {
+        white-space: nowrap;
+        padding: 8px 10px;
+        border-radius: 9999px;
+        background: #f9fafb;
+      }
+
+      .nav-links a.active-nav {
+        background: #ede9fe;
+        color: #5b21b6;
+        font-weight: 600;
+      }
     }
   </style>
 </head>
+
 <body class="bg-gray-50 min-h-screen">
-  <nav class="bg-white shadow-sm border-b">
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex justify-between h-16 items-center">
-        <a href="/" class="text-xl font-bold text-purple-600">📚 English Vocab</a>
-        <div class="nav-links flex items-center space-x-2 sm:space-x-4 text-sm overflow-x-auto no-scrollbar py-2 sm:py-0" aria-label="Điều hướng chính">
-          <a href="/learn" class="text-gray-700 hover:text-purple-600">Học từ</a>
-          <a href="/assessment" class="text-purple-600 font-semibold active-nav">Test Level</a>
-          <a href="/ipa" class="text-gray-700 hover:text-purple-600">IPA</a>
-          <a href="/combo" class="text-gray-700 hover:text-purple-600">Combo</a>
-          <a href="/grammar" class="text-gray-700 hover:text-purple-600">Grammar</a>
-          <a href="/writing-practice" class="text-gray-700 hover:text-purple-600">Luyện Viết</a>
-          <a href="/conversation-practice" class="text-gray-700 hover:text-purple-600">Luyện Hội thoại</a>
-          <a href="/review" class="text-gray-700 hover:text-purple-600">Ôn từ</a>
-          <a href="/review-grammar" class="text-gray-700 hover:text-purple-600">Ôn Grammar</a>
-          <a href="/voice-chat" class="text-gray-700 hover:text-purple-600">Voice Chat</a>
-          <div class="border-l pl-4 ml-2 flex items-center gap-2">
-            <button onclick="openPreferencesModal()" class="text-gray-700 hover:text-purple-600 flex items-center gap-1" title="Tùy chọn">
-              <i class="fas fa-cog"></i>
-            </button>
-            <button onclick="openDashboardModal()" class="text-gray-700 hover:text-purple-600 flex items-center gap-1" title="Tiến độ">
-              <i class="fas fa-chart-line"></i>
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </nav>
+  <script src="/js/header.js"></script>
 
   <main class="max-w-5xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
       <div>
         <h1 class="text-xl sm:text-2xl font-bold text-gray-900 mb-1">Sentence Fill-in Test</h1>
-        <p class="text-gray-600 text-xs sm:text-sm">Chọn level, đọc câu ví dụ, điền từ còn thiếu để luyện ngữ cảnh & chính tả.</p>
+        <p class="text-gray-600 text-xs sm:text-sm">Chọn level, đọc câu ví dụ, điền từ còn thiếu để luyện ngữ cảnh &
+          chính tả.</p>
       </div>
       <div class="flex items-center gap-2 flex-wrap">
-        <select id="levelSelect" class="px-3 sm:px-4 py-2.5 sm:py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 text-xs sm:text-sm flex-1 sm:flex-none min-w-[120px]">
+        <select id="levelSelect"
+          class="px-3 sm:px-4 py-2.5 sm:py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 text-xs sm:text-sm flex-1 sm:flex-none min-w-[120px]">
           <option value="">Auto (tất cả)</option>
           <option value="A1">A1</option>
           <option value="A2">A2</option>
@@ -80,7 +79,8 @@
           <option value="C1">C1</option>
           <option value="C2">C2</option>
         </select>
-        <button id="btnStart" class="px-4 sm:px-5 py-2.5 sm:py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-xs sm:text-sm font-medium min-h-[44px] sm:min-h-0 whitespace-nowrap">
+        <button id="btnStart"
+          class="px-4 sm:px-5 py-2.5 sm:py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-xs sm:text-sm font-medium min-h-[44px] sm:min-h-0 whitespace-nowrap">
           <i class="fas fa-play mr-1"></i> Bộ câu mới
         </button>
       </div>
@@ -98,9 +98,9 @@
       </div>
       <div class="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 bg-gray-100 rounded-full">
         <label for="ttsRate" class="text-xs text-gray-600 whitespace-nowrap">Tốc độ:</label>
-        <input type="range" id="ttsRate" min="0.5" max="1.5" step="0.1" value="0.8" 
-               class="w-16 sm:w-20 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-               title="Điều chỉnh tốc độ giọng đọc (0.5 = chậm, 1.5 = nhanh)">
+        <input type="range" id="ttsRate" min="0.5" max="1.5" step="0.1" value="0.8"
+          class="w-16 sm:w-20 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+          title="Điều chỉnh tốc độ giọng đọc (0.5 = chậm, 1.5 = nhanh)">
         <span id="ttsRateValue" class="text-xs text-gray-700 w-8 sm:w-10 text-center font-semibold">0.8x</span>
       </div>
     </div>
@@ -108,9 +108,15 @@
     <div id="list" class="space-y-3 sm:space-y-4"></div>
 
     <div class="mt-4 sm:mt-6 flex flex-wrap gap-2 sm:gap-3">
-      <button id="btnCheck" class="px-4 sm:px-5 py-2.5 sm:py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 active:bg-green-800 text-xs sm:text-sm font-medium min-h-[44px] sm:min-h-0 flex-1 sm:flex-none">Chấm điểm</button>
-      <button id="btnShow" class="px-4 sm:px-5 py-2.5 sm:py-2 bg-gray-100 text-gray-800 rounded-lg hover:bg-gray-200 active:bg-gray-300 text-xs sm:text-sm font-medium min-h-[44px] sm:min-h-0 flex-1 sm:flex-none">Hiện đáp án</button>
-      <button id="btnReload" class="px-4 sm:px-5 py-2.5 sm:py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 active:bg-blue-300 text-xs sm:text-sm font-medium min-h-[44px] sm:min-h-0 flex-1 sm:flex-none">Đổi bộ câu</button>
+      <button id="btnCheck"
+        class="px-4 sm:px-5 py-2.5 sm:py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 active:bg-green-800 text-xs sm:text-sm font-medium min-h-[44px] sm:min-h-0 flex-1 sm:flex-none">Chấm
+        điểm</button>
+      <button id="btnShow"
+        class="px-4 sm:px-5 py-2.5 sm:py-2 bg-gray-100 text-gray-800 rounded-lg hover:bg-gray-200 active:bg-gray-300 text-xs sm:text-sm font-medium min-h-[44px] sm:min-h-0 flex-1 sm:flex-none">Hiện
+        đáp án</button>
+      <button id="btnReload"
+        class="px-4 sm:px-5 py-2.5 sm:py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 active:bg-blue-300 text-xs sm:text-sm font-medium min-h-[44px] sm:min-h-0 flex-1 sm:flex-none">Đổi
+        bộ câu</button>
     </div>
 
     <div id="result" class="mt-6 text-lg font-semibold text-gray-900"></div>
@@ -139,7 +145,7 @@
     const DICT_THROTTLE_MS = 80; // giãn nhịp request để tránh 429
     let items = [];
     let score = 0;
-    
+
     // Initialize managers với error handling
     let storage, preferences, adaptiveDifficulty, progressDashboard;
     try {
@@ -150,29 +156,29 @@
     } catch (e) {
       console.error('Failed to initialize managers:', e);
       // Fallback: tạo minimal objects
-      storage = { getProgress: () => ({ words: {}, stats: {} }), saveProgress: () => {} };
-      preferences = { 
+      storage = { getProgress: () => ({ words: {}, stats: {} }), saveProgress: () => { } };
+      preferences = {
         preferences: { preferredTopics: [], preferredLevels: [], difficulty: 'medium' },
         filterWords: (w) => w,
         sortByDifficulty: (w) => w,
         isAdaptiveLearningEnabled: () => false
       };
       adaptiveDifficulty = { selectWords: (w, c) => w.slice(0, c) };
-      progressDashboard = { recordSession: () => {} };
+      progressDashboard = { recordSession: () => { } };
     }
     const sessionStartTime = Date.now();
-    
+
     // Audio cache cho TTS
     const audioCache = new Map();
     const audioInstances = new Map(); // Lưu Audio instances để có thể pause/play
-    
+
     // TTS Settings (tốc độ, pitch, volume)
     let ttsSettings = {
       rate: 0.8, // Tốc độ (0.1 - 2.0, mặc định 0.8 = chậm hơn)
       pitch: 1.0, // Cao độ (0 - 2.0)
       volume: 1.0 // Âm lượng (0 - 1.0)
     };
-    
+
     // Load TTS settings từ localStorage
     function loadTTSSettings() {
       try {
@@ -184,7 +190,7 @@
         console.warn('Failed to load TTS settings:', e);
       }
     }
-    
+
     // Save TTS settings
     function saveTTSSettings() {
       try {
@@ -193,10 +199,10 @@
         console.warn('Failed to save TTS settings:', e);
       }
     }
-    
+
     // Load settings khi khởi động
     loadTTSSettings();
-    
+
     // Kiểm tra Puter.js availability
     function checkPuterAvailable() {
       // Kiểm tra nhiều cách Puter.js có thể được expose
@@ -211,7 +217,7 @@
       }
       return null;
     }
-    
+
     // Load cache từ localStorage
     function loadAudioCache() {
       try {
@@ -226,7 +232,7 @@
         console.warn('Failed to load audio cache:', e);
       }
     }
-    
+
     // Save cache to localStorage
     function saveAudioCache() {
       try {
@@ -236,48 +242,48 @@
         console.warn('Failed to save audio cache:', e);
       }
     }
-    
+
     // Kiểm tra Web Speech API availability
     function checkWebSpeechAvailable() {
       return 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
     }
-    
+
     // Generate audio từ Web Speech API (fallback miễn phí)
     function generateAudioWebSpeech(text) {
       if (!checkWebSpeechAvailable()) return null;
-      
+
       return new Promise((resolve) => {
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = 'en-US';
         utterance.rate = ttsSettings.rate; // Tốc độ nói (từ settings)
         utterance.pitch = ttsSettings.pitch; // Cao độ (từ settings)
         utterance.volume = ttsSettings.volume; // Âm lượng (từ settings)
-        
+
         // Chọn giọng nữ tiếng Anh nếu có
         const voices = speechSynthesis.getVoices();
-        const englishVoice = voices.find(v => 
+        const englishVoice = voices.find(v =>
           v.lang.startsWith('en') && v.name.toLowerCase().includes('female')
         ) || voices.find(v => v.lang.startsWith('en-US')) || voices[0];
-        
+
         if (englishVoice) {
           utterance.voice = englishVoice;
         }
-        
+
         // Tạo blob URL từ audio (không thể cache trực tiếp, nhưng có thể tái sử dụng utterance)
         utterance.onend = () => resolve(utterance);
         utterance.onerror = () => resolve(null);
-        
+
         // Lưu utterance để có thể phát lại
         resolve(utterance);
       });
     }
-    
+
     // Generate audio từ Puter.js TTS (chất lượng cao) hoặc Web Speech API (fallback)
     async function generateAudio(text, questionId) {
       if (!text || !text.trim()) return null;
-      
+
       const cacheKey = text.trim().toLowerCase();
-      
+
       // Check cache trước
       if (audioCache.has(cacheKey)) {
         const cached = audioCache.get(cacheKey);
@@ -287,7 +293,7 @@
         }
         return cached;
       }
-      
+
       // Thử Puter.js trước (chất lượng cao)
       try {
         const puterClient = checkPuterAvailable();
@@ -298,69 +304,69 @@
             voice: '21m00Tcm4TlvDq8ikWAM', // Giọng nữ tiếng Anh
             model: 'eleven_multilingual_v2'
           });
-        
-        // Kiểm tra nếu Puter.js trả về error object
-        if (audioResult && typeof audioResult === 'object') {
-          // Nếu có success: false hoặc error property, đó là lỗi
-          if (audioResult.success === false || audioResult.error) {
-            const errorObj = audioResult.error || {};
-            const errorMsg = errorObj.message || errorObj.code || errorObj.toString() || JSON.stringify(errorObj);
-            const errorCode = errorObj.code || errorObj.status || 'UNKNOWN';
-            
-            console.error('TTS API Error:', {
-              message: errorMsg,
-              code: errorCode,
-              fullError: errorObj,
-              response: audioResult
-            });
-            
-            // Log chi tiết để debug
-            if (errorObj.message) console.error('Error message:', errorObj.message);
-            if (errorObj.code) console.error('Error code:', errorObj.code);
-            if (errorObj.status) console.error('Error status:', errorObj.status);
-            if (errorObj.details) console.error('Error details:', errorObj.details);
-            
-            // Update UI status với thông báo hữu ích
-            let userFriendlyMsg = errorMsg;
-            if (errorCode === 'AUTH_REQUIRED' || errorMsg?.toLowerCase().includes('auth') || errorMsg?.toLowerCase().includes('login')) {
-              userFriendlyMsg = 'Cần đăng nhập Puter.com. Xem hướng dẫn trong console.';
-              console.info('💡 Hướng dẫn: Puter.js sử dụng mô hình "User-Pays". Bạn có thể:');
-              console.info('   1. Truy cập https://puter.com và tạo tài khoản miễn phí');
-              console.info('   2. Hoặc sử dụng TTS provider khác không cần authentication');
+
+          // Kiểm tra nếu Puter.js trả về error object
+          if (audioResult && typeof audioResult === 'object') {
+            // Nếu có success: false hoặc error property, đó là lỗi
+            if (audioResult.success === false || audioResult.error) {
+              const errorObj = audioResult.error || {};
+              const errorMsg = errorObj.message || errorObj.code || errorObj.toString() || JSON.stringify(errorObj);
+              const errorCode = errorObj.code || errorObj.status || 'UNKNOWN';
+
+              console.error('TTS API Error:', {
+                message: errorMsg,
+                code: errorCode,
+                fullError: errorObj,
+                response: audioResult
+              });
+
+              // Log chi tiết để debug
+              if (errorObj.message) console.error('Error message:', errorObj.message);
+              if (errorObj.code) console.error('Error code:', errorObj.code);
+              if (errorObj.status) console.error('Error status:', errorObj.status);
+              if (errorObj.details) console.error('Error details:', errorObj.details);
+
+              // Update UI status với thông báo hữu ích
+              let userFriendlyMsg = errorMsg;
+              if (errorCode === 'AUTH_REQUIRED' || errorMsg?.toLowerCase().includes('auth') || errorMsg?.toLowerCase().includes('login')) {
+                userFriendlyMsg = 'Cần đăng nhập Puter.com. Xem hướng dẫn trong console.';
+                console.info('💡 Hướng dẫn: Puter.js sử dụng mô hình "User-Pays". Bạn có thể:');
+                console.info('   1. Truy cập https://puter.com và tạo tài khoản miễn phí');
+                console.info('   2. Hoặc sử dụng TTS provider khác không cần authentication');
+              }
+              updateTTSStatus(true, userFriendlyMsg);
+
+              return null;
             }
-            updateTTSStatus(true, userFriendlyMsg);
-            
-            return null;
           }
-        }
-        
-        // Puter.js trả về Audio object, lấy src để cache
-        let audioUrl = null;
-        if (audioResult) {
-          if (audioResult instanceof Audio) {
-            // Nếu là Audio object
-            audioUrl = audioResult.src || audioResult.currentSrc;
-          } else if (typeof audioResult === 'string') {
-            // Nếu là URL string
-            audioUrl = audioResult;
-          } else if (audioResult.src) {
-            // Nếu có property src
-            audioUrl = audioResult.src;
-          } else if (audioResult.url) {
-            // Nếu có property url
-            audioUrl = audioResult.url;
+
+          // Puter.js trả về Audio object, lấy src để cache
+          let audioUrl = null;
+          if (audioResult) {
+            if (audioResult instanceof Audio) {
+              // Nếu là Audio object
+              audioUrl = audioResult.src || audioResult.currentSrc;
+            } else if (typeof audioResult === 'string') {
+              // Nếu là URL string
+              audioUrl = audioResult;
+            } else if (audioResult.src) {
+              // Nếu có property src
+              audioUrl = audioResult.src;
+            } else if (audioResult.url) {
+              // Nếu có property url
+              audioUrl = audioResult.url;
+            }
           }
-        }
-        
-        // Nếu không có URL, thử tạo từ Audio object
-        if (!audioUrl && audioResult instanceof Audio) {
-          // Audio object từ Puter.js có thể là blob URL hoặc data URL
-          // Lưu lại Audio object để dùng trực tiếp
-          audioCache.set(cacheKey, audioResult);
-          saveAudioCache();
-          return audioResult; // Trả về Audio object để phát trực tiếp
-        }
-        
+
+          // Nếu không có URL, thử tạo từ Audio object
+          if (!audioUrl && audioResult instanceof Audio) {
+            // Audio object từ Puter.js có thể là blob URL hoặc data URL
+            // Lưu lại Audio object để dùng trực tiếp
+            audioCache.set(cacheKey, audioResult);
+            saveAudioCache();
+            return audioResult; // Trả về Audio object để phát trực tiếp
+          }
+
           // Cache lại URL
           if (audioUrl) {
             audioCache.set(cacheKey, audioUrl);
@@ -372,7 +378,7 @@
         // Puter.js lỗi, fallback sang Web Speech API
         console.warn('Puter.js TTS failed, falling back to Web Speech API:', error.message);
       }
-      
+
       // Fallback: Sử dụng Web Speech API (miễn phí, không cần API key)
       if (checkWebSpeechAvailable()) {
         try {
@@ -383,7 +389,7 @@
               setTimeout(resolve, 500); // Timeout sau 500ms
             });
           }
-          
+
           const utterance = await generateAudioWebSpeech(text);
           if (utterance) {
             // Cache utterance (sẽ tạo mới mỗi lần phát)
@@ -394,42 +400,42 @@
           console.error('Web Speech API error:', error);
         }
       }
-      
+
       // Cả 2 đều không khả dụng
       return null;
     }
-    
+
     // Hàm riêng để phát audio (xử lý cả Puter.js result và Web Speech utterance)
     async function playAudio(audioResult, btn, idx) {
       try {
         let audio;
-        
+
         // Nếu là Web Speech utterance
         if (audioResult && audioResult.constructor?.name === 'SpeechSynthesisUtterance') {
           // Dừng bất kỳ speech nào đang phát
           speechSynthesis.cancel();
-          
+
           // Phát trực tiếp
           speechSynthesis.speak(audioResult);
-          
+
           // Update button
           btn.innerHTML = '<i class="fas fa-pause"></i> Đang phát...';
           btn.disabled = false;
-          
+
           // Event handlers
           audioResult.onend = () => {
             btn.innerHTML = '<i class="fas fa-volume-up"></i> Nghe lại';
             btn.disabled = false;
           };
-          
+
           audioResult.onerror = () => {
             btn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Lỗi phát audio';
             btn.disabled = false;
           };
-          
+
           // Lưu utterance để có thể pause
           audioInstances.set(idx, audioResult);
-          
+
           // Thêm click để pause/resume
           btn.onclick = () => {
             if (speechSynthesis.speaking) {
@@ -440,10 +446,10 @@
               btn.innerHTML = '<i class="fas fa-pause"></i> Đang phát...';
             }
           };
-          
+
           return;
         }
-        
+
         // Xử lý Puter.js audio (Audio object hoặc URL)
         if (audioResult instanceof Audio) {
           audio = audioResult;
@@ -454,34 +460,34 @@
         } else {
           throw new Error('Invalid audio result format');
         }
-        
+
         // Áp dụng tốc độ phát (playbackRate) cho Puter.js audio
         // playbackRate: 0.5 = chậm 50%, 1.0 = bình thường, 1.5 = nhanh 50%
         // Map từ ttsSettings.rate (0.5-1.5) sang playbackRate
         audio.playbackRate = ttsSettings.rate;
-        
+
         // Lưu instance để có thể pause sau
         audioInstances.set(idx, audio);
-        
+
         // Event handlers
         audio.onended = () => {
           btn.innerHTML = '<i class="fas fa-volume-up"></i> Nghe lại';
           btn.disabled = false;
         };
-        
+
         audio.onerror = (e) => {
           console.error('Audio playback error:', e);
           btn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Lỗi phát audio';
           btn.disabled = false;
         };
-        
+
         // Phát audio
         await audio.play();
-        
+
         // Update button
         btn.innerHTML = '<i class="fas fa-pause"></i> Đang phát...';
         btn.disabled = false;
-        
+
         // Thêm click để pause/resume
         btn.onclick = () => {
           const currentAudio = audioInstances.get(idx);
@@ -501,16 +507,16 @@
         btn.disabled = false;
       }
     }
-    
-    
+
+
     // Phát audio cho câu hỏi
     async function playQuestionAudio(idx) {
       const question = items[idx];
       if (!question) return;
-      
+
       const btn = document.getElementById(`audio-btn-${idx}`);
       if (!btn) return;
-      
+
       // Dừng audio cũ nếu đang phát
       const oldAudio = audioInstances.get(idx);
       if (oldAudio) {
@@ -521,7 +527,7 @@
             btn.innerHTML = '<i class="fas fa-volume-up"></i> Nghe câu';
             return;
           }
-        } 
+        }
         // Nếu là Audio object
         else if (!oldAudio.paused) {
           oldAudio.pause();
@@ -530,17 +536,17 @@
           return;
         }
       }
-      
+
       // Disable button khi đang load
       btn.disabled = true;
       btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang tạo audio...';
-      
+
       // Lấy câu đầy đủ (không có blank)
       const fullSentence = question.sentence;
-      
+
       // Generate audio (sẽ tự động fallback nếu Puter.js lỗi)
       const audioResult = await generateAudio(fullSentence, idx);
-      
+
       if (audioResult) {
         await playAudio(audioResult, btn, idx);
       } else {
@@ -553,7 +559,7 @@
         updateTTSStatus(true, 'Cả Puter.js và Web Speech API đều không khả dụng');
       }
     }
-    
+
     // Preload audio cho vài câu đầu (chỉ preload Puter.js, Web Speech không cần preload)
     async function preloadAudio() {
       const firstFew = items.slice(0, 3);
@@ -576,9 +582,9 @@
     const escapeRegExp = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
     const STOP_WORDS = new Set([
-      'a','an','the','i','you','he','she','it','we','they','some','any','very','much','well','can','have','has','had',
-      'do','does','did','be','is','am','are','was','were','to','of','in','on','at','for','from','by','with','about',
-      'up','down','out','into','over','under','after','before','this','that','these','those','there','here','go'
+      'a', 'an', 'the', 'i', 'you', 'he', 'she', 'it', 'we', 'they', 'some', 'any', 'very', 'much', 'well', 'can', 'have', 'has', 'had',
+      'do', 'does', 'did', 'be', 'is', 'am', 'are', 'was', 'were', 'to', 'of', 'in', 'on', 'at', 'for', 'from', 'by', 'with', 'about',
+      'up', 'down', 'out', 'into', 'over', 'under', 'after', 'before', 'this', 'that', 'these', 'those', 'there', 'here', 'go'
     ]);
 
     // Dictionary cache (LocalStorage + Map)
@@ -641,12 +647,12 @@
 
     async function fetchExample(word) {
       if (!word || !word.trim()) return null;
-      
+
       const cleanWord = word.trim();
-      
+
       // Skip các từ không phù hợp để tra
       if (!canUseWord(cleanWord)) return null;
-      
+
       let wordToFetch = cleanWord;
 
       // Cache check
@@ -664,12 +670,12 @@
           return null;
         }
         const data = await res.json();
-        
+
         // Kiểm tra nếu API trả về error
         if (data.error) {
           return null;
         }
-        
+
         const defs = data.definition || [];
         for (const def of defs) {
           const examples = def.example || [];
@@ -711,10 +717,10 @@
       document.getElementById('result').textContent = '';
 
       const level = document.getElementById('levelSelect').value;
-      
+
       // Áp dụng preferences
       let params = { count: MAX_CANDIDATES };
-      
+
       // Ưu tiên level được chọn
       if (level) {
         params.level = level;
@@ -726,7 +732,7 @@
         }
         // Nếu không có preferred levels, không set params.level = lấy tất cả
       }
-      
+
       const paramsStr = new URLSearchParams(params).toString();
       console.log('Fetching words with params:', paramsStr);
 
@@ -738,38 +744,38 @@
           throw new Error(`API error: ${res.status} - ${errorText}`);
         }
         let words = await res.json();
-        
+
         console.log(`API returned ${words?.length || 0} words`);
-        
+
         if (!words || words.length === 0) {
           console.warn('No words returned from API. Params:', paramsStr);
           document.getElementById('list').innerHTML = '<div class="text-center text-gray-500 py-10">Không có từ vựng. Hãy thử:<br>1. Chọn level khác<br>2. Điều chỉnh preferences (click icon ⚙️)<br>3. Kiểm tra Console (F12) để xem chi tiết</div>';
           setLoading(false);
           return;
         }
-        
+
         // Lọc cơ bản trước (loại bỏ từ quá dài)
         words = words.filter(w => {
           const bw = (w['Base Word'] || '').toString().trim();
           return bw && bw.length > 0 && bw.length < 20;
         });
-        
+
         if (words.length === 0) {
           console.warn('No words after basic filter');
           document.getElementById('list').innerHTML = '<div class="text-center text-gray-500 py-10">Không có từ vựng phù hợp. Hãy thử lại.</div>';
           setLoading(false);
           return;
         }
-        
+
         // Lọc theo preferences (nếu có)
         let filteredWords = preferences.filterWords(words);
-        
+
         // Fallback: nếu filter quá strict, dùng words gốc
         if (filteredWords.length < 10) {
           console.warn('Preferences filter too strict, using original words');
           filteredWords = words;
         }
-        
+
         // Áp dụng adaptive difficulty nếu enabled
         let finalWords = filteredWords;
         if (preferences.isAdaptiveLearningEnabled() && preferences.preferences.difficulty === 'adaptive') {
@@ -799,7 +805,7 @@
         const filteredForDict = finalWords.filter(w => canUseWord((w['Base Word'] || '').toString()));
         const wordsToFetch = filteredForDict.slice(0, Math.min(MAX_EXAMPLE_FETCH, filteredForDict.length));
         console.log(`Fetching examples for ${wordsToFetch.length} words...`);
-        
+
         const examplePromises = wordsToFetch.map((w, idx) => ({
           word: w,
           promise: (async () => {
@@ -807,22 +813,22 @@
             return fetchExample(w['Base Word']);
           })()
         }));
-        
+
         // Fetch tất cả (đã giãn nhịp)
         const exampleResults = await Promise.allSettled(
           examplePromises.map(ep => ep.promise)
         );
-        
+
         console.log(`Fetched ${exampleResults.length} examples, ${exampleResults.filter(r => r.status === 'fulfilled' && r.value).length} successful`);
-        
+
         // Xử lý kết quả
         for (let i = 0; i < exampleResults.length && items.length < MAX_ITEMS; i++) {
           const result = exampleResults[i];
           if (result.status !== 'fulfilled') continue;
-          
+
           const ex = result.value;
           if (!ex || !ex.sentence) continue;
-          
+
           const w = wordsToFetch[i];
           const base = w['Base Word'];
           const blank = createBlankSentence(ex.sentence, base);
@@ -839,7 +845,7 @@
 
           document.getElementById('loadedCount').textContent = items.length;
         }
-        
+
         console.log(`Final items count: ${items.length}`);
       } catch (e) {
         console.error('loadSet error:', e);
@@ -878,7 +884,7 @@
           <div class="text-xs text-gray-500" id="fb-${idx}"></div>
         </div>
       `).join('');
-      
+
       // Preload audio cho 2-3 câu đầu sau khi render
       setTimeout(() => {
         preloadAudio();
@@ -921,11 +927,11 @@
         score = correct;
         document.getElementById('score').textContent = `${score}/${items.length}`;
         document.getElementById('result').textContent = `Bạn làm đúng ${score}/${items.length} câu.`;
-        
+
         // Ghi nhận progress
         const incorrect = items.length - correct;
         const timeSpent = Math.round((Date.now() - sessionStartTime) / 1000 / 60); // minutes
-        
+
         // Record session
         progressDashboard.recordSession(
           new Date(),
@@ -935,13 +941,13 @@
           incorrect,
           timeSpent
         );
-        
+
         // Update word progress
         inputs.forEach(inp => {
           const idx = Number(inp.dataset.idx);
           const word = items[idx].word;
           const isCorrect = inp.classList.contains('border-green-500');
-          
+
           // Get or create word progress
           let wordProgress = storage.getWordProgress(word);
           if (!wordProgress) {
@@ -952,7 +958,7 @@
             });
             wordProgress = storage.getWordProgress(word);
           }
-          
+
           // Record answer
           storage.recordAnswer(word, isCorrect);
         });
@@ -974,7 +980,7 @@
       const statusEl = document.getElementById('ttsStatus');
       const statusTextEl = document.getElementById('ttsStatusText');
       if (!statusEl || !statusTextEl) return;
-      
+
       if (isError) {
         ttsErrorCount++;
         statusEl.classList.remove('hidden', 'bg-green-100', 'text-green-700', 'bg-blue-100', 'text-blue-700');
@@ -983,10 +989,10 @@
         statusEl.title = `TTS gặp lỗi. Mở Console (F12) để xem chi tiết.${errorDetails ? '\n' + errorDetails : ''}`;
         return;
       }
-      
+
       const puterClient = checkPuterAvailable();
       const webSpeechAvailable = checkWebSpeechAvailable();
-      
+
       if (puterClient) {
         ttsErrorCount = 0; // Reset error count on success
         statusEl.classList.remove('hidden', 'bg-yellow-100', 'text-yellow-700', 'bg-red-100', 'text-red-700', 'bg-blue-100', 'text-blue-700');
@@ -1006,7 +1012,7 @@
         statusEl.title = 'TTS không khả dụng. Kiểm tra console để biết chi tiết.';
       }
     }
-    
+
     // Load audio cache khi trang load
     window.addEventListener('DOMContentLoaded', () => {
       loadAudioCache();
@@ -1020,23 +1026,23 @@
       if (listEl) {
         listEl.innerHTML = '<div class="text-center text-gray-500 py-8 text-sm">Chọn level (hoặc để Auto) rồi bấm <span class="font-semibold text-purple-700">Bộ câu mới</span> để tải câu hỏi.</div>';
       }
-      
+
       // TTS Rate control
       const ttsRateSlider = document.getElementById('ttsRate');
       const ttsRateValue = document.getElementById('ttsRateValue');
-      
+
       if (ttsRateSlider && ttsRateValue) {
         // Set initial value từ settings
         ttsRateSlider.value = ttsSettings.rate;
         ttsRateValue.textContent = ttsSettings.rate.toFixed(1) + 'x';
-        
+
         // Update khi thay đổi
         ttsRateSlider.addEventListener('input', (e) => {
           const newRate = parseFloat(e.target.value);
           ttsSettings.rate = newRate;
           ttsRateValue.textContent = newRate.toFixed(1) + 'x';
           saveTTSSettings();
-          
+
           // Note: Web Speech API sẽ dùng rate mới cho các utterance mới
           // Puter.js audio đã được generate với tốc độ cố định, cần regenerate
         });
@@ -1044,5 +1050,5 @@
     });
   </script>
 </body>
-</html>
 
+</html>

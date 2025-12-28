@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,7 +8,7 @@
   <script>
     // Suppress Tailwind CDN warning (phải đặt TRƯỚC khi load Tailwind)
     const originalWarn = console.warn;
-    console.warn = function(...args) {
+    console.warn = function (...args) {
       if (args[0] && typeof args[0] === 'string' && args[0].includes('cdn.tailwindcss.com should not be used')) {
         return; // Suppress this specific warning
       }
@@ -18,7 +19,11 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
-    * { font-family: 'Inter', sans-serif; }
+
+    * {
+      font-family: 'Inter', sans-serif;
+    }
+
     .badge {
       display: inline-block;
       padding: 4px 10px;
@@ -29,43 +34,40 @@
       background: #eef2ff;
       color: #4f46e5;
     }
-    .no-scrollbar::-webkit-scrollbar { display: none; }
-    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
     @media (max-width: 640px) {
-      .nav-links { gap: 8px; padding: 8px 0 6px; }
-      .nav-links a { white-space: nowrap; padding: 8px 10px; border-radius: 9999px; background: #f9fafb; }
-      .nav-links a.active-nav { background: #ede9fe; color: #5b21b6; font-weight: 600; }
+      .nav-links {
+        gap: 8px;
+        padding: 8px 0 6px;
+      }
+
+      .nav-links a {
+        white-space: nowrap;
+        padding: 8px 10px;
+        border-radius: 9999px;
+        background: #f9fafb;
+      }
+
+      .nav-links a.active-nav {
+        background: #ede9fe;
+        color: #5b21b6;
+        font-weight: 600;
+      }
     }
   </style>
 </head>
+
 <body class="bg-gray-50 min-h-screen">
-  <nav class="bg-white shadow-sm border-b">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex justify-between h-16 items-center">
-        <a href="/" class="text-xl font-bold text-purple-600">📚 English Vocab</a>
-        <div class="nav-links flex items-center space-x-2 sm:space-x-4 text-sm overflow-x-auto no-scrollbar py-2 sm:py-0" aria-label="Điều hướng chính">
-          <a href="/learn" class="text-gray-600 hover:text-purple-600">Học từ</a>
-          <a href="/assessment" class="text-gray-600 hover:text-purple-600">Test Level</a>
-          <a href="/ipa" class="text-gray-600 hover:text-purple-600">IPA</a>
-          <a href="/combo" class="text-gray-600 hover:text-purple-600">Combo</a>
-          <a href="/review" class="text-gray-600 hover:text-purple-600">Ôn từ</a>
-          <a href="/review-grammar" class="text-gray-600 hover:text-purple-600">Ôn Grammar</a>
-          <a href="/writing-practice" class="text-gray-600 hover:text-purple-600">Luyện Viết</a>
-          <a href="/conversation-practice" class="text-gray-600 hover:text-purple-600">Luyện Hội thoại</a>
-          <a href="/voice-chat" class="text-gray-600 hover:text-purple-600">Voice Chat</a>
-          <a href="/grammar" class="text-purple-600 font-semibold active-nav">Grammar</a>
-          <div class="border-l pl-4 ml-2 flex items-center gap-2">
-            <button onclick="openPreferencesModal()" class="text-gray-600 hover:text-purple-600 flex items-center gap-1 transition-colors" title="Tùy chọn học tập">
-              <i class="fas fa-cog"></i>
-            </button>
-            <button onclick="openDashboardModal()" class="text-gray-600 hover:text-purple-600 flex items-center gap-1 transition-colors" title="Bảng tiến độ">
-              <i class="fas fa-chart-line"></i>
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </nav>
+  <script src="/js/header.js"></script>
 
   <main class="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4 sm:mb-6">
@@ -74,7 +76,8 @@
         <p class="text-gray-600 text-xs sm:text-sm">Lọc theo Level, SuperCategory, tìm kiếm Guideword/Can-do.</p>
       </div>
       <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
-        <select id="levelFilter" class="px-3 sm:px-4 py-2.5 sm:py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 text-xs sm:text-sm flex-1 sm:flex-none min-w-0">
+        <select id="levelFilter"
+          class="px-3 sm:px-4 py-2.5 sm:py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 text-xs sm:text-sm flex-1 sm:flex-none min-w-0">
           <option value="">Tất cả Level</option>
           <option value="A1">A1</option>
           <option value="A2">A2</option>
@@ -83,18 +86,21 @@
           <option value="C1">C1</option>
           <option value="C2">C2</option>
         </select>
-        <select id="superFilter" class="px-3 sm:px-4 py-2.5 sm:py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 text-xs sm:text-sm flex-1 sm:flex-none min-w-0">
+        <select id="superFilter"
+          class="px-3 sm:px-4 py-2.5 sm:py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 text-xs sm:text-sm flex-1 sm:flex-none min-w-0">
           <option value="">Tất cả SuperCategory</option>
         </select>
         <input id="searchInput" type="text" placeholder="Tìm Guideword hoặc Can-do..."
           class="px-3 sm:px-4 py-2.5 sm:py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 text-xs sm:text-sm w-full sm:w-48 lg:w-60">
-        <button id="btnSearch" class="px-4 sm:px-5 py-2.5 sm:py-2 bg-purple-600 text-white rounded-lg text-xs sm:text-sm hover:bg-purple-700 font-medium min-h-[44px] sm:min-h-0 whitespace-nowrap">
+        <button id="btnSearch"
+          class="px-4 sm:px-5 py-2.5 sm:py-2 bg-purple-600 text-white rounded-lg text-xs sm:text-sm hover:bg-purple-700 font-medium min-h-[44px] sm:min-h-0 whitespace-nowrap">
           <i class="fas fa-search mr-1"></i>Tìm
         </button>
       </div>
     </div>
 
-    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2 sm:gap-3 mb-4 sm:mb-6 text-xs sm:text-sm" id="stats"></div>
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2 sm:gap-3 mb-4 sm:mb-6 text-xs sm:text-sm"
+      id="stats"></div>
 
     <div id="list" class="space-y-3"></div>
     <div id="loading" class="hidden text-center py-8 text-gray-500">
@@ -107,12 +113,14 @@
   </main>
 
   <!-- AI Grammar Tutor Modal -->
-  <div id="grammarAIModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-2 sm:p-4">
+  <div id="grammarAIModal"
+    class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-2 sm:p-4">
     <div class="bg-white rounded-lg max-w-3xl w-full max-h-[95vh] sm:max-h-[85vh] overflow-hidden flex flex-col">
       <div class="sticky top-0 bg-white border-b p-3 sm:p-4 flex justify-between items-center z-10">
         <div class="flex-1 min-w-0 pr-2">
           <h2 class="text-lg sm:text-xl font-bold text-gray-900">🤖 AI Grammar Tutor</h2>
-          <p class="text-xs sm:text-sm text-gray-600 mt-1 truncate">Hỏi về: <strong id="grammarTopic" class="text-purple-600"></strong></p>
+          <p class="text-xs sm:text-sm text-gray-600 mt-1 truncate">Hỏi về: <strong id="grammarTopic"
+              class="text-purple-600"></strong></p>
         </div>
         <button onclick="closeGrammarAIModal()" class="text-gray-500 hover:text-gray-700 p-1 sm:p-2 flex-shrink-0">
           <i class="fas fa-times text-xl sm:text-2xl"></i>
@@ -121,11 +129,10 @@
       <div id="grammarChatMessages" class="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 sm:space-y-4 bg-gray-50"></div>
       <div class="border-t p-3 sm:p-4 bg-white">
         <div class="flex gap-2">
-          <input type="text" id="grammarQuestionInput" 
-            placeholder="Ví dụ: Khi nào dùng present perfect?" 
+          <input type="text" id="grammarQuestionInput" placeholder="Ví dụ: Khi nào dùng present perfect?"
             class="flex-1 px-3 sm:px-4 py-2.5 sm:py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none text-sm sm:text-base"
             onkeypress="if(event.key === 'Enter') sendGrammarQuestion()">
-          <button onclick="sendGrammarQuestion()" 
+          <button onclick="sendGrammarQuestion()"
             class="px-4 sm:px-6 py-2.5 sm:py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm sm:text-base font-medium whitespace-nowrap">
             <i class="fas fa-paper-plane mr-1"></i><span class="hidden sm:inline">Gửi</span>
           </button>
@@ -151,7 +158,7 @@
             <div class="text-lg font-bold text-gray-900">${stats.total.toLocaleString()}</div>
             <div class="text-xs text-gray-500">Tổng</div>
           </div>
-          ${['A1','A2','B1','B2','C1','C2'].map(l=>`
+          ${['A1', 'A2', 'B1', 'B2', 'C1', 'C2'].map(l => `
             <div class="bg-white shadow rounded p-3 text-center">
               <div class="text-base font-semibold">${stats.byLevel?.[l] || 0}</div>
               <div class="text-xs text-gray-500">${l}</div>
@@ -170,7 +177,7 @@
       }
     }
 
-    async function loadList(resetPage=false) {
+    async function loadList(resetPage = false) {
       if (resetPage) page = 1;
       const level = document.getElementById('levelFilter').value;
       const sup = document.getElementById('superFilter').value;
@@ -226,19 +233,19 @@
           ${item.Example ? `<div class="text-xs sm:text-sm text-gray-600 bg-gray-50 rounded p-3 sm:p-4 whitespace-pre-line border-l-4 border-purple-500 leading-relaxed">${item.Example}</div>` : ''}
         </div>
       `).join('');
-      
+
       // Lưu grammar data để dùng trong AI chat
       window.currentGrammarList = list;
     }
 
     function renderPagination() {
       const pg = document.getElementById('pagination');
-      if (totalPages <= 1) { pg.innerHTML=''; return; }
+      if (totalPages <= 1) { pg.innerHTML = ''; return; }
       pg.innerHTML = `
         <div class="flex items-center gap-2">
-          <button ${page===1?'disabled':''} class="px-3 py-2 border rounded ${page===1?'opacity-50 cursor-not-allowed':'hover:bg-gray-50'}" onclick="changePage(${page-1})"><i class="fas fa-chevron-left"></i></button>
+          <button ${page === 1 ? 'disabled' : ''} class="px-3 py-2 border rounded ${page === 1 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'}" onclick="changePage(${page - 1})"><i class="fas fa-chevron-left"></i></button>
           <span class="text-sm">Trang ${page}/${totalPages}</span>
-          <button ${page===totalPages?'disabled':''} class="px-3 py-2 border rounded ${page===totalPages?'opacity-50 cursor-not-allowed':'hover:bg-gray-50'}" onclick="changePage(${page+1})"><i class="fas fa-chevron-right"></i></button>
+          <button ${page === totalPages ? 'disabled' : ''} class="px-3 py-2 border rounded ${page === totalPages ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'}" onclick="changePage(${page + 1})"><i class="fas fa-chevron-right"></i></button>
         </div>
       `;
     }
@@ -276,16 +283,16 @@
         alert('Không tìm thấy thông tin grammar');
         return;
       }
-      
+
       currentGrammarItem = window.currentGrammarList[index];
       document.getElementById('grammarTopic').textContent = currentGrammarItem['Guideword'] || 'Grammar';
       document.getElementById('grammarAIModal').classList.remove('hidden');
       document.getElementById('grammarChatMessages').innerHTML = '';
       document.getElementById('grammarQuestionInput').value = '';
       chatMessageId = 0;
-      
+
       // Hiển thị welcome message
-      addChatMessage('assistant', 
+      addChatMessage('assistant',
         `Xin chào! 👋 Tôi sẽ giúp bạn hiểu về "${currentGrammarItem['Guideword']}" (Level ${currentGrammarItem.Level || 'N/A'}).\n\n` +
         `Hãy đặt câu hỏi bất kỳ về grammar này, ví dụ:\n` +
         `• Khi nào dùng cấu trúc này?\n` +
@@ -306,10 +313,10 @@
       const messageDiv = document.createElement('div');
       messageDiv.id = `grammarMsg_${messageId}`;
       messageDiv.className = `flex ${role === 'user' ? 'justify-end' : 'justify-start'}`;
-      
+
       const bgColor = role === 'user' ? 'bg-purple-600 text-white' : 'bg-white border';
       const icon = role === 'user' ? '👤' : '🤖';
-      
+
       messageDiv.innerHTML = `
         <div class="max-w-[80%] ${bgColor} rounded-lg p-3 shadow-sm">
           <div class="flex items-start gap-2">
@@ -320,10 +327,10 @@
           </div>
         </div>
       `;
-      
+
       messagesDiv.appendChild(messageDiv);
       messagesDiv.scrollTop = messagesDiv.scrollHeight;
-      
+
       return messageId;
     }
 
@@ -348,7 +355,7 @@
           text = String(text || '');
         }
       }
-      
+
       return text
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
@@ -360,25 +367,25 @@
     async function sendGrammarQuestion() {
       const questionInput = document.getElementById('grammarQuestionInput');
       const question = questionInput.value.trim();
-      
+
       if (!question) return;
-      
+
       // Hiển thị câu hỏi của user
       addChatMessage('user', question);
       questionInput.value = '';
-      
+
       // Hiển thị loading
       const loadingId = addChatMessage('assistant', '', true);
-      
+
       // Kiểm tra Puter.js
       const puterClient = checkPuterAvailable();
       if (!puterClient) {
-        updateChatMessage(loadingId, 
+        updateChatMessage(loadingId,
           '⚠️ Puter.js không khả dụng.\n\n' +
           'Vui lòng đăng nhập tại <a href="https://puter.com" target="_blank" class="text-purple-600 underline">puter.com</a> để sử dụng tính năng AI.');
         return;
       }
-      
+
       try {
         // Tạo prompt với context về grammar
         const grammarContext = `
@@ -388,7 +395,7 @@ SuperCategory: ${currentGrammarItem.SuperCategory || ''}
 Can-do statement: ${currentGrammarItem['Can-do statement'] || ''}
 ${currentGrammarItem.Example ? `Example: ${currentGrammarItem.Example}` : ''}
         `.trim();
-        
+
         const prompt = `Bạn là giáo viên tiếng Anh chuyên nghiệp. Giải thích ngắn gọn, dễ hiểu bằng tiếng Việt:
 
 ${grammarContext}
@@ -410,12 +417,12 @@ Yêu cầu:
           "gpt-5-nano",
           "gpt-4o",
         ];
-        
+
         let response = null;
         for (const model of modelsToTry) {
           try {
             try {
-              response = await puterClient.ai.chat(prompt, { 
+              response = await puterClient.ai.chat(prompt, {
                 model: model,
                 max_tokens: 200
               });
@@ -447,38 +454,38 @@ Yêu cầu:
             continue;
           }
         }
-        
+
         if (!response) {
           throw new Error('Không thể kết nối với AI');
         }
-        
+
         // Xử lý response (Puter.js format: response.message.content)
         let responseText = '';
         console.log('Raw AI response:', response, 'Type:', typeof response);
-        
+
         if (typeof response === 'string') {
           responseText = response;
         } else if (response && typeof response === 'object') {
           // Puter.js format: response.message.content
           if (response.message && response.message.content) {
             responseText = response.message.content;
-          } 
+          }
           // OpenAI format: response.choices[0].message.content
           else if (response.choices && response.choices[0] && response.choices[0].message && response.choices[0].message.content) {
             responseText = response.choices[0].message.content;
           }
           // Các format khác
           else {
-            responseText = response.text || 
-                          response.content || 
-                          response.message || 
-                          response.response || 
-                          response.choices?.[0]?.text ||
-                          response.data?.text ||
-                          response.data?.content ||
-                          '';
+            responseText = response.text ||
+              response.content ||
+              response.message ||
+              response.response ||
+              response.choices?.[0]?.text ||
+              response.data?.text ||
+              response.data?.content ||
+              '';
           }
-          
+
           // Nếu vẫn không có, log để debug
           if (!responseText || responseText === '{}' || responseText === '[object Object]') {
             console.warn('Unexpected AI response format:', response);
@@ -498,7 +505,7 @@ Yêu cầu:
         } else {
           responseText = String(response || 'Không có phản hồi');
         }
-        
+
         // Đảm bảo responseText là string và không phải "[object Object]"
         if (typeof responseText !== 'string') {
           responseText = String(responseText);
@@ -515,13 +522,13 @@ Yêu cầu:
             }
           }
         }
-        
+
         // Cập nhật message với response
         updateChatMessage(loadingId, responseText);
-        
+
       } catch (error) {
         console.error('Grammar AI error:', error);
-        updateChatMessage(loadingId, 
+        updateChatMessage(loadingId,
           `❌ Lỗi: ${error.message || 'Không thể tải phản hồi từ AI'}\n\n` +
           `Vui lòng thử lại sau hoặc kiểm tra Console (F12) để xem chi tiết.`);
       }
@@ -541,5 +548,5 @@ Yêu cầu:
   <script src="/js/preferencesModal.js"></script>
   <script src="/js/dashboardModal.js"></script>
 </body>
-</html>
 
+</html>

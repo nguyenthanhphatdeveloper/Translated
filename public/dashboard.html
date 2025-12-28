@@ -1,14 +1,15 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Bảng tiến độ</title>
   <script>
-    (function() {
+    (function () {
       if (typeof console !== 'undefined' && console.warn) {
         const originalWarn = console.warn;
-        console.warn = function(...args) {
+        console.warn = function (...args) {
           const firstArg = args[0];
           if (typeof firstArg === 'string' && (
             firstArg.includes('cdn.tailwindcss.com should not be used') ||
@@ -24,21 +25,9 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
+
 <body class="bg-gray-50 min-h-screen">
-  <nav class="bg-white shadow-sm border-b">
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex justify-between h-16 items-center">
-        <a href="/" class="text-xl font-bold text-purple-600">📚 English Vocab</a>
-        <div class="flex items-center space-x-4 text-sm">
-          <a href="/learn" class="text-gray-700 hover:text-purple-600">Học từ</a>
-          <a href="/assessment" class="text-gray-700 hover:text-purple-600">Test Level</a>
-          <a href="/ipa" class="text-gray-700 hover:text-purple-600">IPA</a>
-          <a href="/preferences" class="text-gray-700 hover:text-purple-600">Tùy chọn</a>
-          <a href="/dashboard" class="text-purple-600 font-semibold">Tiến độ</a>
-        </div>
-      </div>
-    </div>
-  </nav>
+  <script src="/js/header.js"></script>
 
   <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <h1 class="text-3xl font-bold text-gray-900 mb-6">📊 Bảng tiến độ</h1>
@@ -122,12 +111,12 @@
       if (!container) return;
 
       const maxWords = Math.max(...weekly.days.map(d => d.wordsLearned), 1);
-      
+
       container.innerHTML = weekly.days.map(day => {
         const date = new Date(day.date);
         const label = date.toLocaleDateString('vi-VN', { weekday: 'short' });
         const height = maxWords > 0 ? (day.wordsLearned / maxWords) * 100 : 0;
-        
+
         return `
           <div class="text-center">
             <div class="text-xs text-gray-600 mb-1">${label}</div>
@@ -144,7 +133,7 @@
     function loadWeakAreas() {
       const analysis = weakAreas.analyzeWeakAreas();
       const container = document.getElementById('weakAreas');
-      
+
       if (analysis.weakTopics.length === 0) {
         container.innerHTML = '<div class="text-gray-500 text-center py-4">Bạn chưa có điểm yếu nào. Tiếp tục phát huy! 🎉</div>';
         return;
@@ -170,7 +159,7 @@
     function loadInsights() {
       const insights = dashboard.getInsights();
       const container = document.getElementById('insights');
-      
+
       if (insights.length === 0) {
         container.innerHTML = '<div class="text-gray-500 text-center py-4">Chưa có insights. Hãy học thêm để xem phân tích!</div>';
         return;
@@ -200,5 +189,5 @@
     window.addEventListener('DOMContentLoaded', loadDashboard);
   </script>
 </body>
-</html>
 
+</html>
