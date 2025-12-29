@@ -374,6 +374,51 @@
       lastAiText: ''
     };
 
+    // --- Mobile Audio Context Management ---
+    let audioContext = null;
+    let isAudioUnlocked = false;
+
+    // Initialize AudioContext
+    const initAudioContext = () => {
+      if (!audioContext) {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioContextClass) {
+          audioContext = new AudioContextClass();
+          console.log('AudioContext created:', audioContext.state);
+        }
+      }
+    };
+
+    // Unlock audio on user interaction (critical for mobile)
+    const unlockAudio = async () => {
+      if (isAudioUnlocked) return;
+
+      initAudioContext();
+
+      // Resume AudioContext
+      if (audioContext && audioContext.state === 'suspended') {
+        try {
+          await audioContext.resume();
+          console.log('AudioContext resumed:', audioContext.state);
+        } catch (e) {
+          console.warn('Failed to resume AudioContext:', e);
+        }
+      }
+
+      // Resume SpeechSynthesis (required for iOS)
+      if (window.speechSynthesis) {
+        try {
+          speechSynthesis.cancel();
+          speechSynthesis.resume();
+        } catch (e) {
+          console.warn('Failed to resume SpeechSynthesis:', e);
+        }
+      }
+
+      isAudioUnlocked = true;
+      console.log('Audio unlocked for mobile');
+    };
+
     // --- DOM Elements ---
     const els = {
       recordBtn: document.getElementById('recordBtn'),
@@ -552,13 +597,25 @@
           }
 
           if (audioUrl) {
+            // Unlock audio context for mobile before playing
+            if (audioContext && audioContext.state === 'suspended') {
+              try {
+                await audioContext.resume();
+              } catch (e) {
+                console.warn('AudioContext resume failed:', e);
+              }
+            }
+
             const audio = new Audio(audioUrl);
             audio.playbackRate = rate;
 
             await new Promise((resolve, reject) => {
               audio.onended = resolve;
               audio.onerror = reject;
-              audio.play().catch(reject);
+              audio.play().catch(err => {
+                console.warn('Audio play blocked:', err);
+                reject(err);
+              });
             });
             state.isSpeaking = false;
             setStatus('Ready');
@@ -577,7 +634,12 @@
           // Cancel previous utterances
           speechSynthesis.cancel();
 
-          // Wait a tick for cancellation to take effect
+          // IMPORTANT: Resume for mobile browsers (iOS requirement)
+          if (speechSynthesis.paused) {
+            speechSynthesis.resume();
+          }
+
+          // Wait a tick for operations to complete
           await new Promise(r => setTimeout(r, 50));
 
           const u = new SpeechSynthesisUtterance(text);
@@ -919,8 +981,15 @@ Rules:
 
     // --- Interaction Handlers ---
 
+    // Unlock audio on first user interaction (critical for mobile)
+    document.addEventListener('touchstart', unlockAudio, { once: true });
+    document.addEventListener('click', unlockAudio, { once: true });
+
     // START
     const handleStart = (e) => {
+      // Unlock audio on interaction
+      unlockAudio();
+
       // Only start if not already recording/processing
       if (!state.isRecording && !state.isProcessing && !state.isSpeaking) {
         e.preventDefault(); // Stop text selection
